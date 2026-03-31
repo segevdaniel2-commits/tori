@@ -38,6 +38,7 @@ const analyticsRoutes = require('./routes/analytics');
 const whatsappRoutes = require('./routes/whatsapp');
 const stripeRoutes = require('./routes/stripe');
 const integrationsRoutes = require('./routes/integrations');
+const calendarRoutes = require('./routes/calendar');
 
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
@@ -127,6 +128,7 @@ initDb().then(() => {
   app.use('/api/whatsapp', whatsappRoutes);
   app.use('/api/stripe', stripeRoutes);
   app.use('/api/integrations', integrationsRoutes);
+  app.use('/api/calendar', calendarRoutes);
 
   // WhatsApp webhook also accessible at root /webhook
   app.use('/webhook', whatsappRoutes);

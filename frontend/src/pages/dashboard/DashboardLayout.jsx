@@ -412,17 +412,26 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-2">
             {/* Live bot indicator */}
             <motion.div
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full cursor-default"
-              style={{ background: isNight ? 'rgba(34,197,94,0.12)' : '#f0fdf4', border: `1px solid ${isNight ? 'rgba(34,197,94,0.25)' : '#bbf7d0'}` }}
-              animate={{ scale: [1, 1.02, 1] }}
-              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-full cursor-default select-none"
+              style={{
+                background: isNight
+                  ? 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(16,185,129,0.10) 100%)'
+                  : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                border: `1px solid ${isNight ? 'rgba(34,197,94,0.30)' : '#86efac'}`,
+                boxShadow: isNight ? '0 0 12px rgba(34,197,94,0.12)' : '0 1px 8px rgba(34,197,94,0.15)',
+              }}
+              animate={{ boxShadow: isNight
+                ? ['0 0 8px rgba(34,197,94,0.08)', '0 0 18px rgba(34,197,94,0.20)', '0 0 8px rgba(34,197,94,0.08)']
+                : ['0 1px 4px rgba(34,197,94,0.10)', '0 1px 14px rgba(34,197,94,0.28)', '0 1px 4px rgba(34,197,94,0.10)'],
+              }}
+              transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
             >
-              <div className="relative">
+              <div className="relative shrink-0">
                 <div className="w-2 h-2 rounded-full bg-green-500" />
-                <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-50" />
+                <div className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-60" />
               </div>
-              <Bot size={13} className="text-green-600" />
-              <span className="text-green-700 text-xs font-bold">בוט פעיל</span>
+              <Bot size={13} className="text-green-600 shrink-0 hidden sm:block" />
+              <span className="text-green-700 text-xs font-bold hidden sm:block whitespace-nowrap">בוט פעיל</span>
             </motion.div>
 
             {/* Notifications bell */}
@@ -568,8 +577,7 @@ export default function DashboardLayout() {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -20, scale: 0.92 }}
                 className="border rounded-2xl p-4 shadow-2xl min-w-64 max-w-sm pointer-events-auto"
-                style={{ background: theme.surface, borderColor: theme.border }}
-                style={{ borderRight: `4px solid ${n.type === 'appointment' ? '#7c3aed' : '#f43f5e'}` }}
+                style={{ background: theme.surface, borderColor: theme.border, borderRight: `4px solid ${n.type === 'appointment' ? '#7c3aed' : '#f43f5e'}` }}
               >
                 <div className="flex items-start gap-3">
                   <div className={`p-1.5 rounded-lg ${n.type === 'appointment' ? 'bg-violet-100' : 'bg-red-100'}`}>

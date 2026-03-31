@@ -25,9 +25,9 @@ function StatCard({ title, value, subtitle, icon: Icon, color = 'tori', loading 
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-white rounded-2xl p-6 border ${c.border} shadow-sm`}
+      className={`bg-white rounded-2xl p-4 sm:p-6 border ${c.border} shadow-sm`}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
         <span className="text-gray-600 text-sm font-medium">{title}</span>
         <div className={`w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center`}>
           <Icon size={18} className={c.icon} />
@@ -132,22 +132,22 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6" dir="rtl">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-gray-900">אנליטיקות</h2>
-        <div className="flex items-center gap-3">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6" dir="rtl">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h2 className="text-xl sm:text-2xl font-black text-gray-900">אנליטיקות</h2>
+        <div className="flex items-center gap-2">
           <input
             type="month"
             value={month}
             onChange={e => setMonth(e.target.value)}
-            className="form-input w-40 text-sm py-2"
+            className="form-input w-36 sm:w-40 text-sm py-2"
           />
           <button
             onClick={downloadReport}
-            className="btn-secondary text-sm py-2 px-4"
+            className="btn-secondary text-sm py-2 px-3 sm:px-4"
           >
-            <Download size={16} />
-            ייצא Excel
+            <Download size={15} />
+            <span className="hidden sm:inline">ייצא Excel</span>
           </button>
         </div>
       </div>

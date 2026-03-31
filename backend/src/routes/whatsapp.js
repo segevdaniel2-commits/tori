@@ -137,6 +137,16 @@ router.post('/simulate', authMiddleware, async (req, res) => {
   const fakePhone = `999${String(req.business.id).padStart(6, '0')}${String(session_id || 'x').slice(-4).replace(/\D/g, '0')}`;
 
   try {
+    // Pre-lock the fake phone to this specific business so the bot skips
+    // the business-selection stage and talks directly as this business's bot
+    const db = getDb();
+    db.prepare(
+      'INSERT OR IGNORE INTO customer_associations (whatsapp_phone, business_id) VALUES (?, ?)'
+    ).run(fakePhone, req.business.id);
+    db.prepare(
+      'INSERT OR IGNORE INTO customers (business_id, whatsapp_phone) VALUES (?, ?)'
+    ).run(req.business.id, fakePhone);
+
     const reply = await processMessage(fakePhone, text.slice(0, 1000), req.app.get('io'));
     res.json({ reply: reply || null });
   } catch (err) {

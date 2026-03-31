@@ -217,8 +217,8 @@ export default function BotSimulatorPage() {
           </div>
         </div>
 
-        {/* Info panel */}
-        <div className="lg:w-64 shrink-0 space-y-3">
+        {/* Info panel — hidden on mobile */}
+        <div className="hidden lg:block lg:w-64 shrink-0 space-y-3">
           <div className="bg-white border border-gray-200 rounded-2xl p-4">
             <h4 className="font-bold text-gray-900 text-sm mb-3">מה הבוט יודע לעשות</h4>
             <ul className="space-y-2 text-sm text-gray-600">

@@ -901,12 +901,32 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6" dir="rtl">
-      <h2 className="text-2xl font-black text-gray-900 mb-6">הגדרות</h2>
+    <div className="p-3 sm:p-6" dir="rtl">
+      <h2 className="text-xl sm:text-2xl font-black text-gray-900 mb-4 sm:mb-6">הגדרות</h2>
 
-      <div className="flex gap-5">
-        {/* Tab sidebar */}
-        <div className="w-44 shrink-0">
+      {/* ── Mobile: horizontal scrollable tab strip ─────────────────────────── */}
+      <div className="sm:hidden mb-4 -mx-3 px-3">
+        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 shrink-0 px-3.5 py-2 rounded-full text-sm font-semibold transition-all ${
+                activeTab === tab.id
+                  ? 'bg-tori-600 text-white shadow-sm'
+                  : 'bg-white text-gray-600 border border-gray-200'
+              }`}
+            >
+              <tab.icon size={14} />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="sm:flex gap-5">
+        {/* ── Desktop: Tab sidebar ────────────────────────────────────────────── */}
+        <div className="hidden sm:block w-44 shrink-0">
           <div className="bg-white border border-gray-200 rounded-2xl p-2 space-y-0.5 shadow-sm">
             {TABS.map(tab => (
               <button
@@ -934,9 +954,9 @@ export default function SettingsPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.18 }}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6"
             >
-              <h3 className="font-bold text-gray-900 text-lg mb-5">
+              <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-4 sm:mb-5">
                 {TABS.find(t => t.id === activeTab)?.label}
               </h3>
               {tabContent[activeTab]}

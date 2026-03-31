@@ -88,14 +88,15 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+        className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
@@ -264,13 +265,15 @@ function AddAppointmentModal({ selectedDate, onClose, onSuccess }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg"
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+        className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
@@ -448,6 +451,88 @@ function DatePickerPopup({ value, onChange, onClose }) {
   );
 }
 
+// ─── Mobile appointment card ──────────────────────────────────────────────────
+function MobileApptCard({ appt, onClick }) {
+  const start = appt.starts_at.split('T')[1]?.slice(0, 5) || appt.starts_at.slice(11, 16);
+  const end = appt.ends_at?.split('T')[1]?.slice(0, 5) || appt.ends_at?.slice(11, 16);
+  const colors = STATUS_COLORS[appt.status] || STATUS_COLORS.confirmed;
+  const staffColor = appt.staff_color || '#7C3AED';
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => onClick(appt)}
+      className={`w-full text-right flex items-stretch gap-0 rounded-2xl border overflow-hidden shadow-sm active:shadow-none transition-shadow ${colors.bg} ${colors.border}`}
+    >
+      {/* Left accent bar (RTL → rendered on left) */}
+      <div className="w-1 shrink-0 rounded-r-full" style={{ background: staffColor }} />
+
+      <div className="flex-1 px-4 py-3 flex items-center gap-3">
+        {/* Time column */}
+        <div className="shrink-0 text-center min-w-[48px]">
+          <div className={`font-black text-base leading-tight ${colors.text}`}>{start}</div>
+          {end && <div className={`text-xs opacity-60 ${colors.text}`}>{end}</div>}
+        </div>
+
+        {/* Divider */}
+        <div className="w-px h-10 bg-black/10 shrink-0" />
+
+        {/* Details */}
+        <div className="flex-1 min-w-0">
+          <div className={`font-bold text-base leading-tight truncate ${colors.text}`}>
+            {appt.customer_name || 'לקוח'}
+          </div>
+          <div className={`text-sm opacity-70 truncate mt-0.5 ${colors.text}`}>
+            {[appt.service_name, appt.staff_name].filter(Boolean).join(' · ') || ''}
+          </div>
+        </div>
+
+        {/* Status dot */}
+        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${colors.dot}`} />
+      </div>
+    </motion.button>
+  );
+}
+
+// ─── 7-day date strip for mobile ─────────────────────────────────────────────
+function MobileDateStrip({ selectedDate, onSelect }) {
+  const today = new Date().toISOString().split('T')[0];
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today + 'T00:00:00');
+    d.setDate(d.getDate() + i - 1); // -1 so today is 2nd item
+    return d.toISOString().split('T')[0];
+  });
+  const DAY_SHORT = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+
+  return (
+    <div className="flex gap-1 overflow-x-auto pb-1 px-1" style={{ scrollbarWidth: 'none' }}>
+      {days.map(d => {
+        const dayObj = new Date(d + 'T00:00:00');
+        const isSelected = d === selectedDate;
+        const isToday = d === today;
+        return (
+          <button
+            key={d}
+            onClick={() => onSelect(d)}
+            className={`flex flex-col items-center shrink-0 w-11 py-2 rounded-xl transition-all font-medium ${
+              isSelected
+                ? 'bg-tori-600 text-white shadow-md'
+                : isToday
+                ? 'bg-tori-50 text-tori-700 ring-1 ring-tori-300'
+                : 'text-gray-500 hover:bg-gray-100'
+            }`}
+          >
+            <span className="text-xs">{DAY_SHORT[dayObj.getDay()]}</span>
+            <span className={`text-base font-black leading-tight ${isSelected ? 'text-white' : ''}`}>{dayObj.getDate()}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function CalendarPage() {
   const { business } = useAuthStore();
   const { selectedDate, setSelectedDate } = useDashboardStore();
@@ -468,6 +553,12 @@ export default function CalendarPage() {
     queryFn: () => api.get('/businesses/staff').then(r => r.data),
   });
 
+  // Pre-fetch services so AddAppointmentModal has data immediately when opened
+  useQuery({
+    queryKey: ['services'],
+    queryFn: () => api.get('/businesses/services').then(r => r.data),
+  });
+
   const dateObj = new Date(selectedDate + 'T00:00:00');
   const isTodayFlag = isToday(dateObj);
 
@@ -479,21 +570,19 @@ export default function CalendarPage() {
 
   function formatHeaderDate(dateStr) {
     const d = new Date(dateStr + 'T00:00:00');
-    return format(d, 'EEEE, d בMMMM yyyy', { locale: he });
+    return format(d, 'EEEE, d בMMMM', { locale: he });
   }
 
   const activeAppts = appointments.filter(a => a.status !== 'cancelled');
+  const sortedAppts = [...activeAppts].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
   return (
-    <div className="p-6 h-full flex flex-col" dir="rtl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-        {/* Date navigation */}
+    <div className="p-3 sm:p-6 h-full flex flex-col" dir="rtl">
+
+      {/* ── Desktop header ─────────────────────────────────────────────────────── */}
+      <div className="hidden sm:flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => goDay(-1)}
-            className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all"
-          >
+          <button onClick={() => goDay(-1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
             <ChevronRight size={17} />
           </button>
 
@@ -503,72 +592,66 @@ export default function CalendarPage() {
               className="flex flex-col items-start px-4 py-2 rounded-xl hover:bg-gray-50 border border-gray-200 transition-all min-w-[180px]"
             >
               <span className="font-bold text-gray-900 text-base leading-tight">
-                {formatHeaderDate(selectedDate)}
+                {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, d בMMMM yyyy', { locale: he })}
               </span>
               <div className="flex items-center gap-2 mt-0.5">
-                {isTodayFlag && (
-                  <span className="bg-tori-100 text-tori-700 text-xs font-bold px-2 py-0.5 rounded-full">היום</span>
-                )}
-                <span className="text-xs text-gray-400">
-                  {activeAppts.length === 0 ? 'אין תורים' : `${activeAppts.length} תורים`}
-                </span>
+                {isTodayFlag && <span className="bg-tori-100 text-tori-700 text-xs font-bold px-2 py-0.5 rounded-full">היום</span>}
+                <span className="text-xs text-gray-400">{activeAppts.length === 0 ? 'אין תורים' : `${activeAppts.length} תורים`}</span>
               </div>
             </button>
-
             <AnimatePresence>
               {showDatePicker && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <DatePickerPopup
-                    value={selectedDate}
-                    onChange={setSelectedDate}
-                    onClose={() => setShowDatePicker(false)}
-                  />
+                <motion.div initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.15 }}>
+                  <DatePickerPopup value={selectedDate} onChange={setSelectedDate} onClose={() => setShowDatePicker(false)} />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          <button
-            onClick={() => goDay(1)}
-            className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all"
-          >
+          <button onClick={() => goDay(1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
             <ChevronLeft size={17} />
           </button>
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2">
           {!isTodayFlag && (
-            <button
-              onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl border border-gray-200 transition-all"
-            >
+            <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl border border-gray-200 transition-all">
               היום
             </button>
           )}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="btn-primary text-sm px-4 py-2"
-          >
+          <button onClick={() => setShowAddModal(true)} className="btn-primary text-sm px-4 py-2">
             <Plus size={15} />
             הוסף תור
           </button>
         </div>
       </div>
 
-      {/* Staff filter tabs */}
-      {staffList.length > 1 && (
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-          {staffList.filter(s => s.is_active).map(s => (
+      {/* ── Mobile header ──────────────────────────────────────────────────────── */}
+      <div className="sm:hidden mb-3">
+        {/* Month + add button row */}
+        <div className="flex items-center justify-between mb-2 px-1">
+          <div>
+            <span className="font-black text-gray-900 text-xl">{formatHeaderDate(selectedDate)}</span>
+            {isTodayFlag && <span className="mr-2 bg-tori-100 text-tori-700 text-xs font-bold px-2 py-0.5 rounded-full">היום</span>}
+          </div>
+          {!isTodayFlag && (
             <button
-              key={s.id}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-tori-300 hover:text-tori-600 whitespace-nowrap transition-all"
+              onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+              className="text-xs font-semibold text-tori-600 bg-tori-50 px-3 py-1.5 rounded-full border border-tori-200"
             >
+              היום
+            </button>
+          )}
+        </div>
+        {/* Swipeable date strip */}
+        <MobileDateStrip selectedDate={selectedDate} onSelect={setSelectedDate} />
+      </div>
+
+      {/* Staff filter tabs (shared desktop + mobile) */}
+      {staffList.length > 1 && (
+        <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+          {staffList.filter(s => s.is_active).map(s => (
+            <button key={s.id} className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-tori-300 hover:text-tori-600 whitespace-nowrap transition-all">
               <div className="w-3 h-3 rounded-full" style={{ background: s.color }} />
               {s.name}
             </button>
@@ -576,14 +659,51 @@ export default function CalendarPage() {
         </div>
       )}
 
-      {/* Calendar grid */}
-      <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* ── Mobile list view ──────────────────────────────────────────────────── */}
+      <div className="sm:hidden flex-1 overflow-y-auto">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={28} className="animate-spin text-tori-400" />
+          </div>
+        ) : sortedAppts.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-16 text-center"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+              <Calendar size={28} className="text-gray-300" />
+            </div>
+            <p className="text-gray-500 font-semibold text-base mb-1">אין תורים ביום זה</p>
+            <p className="text-gray-400 text-sm mb-5">הוסף תור ידנית או המתן לתורים מהבוט</p>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="btn-primary text-sm px-5 py-2.5"
+            >
+              <Plus size={15} />
+              הוסף תור
+            </button>
+          </motion.div>
+        ) : (
+          <div className="space-y-2.5 pb-24">
+            <div className="text-xs text-gray-400 font-medium px-1 mb-1">
+              {sortedAppts.length} תורים
+            </div>
+            {sortedAppts.map((appt, i) => (
+              <MobileApptCard key={appt.id} appt={appt} onClick={setSelectedAppt} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Desktop calendar grid ─────────────────────────────────────────────── */}
+      <div className="hidden sm:flex flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="flex items-center justify-center w-full">
             <Loader2 size={32} className="animate-spin text-tori-400" />
           </div>
         ) : (
-          <div className="flex h-full overflow-y-auto">
+          <div className="flex w-full overflow-y-auto">
             {/* Time labels */}
             <div className="w-16 border-l border-gray-100 shrink-0">
               {HOURS.map(h => (
@@ -595,30 +715,24 @@ export default function CalendarPage() {
 
             {/* Time slots */}
             <div className="flex-1 relative">
-              {/* Hour lines */}
               {HOURS.map(h => (
                 <div key={h} className="h-20 border-b border-gray-50">
                   <div className="h-10 border-b border-gray-50 border-dashed" />
                 </div>
               ))}
 
-              {/* Current time line */}
               {isTodayFlag && (() => {
                 const now = new Date();
                 const nowMin = now.getHours() * 60 + now.getMinutes();
                 const top = ((nowMin - 7 * 60) / 60) * 80;
                 return (
-                  <div
-                    className="absolute left-0 right-0 flex items-center z-10 pointer-events-none"
-                    style={{ top: `${top}px` }}
-                  >
+                  <div className="absolute left-0 right-0 flex items-center z-10 pointer-events-none" style={{ top: `${top}px` }}>
                     <div className="w-3 h-3 rounded-full bg-coral-500 -ml-1.5" />
                     <div className="flex-1 h-0.5 bg-coral-500" />
                   </div>
                 );
               })()}
 
-              {/* Appointments */}
               <div className="absolute inset-0 pointer-events-none">
                 {activeAppts.map(appt => (
                   <div key={appt.id} className="pointer-events-auto">
@@ -627,7 +741,6 @@ export default function CalendarPage() {
                 ))}
               </div>
 
-              {/* Empty state */}
               {activeAppts.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
@@ -641,6 +754,17 @@ export default function CalendarPage() {
           </div>
         )}
       </div>
+
+      {/* ── Mobile FAB ────────────────────────────────────────────────────────── */}
+      {sortedAppts.length > 0 && (
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="sm:hidden fixed bottom-6 left-1/2 -translate-x-1/2 btn-primary shadow-2xl text-sm px-6 py-3.5 rounded-full z-40 flex items-center gap-2"
+        >
+          <Plus size={17} />
+          הוסף תור
+        </button>
+      )}
 
       {/* Modals */}
       <AnimatePresence>

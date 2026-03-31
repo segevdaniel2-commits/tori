@@ -138,17 +138,17 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="p-6" dir="rtl">
+    <div className="p-3 sm:p-6" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div>
-          <h2 className="text-2xl font-black text-gray-900">לקוחות</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-gray-900">לקוחות</h2>
           <p className="text-gray-500 text-sm mt-0.5">{total} לקוחות רשומים</p>
         </div>
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
+      <div className="relative mb-4 sm:mb-6">
         <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           value={search}
@@ -158,13 +158,62 @@ export default function CustomersPage() {
         />
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Mobile: card list */}
+      <div className="sm:hidden">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 size={28} className="animate-spin text-tori-400" />
+          </div>
+        ) : customers.length === 0 ? (
+          <div className="text-center py-12">
+            <Users size={40} className="text-gray-200 mx-auto mb-3" />
+            <p className="text-gray-400 font-medium">אין לקוחות</p>
+            <p className="text-gray-300 text-sm">לקוחות יופיעו כשיתחילו לקיים תורים</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {customers.map((customer, i) => (
+              <motion.button
+                key={customer.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedId(customer.id)}
+                className="w-full text-right flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm active:shadow-none transition-shadow"
+              >
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-tori-500 to-tori-700 flex items-center justify-center text-white font-bold text-base shrink-0">
+                  {(customer.name || customer.whatsapp_phone || 'L')[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-gray-900 text-sm truncate">
+                    {customer.name || <span className="text-gray-400 italic">לא ידוע</span>}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5 font-mono">{customer.whatsapp_phone}</div>
+                </div>
+                <div className="shrink-0 text-left">
+                  <div className="flex items-center gap-1 justify-end">
+                    <Star size={11} className="text-amber-400 fill-amber-400" />
+                    <span className="font-bold text-gray-900 text-sm">{customer.total_visits}</span>
+                  </div>
+                  {customer.total_spent > 0 && (
+                    <div className="text-xs text-gray-400 mt-0.5">₪{customer.total_spent?.toLocaleString()}</div>
+                  )}
+                </div>
+                <ChevronRight size={15} className="text-gray-300 shrink-0" />
+              </motion.button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden sm:block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50">
               <th className="text-right px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">לקוח</th>
-              <th className="text-right px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">טלפון</th>
+              <th className="text-right px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">טלפון</th>
               <th className="text-right px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">ביקורים</th>
               <th className="text-right px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">ביקור אחרון</th>
               <th className="text-right px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">הוצאה</th>
@@ -208,7 +257,7 @@ export default function CustomersPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4 hidden sm:table-cell">
+                  <td className="px-5 py-4">
                     <span className="text-gray-600 text-sm font-mono">{customer.whatsapp_phone}</span>
                   </td>
                   <td className="px-5 py-4">

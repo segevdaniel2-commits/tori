@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, ChevronLeft, Eye, EyeOff, Loader2, Zap, Minus, Plus, X } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Eye, EyeOff, Loader2, Zap, Minus, Plus, X, Calendar, ExternalLink } from 'lucide-react';
 import { useAuthStore } from '../../store/useStore';
 import api from '../../hooks/useApi';
 
@@ -136,6 +136,184 @@ function Stepper({ value, onDec, onInc, label }) {
         className="w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 text-white flex items-center justify-center transition-colors">
         <Plus size={14} />
       </button>
+    </div>
+  );
+}
+
+// ─── Success + Google Calendar import screen ──────────────────────────────────
+function SuccessScreen({ onDone }) {
+  const [phase, setPhase] = useState('success'); // 'success' | 'gcal' | 'done'
+  const [icalUrl, setIcalUrl] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [importError, setImportError] = useState('');
+
+  async function handleImport() {
+    if (!icalUrl.trim()) return;
+    setImporting(true);
+    setImportError('');
+    try {
+      const { data } = await api.post('/calendar/import', { ical_url: icalUrl.trim() });
+      setImportResult(data);
+      setPhase('done');
+    } catch (err) {
+      setImportError(err.response?.data?.error || 'שגיאה בייבוא. נסה שוב.');
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  if (phase === 'success') {
+    return (
+      <div className="min-h-screen bg-[#08080F] flex items-center justify-center px-4" dir="rtl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full text-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring' }}
+            className="w-24 h-24 bg-gradient-to-br from-tori-600 to-coral-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-tori-500/30"
+          >
+            <Check size={40} className="text-white" />
+          </motion.div>
+          <h1 className="text-3xl font-black text-white mb-3">העסק שלך מוכן!</h1>
+          <p className="text-gray-400 mb-8">הבוט פעיל ומוכן לקבל תורים. שתף את הלינק הזה עם הלקוחות שלך:</p>
+          <div className="bg-[#0d1117] border border-tori-500/30 rounded-xl p-4 mb-8 font-mono text-tori-300 text-sm break-all">
+            https://wa.me/972584532944
+          </div>
+
+          {/* Google Calendar import prompt */}
+          <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5 mb-5 text-right">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0">
+                <Calendar size={18} className="text-blue-400" />
+              </div>
+              <div>
+                <p className="text-white font-bold text-sm">יש לך תורים ביומן גוגל?</p>
+                <p className="text-gray-500 text-xs">ייבא את כל התורים שלך בלחיצה אחת</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setPhase('gcal')}
+              className="w-full mt-3 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 font-semibold py-2.5 rounded-xl text-sm transition-all"
+            >
+              ייבא תורים מגוגל קלנדר
+            </button>
+          </div>
+
+          <button
+            onClick={onDone}
+            className="w-full bg-gradient-to-r from-tori-600 to-tori-500 text-white font-bold px-8 py-4 rounded-xl shadow-lg"
+          >
+            כניסה לדשבורד
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (phase === 'gcal') {
+    return (
+      <div className="min-h-screen bg-[#08080F] flex items-center justify-center px-4" dir="rtl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full"
+        >
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
+              <Calendar size={28} className="text-blue-400" />
+            </div>
+            <h2 className="text-2xl font-black text-white mb-2">ייבוא מגוגל קלנדר</h2>
+            <p className="text-gray-400 text-sm">הבוט יייבא את כל התורים הקיימים ויישמור עליהם</p>
+          </div>
+
+          <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5 mb-4">
+            <p className="text-gray-300 font-semibold text-sm mb-3">איך מקבלים את הקישור?</p>
+            <ol className="text-gray-400 text-xs space-y-2 list-decimal list-inside leading-relaxed">
+              <li>פתח <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Google Calendar</a> במחשב</li>
+              <li>לחץ על ⚙️ הגדרות ← הגדרות</li>
+              <li>בצד שמאל, לחץ על שם היומן שלך</li>
+              <li>גלול למטה עד "שילוב יומן"</li>
+              <li>העתק את הכתובת "כתובת ציבורית בפורמט iCal"</li>
+            </ol>
+            <a
+              href="https://calendar.google.com/calendar/r/settings"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-3 text-blue-400 text-xs hover:underline"
+            >
+              <ExternalLink size={12} />
+              פתח הגדרות גוגל קלנדר
+            </a>
+          </div>
+
+          <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5 mb-4">
+            <label className="block text-sm font-medium text-gray-400 mb-2">הכנס את כתובת ה-iCal:</label>
+            <input
+              value={icalUrl}
+              onChange={e => setIcalUrl(e.target.value)}
+              placeholder="https://calendar.google.com/calendar/ical/..."
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-all text-sm"
+              dir="ltr"
+            />
+            {importError && (
+              <p className="text-red-400 text-xs mt-2">{importError}</p>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setPhase('success')}
+              className="flex-1 border border-white/10 text-gray-400 hover:text-white font-semibold py-3 rounded-xl transition-all text-sm"
+            >
+              חזרה
+            </button>
+            <button
+              onClick={handleImport}
+              disabled={importing || !icalUrl.trim()}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2"
+            >
+              {importing ? <Loader2 size={16} className="animate-spin" /> : <Calendar size={16} />}
+              {importing ? 'מייבא...' : 'ייבא תורים'}
+            </button>
+          </div>
+
+          <button onClick={onDone} className="w-full mt-3 text-gray-600 hover:text-gray-400 text-sm transition-colors">
+            דלג, אעשה זאת מאוחר יותר
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Phase: done (import completed)
+  return (
+    <div className="min-h-screen bg-[#08080F] flex items-center justify-center px-4" dir="rtl">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-md w-full text-center"
+      >
+        <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-tori-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+          <Check size={36} className="text-white" />
+        </div>
+        <h2 className="text-2xl font-black text-white mb-3">
+          {importResult?.imported > 0 ? `${importResult.imported} תורים ייובאו!` : 'ייבוא הושלם'}
+        </h2>
+        <p className="text-gray-400 mb-8 text-sm">
+          {importResult?.message || 'הייבוא הושלם. כל התורים זמינים ביומן שלך.'}
+        </p>
+        <button
+          onClick={onDone}
+          className="bg-gradient-to-r from-tori-600 to-tori-500 text-white font-bold px-8 py-4 rounded-xl shadow-lg w-full"
+        >
+          כניסה לדשבורד
+        </button>
+      </motion.div>
     </div>
   );
 }
@@ -277,38 +455,9 @@ export default function OnboardingFlow() {
     }
   }
 
-  // ─── Success screen ──────────────────────────────────────────────────────────
+  // ─── Success screen + optional Google Calendar import ────────────────────────
   if (success) {
-    return (
-      <div className="min-h-screen bg-[#08080F] flex items-center justify-center px-4" dir="rtl">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full text-center"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
-            className="w-24 h-24 bg-gradient-to-br from-tori-600 to-coral-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-tori-500/30"
-          >
-            <Check size={40} className="text-white" />
-          </motion.div>
-          <h1 className="text-3xl font-black text-white mb-3">העסק שלך מוכן!</h1>
-          <p className="text-gray-400 mb-8">הבוט פעיל ומוכן לקבל תורים. שתף את הלינק הזה עם הלקוחות שלך:</p>
-          <div className="bg-[#0d1117] border border-tori-500/30 rounded-xl p-4 mb-6 font-mono text-tori-300 text-sm break-all">
-            https://wa.me/972584532944
-          </div>
-          <p className="text-gray-500 text-sm mb-6">כשלקוח ישלח הודעה, הבוט יחבר אותו לעסק שלך אוטומטית</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-gradient-to-r from-tori-600 to-tori-500 text-white font-bold px-8 py-4 rounded-xl shadow-lg w-full"
-          >
-            כניסה לדשבורד
-          </button>
-        </motion.div>
-      </div>
-    );
+    return <SuccessScreen onDone={() => navigate('/dashboard')} />;
   }
 
   return (
