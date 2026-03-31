@@ -235,13 +235,13 @@ export default function Landing() {
             ))}
           </div>
 
-          <div className="flex items-center gap-5">
-            <Link to="/login" className="text-gray-400 hover:text-white text-sm font-medium transition-colors hidden md:block">כניסה</Link>
+          <div className="flex items-center gap-3 sm:gap-5">
+            <Link to="/login" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">כניסה</Link>
             <Link to="/register">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="bg-gradient-to-r from-tori-600 to-tori-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-tori-500/25 hover:shadow-tori-500/40 transition-shadow"
+                className="bg-gradient-to-r from-tori-600 to-tori-500 text-white text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl shadow-lg shadow-tori-500/25 hover:shadow-tori-500/40 transition-shadow"
               >
                 התחל בחינם
               </motion.button>
@@ -303,11 +303,11 @@ export default function Landing() {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="flex flex-col sm:flex-row gap-4 mb-10"
               >
-                <Link to="/register">
+                <Link to="/register" className="w-full sm:w-auto">
                   <motion.button
                     whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(124,58,237,0.4)' }}
                     whileTap={{ scale: 0.97 }}
-                    className="bg-gradient-to-r from-tori-600 to-tori-500 text-white font-bold text-lg px-8 py-4 rounded-2xl shadow-xl shadow-tori-500/30 transition-all inline-flex items-center gap-2"
+                    className="w-full sm:w-auto bg-gradient-to-r from-tori-600 to-tori-500 text-white font-bold text-lg px-8 py-4 rounded-2xl shadow-xl shadow-tori-500/30 transition-all inline-flex items-center justify-center gap-2"
                   >
                     <Zap size={20} />
                     התחל בחינם
@@ -316,7 +316,7 @@ export default function Landing() {
                 <motion.a
                   href="#features"
                   whileHover={{ scale: 1.02 }}
-                  className="border border-gray-700 hover:border-tori-500/50 text-gray-300 hover:text-white font-semibold text-lg px-8 py-4 rounded-2xl transition-all inline-flex items-center gap-2 justify-center"
+                  className="w-full sm:w-auto border border-gray-700 hover:border-tori-500/50 text-gray-300 hover:text-white font-semibold text-lg px-8 py-4 rounded-2xl transition-all inline-flex items-center gap-2 justify-center"
                 >
                   ראה איך זה עובד
                   <ChevronLeft size={18} />
@@ -338,12 +338,12 @@ export default function Landing() {
               </motion.div>
             </div>
 
-            {/* Chat bubbles */}
+            {/* Chat bubbles — hidden on mobile to keep hero clean */}
             <motion.div
               initial={{ opacity: 0, scale: 0.92, x: -20 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
-              className="flex justify-center"
+              className="hidden sm:flex justify-center"
             >
               <div className="relative">
                 {/* Ambient glow behind bubbles */}
@@ -372,13 +372,13 @@ export default function Landing() {
 
       {/* ─── Marquee ─── */}
       <div className="border-y border-gray-800/50 py-4 overflow-hidden bg-[#0a0a12]">
-        <div className="flex animate-marquee whitespace-nowrap">
+        <div className="animate-marquee" style={{ display: 'flex', width: 'max-content' }}>
           {[0, 1].map(k => (
-            <div key={k} className="flex gap-10 items-center shrink-0 px-5">
+            <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', padding: '0 1.25rem', flexShrink: 0 }}>
               {['מספרות גברים', 'סלוני ציפורניים', 'ריסים ועיצוב גבות', 'מעסות', 'קוסמטיקאיות', 'אמני קעקועים', 'מספרות נשים', 'טיפולי פנים', 'ספא'].map((b, i) => (
-                <span key={i} className="text-gray-600 font-medium text-sm tracking-wide flex items-center gap-3">
+                <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#4b5563', fontSize: '0.875rem', fontWeight: 500, letterSpacing: '0.025em', whiteSpace: 'nowrap' }}>
                   {b}
-                  <span className="w-1 h-1 rounded-full bg-gray-700 inline-block" />
+                  <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#374151', display: 'inline-block', flexShrink: 0 }} />
                 </span>
               ))}
             </div>

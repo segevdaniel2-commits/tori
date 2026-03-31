@@ -70,13 +70,13 @@ export default function DashboardLayout() {
   const theme = isNight
     ? {
         outerBg: '#000000',
-        surface: '#0d0d0d',
-        border: 'rgba(255,255,255,0.08)',
+        surface: '#000000',
+        border: 'rgba(255,255,255,0.12)',
         sidebarBg: '#000000',
-        sidebarBorder: 'rgba(255,255,255,0.08)',
+        sidebarBorder: 'rgba(255,255,255,0.12)',
         titleColor: '#ffffff',
-        mutedColor: 'rgba(255,255,255,0.45)',
-        hoverBg: 'rgba(255,255,255,0.05)',
+        mutedColor: 'rgba(255,255,255,0.50)',
+        hoverBg: 'rgba(255,255,255,0.07)',
         activeBg: 'rgba(124,58,237,0.25)',
         activeText: '#c4b5fd',
       }
@@ -280,7 +280,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" dir="rtl" style={{ background: theme.outerBg }}>
+    <div className="flex h-screen overflow-hidden" dir="rtl" data-night={isNight} style={{ background: theme.outerBg }}>
 
       {/* Mobile overlay */}
       <AnimatePresence>
@@ -342,12 +342,12 @@ export default function DashboardLayout() {
                   to={item.path}
                   end={item.exact}
                   onClick={toggleSidebar}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                      isActive ? 'bg-violet-100 text-violet-700 font-bold' : 'hover:bg-gray-100'
-                    }`
-                  }
-                  style={({ isActive }) => ({ color: isActive ? theme.activeText : theme.mutedColor })}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                  style={({ isActive }) => ({
+                    color: isActive ? theme.activeText : theme.mutedColor,
+                    background: isActive ? theme.activeBg : 'transparent',
+                    fontWeight: isActive ? 700 : 500,
+                  })}
                 >
                   <item.icon size={19} />
                   <span>{item.label}</span>
@@ -567,7 +567,8 @@ export default function DashboardLayout() {
                 initial={{ opacity: 0, x: -20, scale: 0.92 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -20, scale: 0.92 }}
-                className="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xl min-w-64 max-w-sm pointer-events-auto"
+                className="border rounded-2xl p-4 shadow-2xl min-w-64 max-w-sm pointer-events-auto"
+                style={{ background: theme.surface, borderColor: theme.border }}
                 style={{ borderRight: `4px solid ${n.type === 'appointment' ? '#7c3aed' : '#f43f5e'}` }}
               >
                 <div className="flex items-start gap-3">
@@ -578,8 +579,8 @@ export default function DashboardLayout() {
                     }
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900 text-sm">{n.title}</div>
-                    <div className="text-gray-500 text-xs mt-0.5">{n.message}</div>
+                    <div className="font-semibold text-sm" style={{ color: theme.titleColor }}>{n.title}</div>
+                    <div className="text-xs mt-0.5" style={{ color: theme.mutedColor }}>{n.message}</div>
                   </div>
                 </div>
               </motion.div>

@@ -170,6 +170,119 @@
   }
 }
 
+/* ─── Night mode (data-night="true" on DashboardLayout root) ─────────────── */
+[data-night="true"] .bg-white,
+[data-night="true"] .bg-gray-50,
+[data-night="true"] .bg-gray-100 {
+  background-color: #000000 !important;
+}
+
+[data-night="true"] .border-gray-50,
+[data-night="true"] .border-gray-100,
+[data-night="true"] .border-gray-200,
+[data-night="true"] .border-gray-300 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-night="true"] .text-gray-900,
+[data-night="true"] .text-gray-800,
+[data-night="true"] .text-gray-700 {
+  color: #ffffff !important;
+}
+
+[data-night="true"] .text-gray-600,
+[data-night="true"] .text-gray-500 {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+[data-night="true"] .text-gray-400 {
+  color: rgba(255, 255, 255, 0.38) !important;
+}
+
+[data-night="true"] .card,
+[data-night="true"] .card-hover {
+  background-color: #000000 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-night="true"] .hover\:bg-gray-100:hover,
+[data-night="true"] .hover\:bg-gray-50:hover {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+[data-night="true"] .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+[data-night="true"] .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Form inputs */
+[data-night="true"] .form-input,
+[data-night="true"] input[type="text"],
+[data-night="true"] input[type="email"],
+[data-night="true"] input[type="password"],
+[data-night="true"] input[type="tel"],
+[data-night="true"] input[type="number"],
+[data-night="true"] input[type="search"],
+[data-night="true"] input[type="date"],
+[data-night="true"] textarea,
+[data-night="true"] select {
+  background-color: #111111 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+[data-night="true"] input::placeholder,
+[data-night="true"] textarea::placeholder {
+  color: rgba(255, 255, 255, 0.30) !important;
+}
+
+/* Colored status badges — keep tinted, just darken bg */
+[data-night="true"] .bg-amber-50 {
+  background-color: rgba(251, 191, 36, 0.10) !important;
+}
+[data-night="true"] .border-amber-200 {
+  border-color: rgba(251, 191, 36, 0.25) !important;
+}
+[data-night="true"] .bg-green-50 {
+  background-color: rgba(16, 185, 129, 0.10) !important;
+}
+[data-night="true"] .border-green-100,
+[data-night="true"] .border-green-200 {
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+[data-night="true"] .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.10) !important;
+}
+[data-night="true"] .border-red-100,
+[data-night="true"] .border-red-200 {
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+[data-night="true"] .bg-tori-50,
+[data-night="true"] .bg-violet-50 {
+  background-color: rgba(124, 58, 237, 0.12) !important;
+}
+[data-night="true"] .border-tori-100,
+[data-night="true"] .border-tori-200,
+[data-night="true"] .border-violet-100,
+[data-night="true"] .border-violet-200 {
+  border-color: rgba(124, 58, 237, 0.28) !important;
+}
+
+/* Modal / fixed overlays that are white */
+[data-night="true"] .bg-white.shadow-2xl,
+[data-night="true"] .bg-white.shadow-xl {
+  background-color: #000000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Scrollbar for night mode */
+[data-night="true"] ::-webkit-scrollbar-track {
+  background: #111111;
+}
+[data-night="true"] ::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.5);
+}
+
 /* RTL specific fixes */
 [dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 1;
