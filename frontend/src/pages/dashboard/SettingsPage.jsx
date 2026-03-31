@@ -38,6 +38,7 @@ function GeneralSettings() {
     phone: business?.phone || '',
     buffer_minutes: business?.buffer_minutes || 15,
     cancellation_hours: business?.cancellation_hours || 24,
+    bot_tone: business?.bot_tone || 'friendly',
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -105,6 +106,35 @@ function GeneralSettings() {
             <select value={form.cancellation_hours} onChange={e => setForm(f => ({ ...f, cancellation_hours: Number(e.target.value) }))} className="form-input">
               {[1, 2, 4, 8, 12, 24, 48].map(h => <option key={h} value={h}>{h} שעות</option>)}
             </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Bot tone */}
+      <div className="border border-gray-200 rounded-2xl p-4">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">אופי הבוט</p>
+        <div>
+          <label className="form-label">סגנון דיבור של הבוט</label>
+          <div className="grid grid-cols-3 gap-2 mt-1">
+            {[
+              { id: 'friendly', label: 'חברי', desc: 'חם, יומיומי, קרוב' },
+              { id: 'professional', label: 'מקצועי', desc: 'ברור, עסקי, ממוקד' },
+              { id: 'formal', label: 'רשמי', desc: 'מנומס, פורמלי' },
+            ].map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setForm(f => ({ ...f, bot_tone: t.id }))}
+                className={`p-3 rounded-xl border text-right transition-all ${
+                  form.bot_tone === t.id
+                    ? 'border-tori-500 bg-tori-50'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <div className={`font-semibold text-sm ${form.bot_tone === t.id ? 'text-tori-700' : 'text-gray-800'}`}>{t.label}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{t.desc}</div>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -375,7 +405,7 @@ const PLANS = [
   {
     id: 'basic',
     label: 'Basic',
-    price: '₪89',
+    price: '₪99',
     period: '/חודש',
     features: ['עובד אחד', 'תורים ללא הגבלה', 'בוט AI 24/7', 'תזכורות WhatsApp', 'דשבורד ניהול'],
     highlight: false,
@@ -549,7 +579,7 @@ function BillingSettings() {
                isTrial ? 'תקופת ניסיון' : 'מנוי לא פעיל'}
             </span>
             <div className="text-2xl font-black text-gray-900 mt-3">
-              {isActive ? (business.plan === 'basic' ? '₪89' : '₪200') : isTrial ? 'חינם' : '—'}
+              {isActive ? (business.plan === 'basic' ? '₪99' : '₪200') : isTrial ? 'חינם' : '—'}
               {isActive && <span className="text-sm font-normal text-gray-500">/חודש</span>}
             </div>
             {isTrial && trialDaysLeft !== null && (
@@ -675,140 +705,95 @@ function BillingSettings() {
 
 // ─── Integrations ─────────────────────────────────────────────────────────────
 function IntegrationsSettings() {
-  const { data: status, isLoading } = useQuery({
-    queryKey: ['integrations-status'],
-    queryFn: () => api.get('/integrations/status').then(r => r.data),
-    staleTime: 30_000,
-  });
+  const { business, updateBusiness } = useAuthStore();
+  const [apiKey, setApiKey] = useState(business?.green_invoice_api_key || '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const isConnected = !!business?.green_invoice_enabled;
 
-  const integrations = [
-    {
-      key: 'whatsapp',
-      label: 'WhatsApp (Meta Cloud API)',
-      desc: status?.whatsapp?.connected
-        ? `מחובר · ${status.whatsapp.phone || status.whatsapp.phone_id}`
-        : 'לא מחובר — הוסף WHATSAPP_TOKEN ו-WHATSAPP_PHONE_ID ל-.env',
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-green-500">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-        </svg>
-      ),
-      connected: status?.whatsapp?.connected,
-      setupUrl: 'https://developers.facebook.com/docs/whatsapp/cloud-api/get-started',
-      setupLabel: 'מדריך חיבור Meta',
-      envVars: ['WHATSAPP_TOKEN', 'WHATSAPP_PHONE_ID', 'WHATSAPP_VERIFY_TOKEN', 'WHATSAPP_APP_SECRET'],
-    },
-    {
-      key: 'stripe',
-      label: 'Stripe — תשלומים',
-      desc: status?.stripe?.connected
-        ? 'מחובר · תשלומים פעילים'
-        : 'לא מחובר — הוסף STRIPE_SECRET_KEY ל-.env',
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-indigo-500">
-          <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.929 3.477 1.63 3.477 2.623 0 .84-.74 1.316-1.985 1.316-1.863 0-4.664-.897-6.544-2.168l-.83 5.504C6.048 22.89 8.869 24 12.172 24c2.655 0 4.898-.62 6.379-1.855 1.586-1.316 2.42-3.22 2.42-5.558-.017-3.993-2.502-5.73-6.995-7.437z"/>
-        </svg>
-      ),
-      connected: status?.stripe?.connected,
-      setupUrl: 'https://dashboard.stripe.com/apikeys',
-      setupLabel: 'Stripe Dashboard',
-      envVars: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_BASIC_PRICE_ID', 'STRIPE_BUSINESS_PRICE_ID'],
-    },
-    {
-      key: 'groq',
-      label: 'Groq AI — מנוע השפה',
-      desc: status?.groq?.connected
-        ? 'מחובר · Llama 3.3 70B פעיל'
-        : 'לא מחובר — הוסף GROQ_API_KEY ל-.env',
-      icon: (
-        <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-black">G</div>
-      ),
-      connected: status?.groq?.connected,
-      setupUrl: 'https://console.groq.com/keys',
-      setupLabel: 'Groq Console',
-      envVars: ['GROQ_API_KEY'],
-    },
-    {
-      key: 'email',
-      label: 'Resend — שליחת מיילים',
-      desc: status?.email?.connected
-        ? `מחובר · שולח מ-${status.email.from || 'לא הוגדר'}`
-        : 'לא מחובר — הוסף RESEND_API_KEY ל-.env',
-      icon: (
-        <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-black">@</div>
-      ),
-      connected: status?.email?.connected,
-      setupUrl: 'https://resend.com/api-keys',
-      setupLabel: 'Resend Dashboard',
-      envVars: ['RESEND_API_KEY', 'FROM_EMAIL'],
-    },
-  ];
+  async function handleSave() {
+    if (!apiKey.trim()) return;
+    setSaving(true);
+    try {
+      const { data } = await api.put('/businesses/settings', {
+        green_invoice_api_key: apiKey,
+        green_invoice_enabled: 1,
+      });
+      updateBusiness(data);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDisconnect() {
+    await api.put('/businesses/settings', { green_invoice_enabled: 0 });
+    updateBusiness({ ...business, green_invoice_enabled: 0 });
+  }
 
   return (
     <div className="space-y-4">
-      {isLoading && (
-        <div className="flex justify-center py-8">
-          <Loader2 size={24} className="animate-spin text-gray-300" />
-        </div>
-      )}
-
-      {!isLoading && integrations.map(int => (
-        <div
-          key={int.key}
-          className={`bg-white border rounded-2xl p-5 transition-colors ${
-            int.connected ? 'border-green-200' : 'border-gray-200'
-          }`}
-        >
-          <div className="flex items-start gap-4">
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-              int.connected ? 'bg-green-50' : 'bg-gray-50'
-            }`}>
-              {int.icon}
+      <div className={`bg-white border rounded-2xl p-5 ${isConnected ? 'border-green-200' : 'border-gray-200'}`}>
+        <div className="flex items-start gap-4">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-lg font-bold ${isConnected ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
+            🧾
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-semibold text-gray-900">חשבונית ירוקה</span>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isConnected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                {isConnected ? 'מחובר' : 'לא מחובר'}
+              </span>
             </div>
+            <p className="text-sm text-gray-500 mb-4">הפק חשבוניות אוטומטיות לכל תור שנקבע דרך הבוט.</p>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-gray-900">{int.label}</span>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                  int.connected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {int.connected ? 'פעיל' : 'לא מחובר'}
-                </span>
+            {isConnected ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-xl">
+                  <Check size={14} />
+                  חשבוניות ירוקות פעילות
+                </div>
+                <button onClick={handleDisconnect} className="text-sm text-gray-400 hover:text-red-500 transition-colors">
+                  נתק
+                </button>
               </div>
-              <div className="text-sm text-gray-500 mt-0.5">{int.desc}</div>
-
-              {!int.connected && (
-                <details className="mt-3">
-                  <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 select-none">
-                    הוראות חיבור
-                  </summary>
-                  <div className="mt-2 space-y-2 text-xs text-gray-500">
-                    <div className="bg-gray-50 rounded-xl p-3 font-mono space-y-1">
-                      {int.envVars.map(v => (
-                        <div key={v}>{v}=<span className="text-gray-400">your_value_here</span></div>
-                      ))}
-                    </div>
-                    <p>הוסף לקובץ <code className="bg-gray-100 px-1 rounded">backend/.env</code> ואתחל את השרת.</p>
-                  </div>
-                </details>
-              )}
-            </div>
-
-            <a
-              href={int.setupUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-secondary text-xs py-1.5 px-3 shrink-0"
-            >
-              <ExternalLink size={12} />
-              {int.setupLabel}
-            </a>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="form-label">API Key מחשבונית ירוקה</label>
+                  <input
+                    value={apiKey}
+                    onChange={e => setApiKey(e.target.value)}
+                    className="form-input"
+                    placeholder="הכנס את ה-API Key שלך"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <button onClick={handleSave} disabled={saving || !apiKey.trim()} className="btn-primary text-sm py-2">
+                    {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                    {saving ? 'מחבר...' : saved ? 'חובר!' : 'חבר חשבונית ירוקה'}
+                  </button>
+                  <a href="https://app.greeninvoice.co.il" target="_blank" rel="noopener noreferrer" className="text-sm text-tori-600 hover:underline flex items-center gap-1">
+                    <ExternalLink size={12} />
+                    פתח חשבונית ירוקה
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      ))}
+      </div>
 
-      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs text-gray-500 leading-relaxed">
-        <strong className="text-gray-700">לתמיכה טכנית:</strong> עומרי — 050-960-3671 · מרדכי — 058-453-2944
+      <div className="bg-tori-50 border border-tori-100 rounded-2xl p-4 text-sm text-tori-700">
+        <strong>בקרוב:</strong> אינטגרציית יומן Google לסנכרון תורים אוטומטי.
+      </div>
+
+      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs text-gray-500">
+        <strong className="text-gray-700">לתמיכה:</strong> עומרי — 050-960-3671 · מרדכי — 058-453-2944
       </div>
     </div>
   );

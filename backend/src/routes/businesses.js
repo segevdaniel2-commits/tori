@@ -29,7 +29,7 @@ router.get('/settings', (req, res) => {
 router.put('/settings', (req, res) => {
   try {
     const db = getDb();
-    const { name, type, owner_name, phone, address, city, description, logo_url, buffer_minutes, cancellation_hours, terms_text } = req.body;
+    const { name, type, owner_name, phone, address, city, description, logo_url, buffer_minutes, cancellation_hours, terms_text, bot_tone, green_invoice_api_key, green_invoice_enabled } = req.body;
 
     const cleanLogoUrl = safeUrl(logo_url);
     const cleanBufferMin = buffer_minutes !== undefined
@@ -50,6 +50,9 @@ router.put('/settings', (req, res) => {
         buffer_minutes = COALESCE(?, buffer_minutes),
         cancellation_hours = COALESCE(?, cancellation_hours),
         terms_text = COALESCE(?, terms_text),
+        bot_tone = COALESCE(?, bot_tone),
+        green_invoice_api_key = COALESCE(?, green_invoice_api_key),
+        green_invoice_enabled = COALESCE(?, green_invoice_enabled),
         updated_at = datetime('now')
       WHERE id = ?
     `).run(
@@ -57,7 +60,11 @@ router.put('/settings', (req, res) => {
       sanitize(phone, 20), sanitize(address, 200), sanitize(city, 100),
       sanitize(description, 500), cleanLogoUrl,
       cleanBufferMin, cleanCancelHours,
-      sanitize(terms_text, 2000), req.business.id
+      sanitize(terms_text, 2000),
+      ['friendly', 'professional', 'formal'].includes(bot_tone) ? bot_tone : null,
+      green_invoice_api_key !== undefined ? sanitize(green_invoice_api_key, 200) : null,
+      green_invoice_enabled !== undefined ? (green_invoice_enabled ? 1 : 0) : null,
+      req.business.id
     );
     const updated = db.prepare('SELECT * FROM businesses WHERE id = ?').get(req.business.id);
     delete updated.password;

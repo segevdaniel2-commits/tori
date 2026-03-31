@@ -215,15 +215,24 @@ ${list}
 {"selected_business_id": <id>, "message": "<הודעה>"}`;
 }
 
-function buildBusinessSystemPrompt(business, staffList, services, customer, hours) {
+const TONE_PROMPTS = {
+  friendly: 'שפה יומיומית וחמה, כמו חבר שעוזר — קצר, ישיר, עם רגש אנושי.',
+  professional: 'שפה מקצועית ומכובדת — ברורה, ממוקדת, ללא סלנג.',
+  formal: 'שפה רשמית לחלוטין — פניות בגוף שלישי, משפטים מלאים, מנומסת.',
+};
+
+function buildBusinessSystemPrompt(business, staffList, services, customer, hours, lockedStaff) {
   const servicesText = services.map(s => `- ${s.name}: ${s.duration_minutes} דק׳, ₪${s.price}`).join('\n');
-  const staffText = staffList.map(s => `- ${s.name} (${s.role || 'ספר/מטפל'})`).join('\n');
+  const staffText = lockedStaff
+    ? `- ${lockedStaff.name} (${lockedStaff.role || 'ספר/מטפל'}) — הלקוח בחר בעובד זה`
+    : staffList.map(s => `- ${s.name} (${s.role || 'ספר/מטפל'})`).join('\n');
   const hoursText = hours.map(h => {
     const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
     return `${days[h.day_of_week]}: ${h.is_open ? `${h.open_time}–${h.close_time}` : 'סגור'}`;
   }).join(' | ');
 
   const customerGreet = customer?.name ? `שם הלקוח: ${customer.name}, ביקורים: ${customer.total_visits}` : 'לקוח חדש';
+  const tone = TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.friendly;
 
   return `אתה הבוט הרשמי של "${business.name}".
 אתה מדבר בשם ${business.owner_name}, הבעלים.
@@ -246,9 +255,10 @@ ${customerGreet}
 
 ===
 כללים חשובים:
-1. אתה מדבר בעברית בלבד, שפה יומיומית וחמה, כמו בן אדם אמיתי ולא רובוט
-2. אל תציין שאתה AI, אתה נציג העסק
-3. תמיד ענה ב-JSON בפורמט הבא (בלבד!):
+1. סגנון דיבור: ${tone}
+2. אתה מדבר בעברית בלבד
+3. אל תציין שאתה AI, אתה נציג העסק
+4. תמיד ענה ב-JSON בפורמט הבא (בלבד!):
 
 {
   "message": "<הודעה ללקוח>",
@@ -264,12 +274,12 @@ ${customerGreet}
   "cancel_appointment_id": null
 }
 
-4. ready_to_book = true רק כשיש: service_id + date + time + customer_name
-5. כשמאשר תור, כלול בהודעה את כל הפרטים: שירות, תאריך, שעה
-6. לא לאשר תורים בשעות מחוץ לשעות הפעילות
-7. לביטול, בקש אישור לפני ביצוע
-8. אם שואלים על מחיר/משך, תשיב מהרשימה
-9. היה קצר וישיר, מקסימום 3 משפטים לתשובה`;
+5. ready_to_book = true רק כשיש: service_id + date + time + customer_name
+6. כשמאשר תור, כלול בהודעה את כל הפרטים: שירות, תאריך, שעה${lockedStaff ? `, עובד: ${lockedStaff.name}` : ''}
+7. לא לאשר תורים בשעות מחוץ לשעות הפעילות
+8. לביטול, בקש אישור לפני ביצוע
+9. אם שואלים על מחיר/משך, תשיב מהרשימה
+10. היה קצר וישיר, מקסימום 3 משפטים לתשובה`;
 }
 
 // ─── Conversation state ───────────────────────────────────────────────────────
@@ -319,18 +329,23 @@ async function processMessage(phone, text, io) {
 
   const conv = getConversation(db, phone);
 
-  // Check if customer has a locked business association
   const assoc = db.prepare('SELECT * FROM customer_associations WHERE whatsapp_phone = ?').get(phone);
-
-  let businessId = assoc ? assoc.business_id : null;
+  const businessId = assoc ? assoc.business_id : null;
 
   // Stage 1: Select business
   if (!businessId) {
     return await handleBusinessSelection(db, phone, text, conv, io);
   }
 
-  // Stage 2: Business bot
-  return await handleBusinessBot(db, phone, text, conv, businessId, io);
+  // Stage 2: Select staff (if multiple active staff and not yet locked)
+  const staffList = db.prepare('SELECT * FROM staff WHERE business_id = ? AND is_active = 1').all(businessId);
+  if (staffList.length > 1 && !assoc.staff_id) {
+    return await handleStaffSelection(db, phone, text, conv, businessId, staffList, io);
+  }
+
+  // Stage 3: Business bot
+  const lockedStaff = assoc.staff_id ? staffList.find(s => s.id === assoc.staff_id) || null : null;
+  return await handleBusinessBot(db, phone, text, conv, businessId, lockedStaff, io);
 }
 
 // ─── Stage 1: Business selection ─────────────────────────────────────────────
@@ -396,9 +411,39 @@ async function lockAndGreet(db, phone, business, conv, io) {
   return `מעולה! חיברתי אותך ל*${business.name}* 🎉\n\nהיי! אני הבוט של ${business.name}. אפשר לקבוע תור, לבטל, לשאול על מחירים ושעות, הכל בוואטסאפ 24/7 💪\n\nמה אפשר לעשות בשבילך?${terms}`;
 }
 
-// ─── Stage 2: Business bot ────────────────────────────────────────────────────
+// ─── Stage 2: Staff selection ─────────────────────────────────────────────────
 
-async function handleBusinessBot(db, phone, text, conv, businessId, io) {
+async function handleStaffSelection(db, phone, text, conv, businessId, staffList, io) {
+  const staffMenu = staffList.map((s, i) => `${i + 1}. ${s.name}${s.role ? ` (${s.role})` : ''}`).join('\n');
+
+  // Try number selection
+  const numMatch = text.match(/^(\d+)$/);
+  if (numMatch) {
+    const idx = parseInt(numMatch[1]) - 1;
+    if (idx >= 0 && idx < staffList.length) {
+      const chosen = staffList[idx];
+      db.prepare('UPDATE customer_associations SET staff_id = ? WHERE whatsapp_phone = ?').run(chosen.id, phone);
+      saveConversation(db, phone, { stage: 'business_bot' });
+      return `מעולה! תואמת אותך עם *${chosen.name}* 💪\n\nאיך אפשר לעזור לך?`;
+    }
+  }
+
+  // Try name match
+  const lower = text.toLowerCase();
+  for (const s of staffList) {
+    if (lower.includes(s.name.toLowerCase())) {
+      db.prepare('UPDATE customer_associations SET staff_id = ? WHERE whatsapp_phone = ?').run(s.id, phone);
+      saveConversation(db, phone, { stage: 'business_bot' });
+      return `מעולה! תואמת אותך עם *${s.name}* 💪\n\nאיך אפשר לעזור לך?`;
+    }
+  }
+
+  return `עם מי תרצה לקבוע תור? 😊\n\n${staffMenu}\n\nפשוט כתוב את השם או המספר`;
+}
+
+// ─── Stage 3: Business bot ────────────────────────────────────────────────────
+
+async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff, io) {
   const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(businessId);
   if (!business || !business.is_active) {
     return 'מצטער, העסק אינו פעיל כרגע. נסה שוב מאוחר יותר.';
@@ -447,9 +492,9 @@ async function handleBusinessBot(db, phone, text, conv, businessId, io) {
   // Check available slots if we have date
   const dateToCheck = resolvedDate || ed.date;
   if (dateToCheck) {
-    const defaultStaff = staffList[0] || null;
+    const staffForSlots = lockedStaff || staffList[0] || null;
     const defaultService = ed.service_id ? services.find(s => s.id === ed.service_id) : services[0];
-    const slots = getAvailableSlots(db, business, defaultStaff, defaultService, dateToCheck);
+    const slots = getAvailableSlots(db, business, staffForSlots, defaultService, dateToCheck);
     if (slots.length > 0) {
       contextHint += `\n[מערכת: שעות פנויות ב-${formatHebrewDate(dateToCheck)}: ${slots.slice(0, 8).join(', ')}]`;
     } else {
@@ -457,7 +502,9 @@ async function handleBusinessBot(db, phone, text, conv, businessId, io) {
     }
   }
 
-  const systemPrompt = buildBusinessSystemPrompt(business, staffList, services, customer, hours);
+  if (lockedStaff) contextHint += `\n[מערכת: הלקוח בחר לעבוד עם ${lockedStaff.name}]`;
+
+  const systemPrompt = buildBusinessSystemPrompt(business, staffList, services, customer, hours, lockedStaff);
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -513,7 +560,8 @@ async function handleBusinessBot(db, phone, text, conv, businessId, io) {
 
   // Handle ready_to_book
   if (parsed.ready_to_book && newEd.service_id && newEd.date && newEd.time && newEd.customer_name) {
-    await bookAppointment(db, phone, businessId, business, newEd, services, staffList, io);
+    const staffForBooking = lockedStaff ? [lockedStaff] : staffList;
+    await bookAppointment(db, phone, businessId, business, newEd, services, staffForBooking, io);
 
     // Reset extracted data after booking
     saveConversation(db, phone, { extracted_data: {} });

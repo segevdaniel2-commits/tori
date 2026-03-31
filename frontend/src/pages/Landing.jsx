@@ -520,7 +520,7 @@ export default function Landing() {
             />
             <PricingCard
               plan="Basic"
-              price={89}
+              price={99}
               highlight={true}
               badge="הכי פופולרי"
               features={[

@@ -250,6 +250,9 @@ const init = async () => {
   const migrations = [
     "ALTER TABLE appointments ADD COLUMN reminder_24h_sent INTEGER DEFAULT 0",
     "ALTER TABLE appointments ADD COLUMN reminder_1h_sent INTEGER DEFAULT 0",
+    "ALTER TABLE customer_associations ADD COLUMN staff_id INTEGER REFERENCES staff(id) ON DELETE SET NULL",
+    "ALTER TABLE businesses ADD COLUMN bot_tone TEXT DEFAULT 'friendly'",
+    "ALTER TABLE businesses ADD COLUMN green_invoice_api_key TEXT",
   ];
   for (const m of migrations) {
     try { db.run(m); } catch (_) { /* column already exists */ }

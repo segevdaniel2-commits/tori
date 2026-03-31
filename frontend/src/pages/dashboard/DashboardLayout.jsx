@@ -96,7 +96,10 @@ export default function DashboardLayout() {
   // Socket
   useEffect(() => {
     if (!business?.id) return;
-    const socket = io('/', { transports: ['websocket', 'polling'], reconnection: true });
+    const socketUrl = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace('/api', '')
+      : '/';
+    const socket = io(socketUrl, { transports: ['websocket', 'polling'], reconnection: true });
     socketRef.current = socket;
     socket.emit('join_business', business.id);
     socket.on('appointment:created', (appt) => {
@@ -408,11 +411,19 @@ export default function DashboardLayout() {
 
           <div className="flex items-center gap-2">
             {/* Live bot indicator */}
-            <div className="hidden sm:flex items-center gap-1.5 bg-green-50 border border-green-100 px-3 py-1.5 rounded-full">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <motion.div
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full cursor-default"
+              style={{ background: isNight ? 'rgba(34,197,94,0.12)' : '#f0fdf4', border: `1px solid ${isNight ? 'rgba(34,197,94,0.25)' : '#bbf7d0'}` }}
+              animate={{ scale: [1, 1.02, 1] }}
+              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+            >
+              <div className="relative">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-50" />
+              </div>
               <Bot size={13} className="text-green-600" />
-              <span className="text-green-700 text-xs font-semibold">בוט פעיל</span>
-            </div>
+              <span className="text-green-700 text-xs font-bold">בוט פעיל</span>
+            </motion.div>
 
             {/* Notifications bell */}
             <div className="relative" ref={notifsRef}>
@@ -503,7 +514,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -519,8 +530,33 @@ export default function DashboardLayout() {
         </main>
       </div>
 
+      {/* Mobile bottom navigation */}
+      <nav
+        className="lg:hidden fixed bottom-0 right-0 left-0 z-40 flex items-center justify-around px-2 py-1 border-t"
+        style={{ background: theme.surface, borderColor: theme.border, paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
+      >
+        {NAV_ITEMS.map(item => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={item.exact}
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-0"
+            style={({ isActive }) => ({
+              color: isActive ? theme.activeText : theme.mutedColor,
+            })}
+          >
+            {({ isActive }) => (
+              <>
+                <item.icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
+                <span className="text-[10px] font-medium leading-none truncate max-w-[52px] text-center">{item.label}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+      </nav>
+
       {/* Toast notifications */}
-      <div className="fixed bottom-6 left-6 z-50 space-y-2 pointer-events-none">
+      <div className="fixed bottom-20 lg:bottom-6 left-4 lg:left-6 z-50 space-y-2 pointer-events-none">
         <AnimatePresence>
           {notifications
             .slice(0, 3)
