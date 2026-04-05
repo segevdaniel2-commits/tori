@@ -1,0 +1,8 @@
+{
+  "name": "tori",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "cd backend && node src/index.js",
+    "postinstall": "npm --prefix backend install"
+  }
+}
