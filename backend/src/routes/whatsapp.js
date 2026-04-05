@@ -85,7 +85,7 @@ router.post('/webhook', async (req, res) => {
               const assoc = db.prepare('SELECT * FROM customer_associations WHERE whatsapp_phone = ?').get(phone);
               const businessId = assoc ? assoc.business_id : null;
               db.prepare('INSERT INTO message_logs (business_id, whatsapp_phone, direction, content) VALUES (?, ?, ?, ?)').run(businessId, phone, 'outbound', reply.slice(0, 500));
-            } catch (e) { /* non-critical */ }
+            } catch (e) { /* non-critical */ }h
           }
         }
       }
@@ -99,7 +99,7 @@ async function sendWhatsAppMessage(to, text) {
   const phoneId = process.env.WHATSAPP_PHONE_ID || '1064513836752035';
   const token = process.env.WHATSAPP_TOKEN;
 
-  console.log(`[WhatsApp] phoneId=${phoneId} token=${token ? token.slice(0,20)+'...' : 'MISSING'}`);
+
 
   if (!phoneId || !token) {
     console.log(`[WhatsApp] DEV MODE - Would send to ${to}: ${text.slice(0, 80)}`);
