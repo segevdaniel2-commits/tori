@@ -5,7 +5,7 @@ const { processMessage } = require('../services/ai-agent');
 const { getDb } = require('../config/database');
 const axios = require('axios');
 
-const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
+const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'tori-verify-2024-xR7vN4kL';
 const APP_SECRET = process.env.WHATSAPP_APP_SECRET; // Meta App Secret for signature verification
 
 // Verify Meta's X-Hub-Signature-256 header
