@@ -89,7 +89,8 @@ router.post('/webhook', async (req, res) => {
           }      
       }
     }
-  } catch (err) {
+    }
+    } catch (err) {
     console.error('[WhatsApp] Webhook processing error:', err.message);
   }
 });
