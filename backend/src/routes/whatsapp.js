@@ -85,9 +85,8 @@ router.post('/webhook', async (req, res) => {
               const assoc = db.prepare('SELECT * FROM customer_associations WHERE whatsapp_phone = ?').get(phone);
               const businessId = assoc ? assoc.business_id : null;
               db.prepare('INSERT INTO message_logs (business_id, whatsapp_phone, direction, content) VALUES (?, ?, ?, ?)').run(businessId, phone, 'outbound', reply.slice(0, 500));
-            } catch (e) { /* non-critical */ }h
-          }
-        }
+            } catch (e) { /* non-critical */ }
+          }      
       }
     }
   } catch (err) {
