@@ -33,7 +33,7 @@ export default function App() {
     <BrowserRouter>
       <AnimatePresence mode="wait">
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<LandingV2 />} />
           <Route
             path="/login"
             element={
