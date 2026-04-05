@@ -133,8 +133,8 @@ router.post('/simulate', authMiddleware, async (req, res) => {
   const { text, session_id } = req.body;
   if (!text || typeof text !== 'string') return res.status(400).json({ error: 'text required' });
 
-  // Use a deterministic fake phone derived from session_id so conversation state persists per session
-  const fakePhone = `999${String(req.business.id).padStart(6, '0')}${String(session_id || 'x').slice(-4).replace(/\D/g, '0')}`;
+  // Fixed fake phone per business — one simulator customer per business, no accumulation
+  const fakePhone = `999${String(req.business.id).padStart(9, '0')}`;
 
   try {
     // Pre-lock the fake phone to this specific business so the bot skips
@@ -156,14 +156,13 @@ router.post('/simulate', authMiddleware, async (req, res) => {
 });
 
 router.post('/simulate/reset', authMiddleware, async (req, res) => {
-  const { session_id } = req.body;
-  const fakePhone = `999${String(req.business.id).padStart(6, '0')}${String(session_id || 'x').slice(-4).replace(/\D/g, '0')}`;
   try {
     const { getDb } = require('../config/database');
     const db = getDb();
-    db.prepare('DELETE FROM conversations WHERE whatsapp_phone = ?').run(fakePhone);
-    db.prepare('DELETE FROM customer_associations WHERE whatsapp_phone = ?').run(fakePhone);
-    db.prepare('DELETE FROM customers WHERE whatsapp_phone = ?').run(fakePhone);
+    // Delete ALL simulator phones for this business (pattern 999...)
+    db.prepare("DELETE FROM conversations WHERE whatsapp_phone LIKE '999%'").run();
+    db.prepare("DELETE FROM customer_associations WHERE whatsapp_phone LIKE '999%'").run();
+    db.prepare("DELETE FROM customers WHERE business_id = ? AND whatsapp_phone LIKE '999%'").run(req.business.id);
     res.json({ ok: true });
   } catch (err) {
     res.json({ ok: false });

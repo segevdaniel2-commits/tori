@@ -1,16 +1,133 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Users, Calendar, DollarSign, Download, Loader2 } from 'lucide-react';
+import { TrendingUp, Users, Calendar, DollarSign, Download, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useAnalyticsApi } from '../../hooks/useApi';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 
-const COLORS = ['#7c3aed', '#f43f5e', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6'];
+const COLORS = ['#f97316', '#f43f5e', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6'];
+
+const MONTH_NAMES = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
+
+function MonthPicker({ value, onChange }) {
+  // value = "YYYY-MM"
+  const [open, setOpen] = useState(false);
+  const [viewYear, setViewYear] = useState(() => parseInt(value.split('-')[0]));
+  const ref = useRef(null);
+
+  const curYear  = parseInt(value.split('-')[0]);
+  const curMonth = parseInt(value.split('-')[1]) - 1; // 0-based
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  function select(monthIdx) {
+    const m = String(monthIdx + 1).padStart(2, '0');
+    onChange(`${viewYear}-${m}`);
+    setOpen(false);
+  }
+
+  const displayLabel = (() => {
+    const [y, m] = value.split('-');
+    return `${MONTH_NAMES[parseInt(m) - 1]} ${y}`;
+  })();
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => { setOpen(o => !o); setViewYear(curYear); }}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-semibold hover:bg-white/10 transition-all"
+      >
+        <Calendar size={15} className="text-[#f43f5e]" />
+        {displayLabel}
+        <ChevronLeft size={14} className={`text-gray-500 transition-transform ${open ? 'rotate-90' : '-rotate-90'}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl bg-[#0d1117] border border-white/10 shadow-2xl shadow-black/50 p-4"
+          >
+            {/* Year nav */}
+            <div className="flex items-center justify-between mb-3">
+              <button
+                onClick={() => setViewYear(y => y - 1)}
+                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
+              <span className="text-white font-bold text-sm">{viewYear}</span>
+              <button
+                onClick={() => setViewYear(y => y + 1)}
+                disabled={viewYear >= new Date().getFullYear()}
+                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={16} />
+              </button>
+            </div>
+
+            {/* Month grid */}
+            <div className="grid grid-cols-3 gap-1.5">
+              {MONTH_NAMES.map((name, i) => {
+                const isSelected = viewYear === curYear && i === curMonth;
+                const isFuture = viewYear > new Date().getFullYear() ||
+                  (viewYear === new Date().getFullYear() && i > new Date().getMonth());
+                return (
+                  <button
+                    key={i}
+                    onClick={() => select(i)}
+                    disabled={isFuture}
+                    className={`py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-[#f97316] via-[#f43f5e] to-[#06b6d4] text-white shadow-md shadow-[#f43f5e]/30'
+                        : isFuture
+                        ? 'text-gray-700 cursor-not-allowed'
+                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Today shortcut */}
+            <div className="border-t border-white/[0.06] mt-3 pt-3 flex justify-between">
+              <button
+                onClick={() => {
+                  const now = new Date();
+                  setViewYear(now.getFullYear());
+                  onChange(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+                  setOpen(false);
+                }}
+                className="text-xs text-[#f43f5e] hover:text-[#f97316] font-semibold transition-colors"
+              >
+                החודש הנוכחי
+              </button>
+              <button onClick={() => setOpen(false)} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+                סגור
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function StatCard({ title, value, subtitle, icon: Icon, color = 'tori', loading }) {
   const colorMap = {
@@ -136,12 +253,7 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="text-xl sm:text-2xl font-black text-gray-900">אנליטיקות</h2>
         <div className="flex items-center gap-2">
-          <input
-            type="month"
-            value={month}
-            onChange={e => setMonth(e.target.value)}
-            className="form-input w-36 sm:w-40 text-sm py-2"
-          />
+          <MonthPicker value={month} onChange={setMonth} />
           <button
             onClick={downloadReport}
             className="btn-secondary text-sm py-2 px-3 sm:px-4"

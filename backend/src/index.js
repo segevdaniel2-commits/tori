@@ -39,12 +39,14 @@ const whatsappRoutes = require('./routes/whatsapp');
 const stripeRoutes = require('./routes/stripe');
 const integrationsRoutes = require('./routes/integrations');
 const calendarRoutes = require('./routes/calendar');
+const ownerBotRoutes = require('./routes/ownerBot');
 
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
 initDb().then(() => {
   const app = express();
+  app.set('trust proxy', 1);
   const server = http.createServer(app);
 
   // Socket.io with CORS locked to client origin
@@ -129,6 +131,7 @@ initDb().then(() => {
   app.use('/api/stripe', stripeRoutes);
   app.use('/api/integrations', integrationsRoutes);
   app.use('/api/calendar', calendarRoutes);
+  app.use('/api/owner-bot', ownerBotRoutes);
 
   // WhatsApp webhook also accessible at root /webhook
   app.use('/webhook', whatsappRoutes);

@@ -12,7 +12,9 @@ import CalendarPage from './pages/dashboard/CalendarPage';
 import AnalyticsPage from './pages/dashboard/AnalyticsPage';
 import CustomersPage from './pages/dashboard/CustomersPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
-import BotSimulatorPage from './pages/dashboard/BotSimulatorPage';
+import OwnerBotPage from './pages/dashboard/OwnerBotPage';
+import DemoOne from './pages/DemoOne';
+import LandingV2 from './pages/LandingV2';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -60,8 +62,10 @@ export default function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="customers" element={<CustomersPage />} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="bot" element={<BotSimulatorPage />} />
+            <Route path="ai" element={<OwnerBotPage />} />
           </Route>
+          <Route path="/demo" element={<DemoOne />} />
+          <Route path="/v2" element={<LandingV2 />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>

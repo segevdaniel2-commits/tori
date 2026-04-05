@@ -4,6 +4,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── shadcn-compatible CSS variables (mapped to tori palette) ─────────── */
+@layer base {
+  :root {
+    --background:             0 0% 100%;
+    --foreground:             240 10% 10%;
+    --primary:                262 83% 57%;   /* tori-600 */
+    --primary-foreground:     0 0% 100%;
+    --secondary:              252 100% 97%;  /* tori-50 */
+    --secondary-foreground:   262 83% 20%;
+    --destructive:            0 84% 60%;     /* red-500 */
+    --destructive-foreground: 0 0% 100%;
+    --muted:                  220 14% 96%;
+    --muted-foreground:       220 9% 46%;
+    --accent:                 252 100% 97%;
+    --accent-foreground:      262 83% 30%;
+    --border:                 220 13% 91%;
+    --input:                  220 13% 91%;
+    --ring:                   262 83% 57%;
+    --radius:                 0.5rem;
+  }
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -15,7 +37,7 @@
   }
 
   body {
-    background-color: #FAFAFA;
+    background-color: #08080F;
     color: #1a1a2e;
     direction: rtl;
     -webkit-font-smoothing: antialiased;
@@ -43,11 +65,11 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-tori-600 hover:bg-tori-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 inline-flex items-center gap-2;
+    @apply bg-gradient-to-r from-[#f97316] via-[#f43f5e] to-[#06b6d4] text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 inline-flex items-center gap-2;
   }
 
   .btn-secondary {
-    @apply bg-white hover:bg-tori-50 text-tori-600 font-semibold px-6 py-3 rounded-xl border border-tori-200 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 inline-flex items-center gap-2;
+    @apply bg-white hover:bg-gray-50 text-gray-700 font-semibold px-6 py-3 rounded-xl border border-gray-200 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 inline-flex items-center gap-2;
   }
 
   .btn-coral {
@@ -71,7 +93,7 @@
   }
 
   .form-input {
-    @apply w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-tori-500 focus:border-transparent transition-all duration-200;
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#f43f5e]/40 focus:border-[#f43f5e]/50 transition-all duration-200;
   }
 
   .form-label {
@@ -142,6 +164,11 @@
   .glow-coral {
     box-shadow: 0 0 30px rgba(244, 63, 94, 0.3);
   }
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
 }
 
 @layer utilities {

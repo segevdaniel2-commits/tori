@@ -3,24 +3,24 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, BarChart3, Users, Settings, LogOut, Menu, X,
-  Bot, Bell, Check, CheckCheck, Clock, MessageSquare
+  Bell, Check, CheckCheck, Clock, Sparkles
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useAuthStore, useDashboardStore, useNotificationStore } from '../../store/useStore';
 
 const NAV_ITEMS = [
+  { path: '/dashboard/ai', label: 'עוזר AI', icon: Sparkles },
   { path: '/dashboard', label: 'יומן', icon: Calendar, exact: true },
   { path: '/dashboard/analytics', label: 'אנליטיקות', icon: BarChart3 },
   { path: '/dashboard/customers', label: 'לקוחות', icon: Users },
-  { path: '/dashboard/bot', label: 'סימולטור בוט', icon: MessageSquare },
   { path: '/dashboard/settings', label: 'הגדרות', icon: Settings },
 ];
 
 function PlanBadge({ plan }) {
   const map = {
     trial: { label: 'ניסיון', color: 'bg-amber-100 text-amber-700' },
-    basic: { label: 'Basic', color: 'bg-tori-100 text-tori-700' },
-    business: { label: 'Business', color: 'bg-tori-600 text-white' },
+    basic: { label: 'Basic', color: 'bg-[#fff1eb] text-[#f43f5e]' },
+    business: { label: 'Business', color: 'bg-[#f97316] text-white' },
     cancelled: { label: 'מבוטל', color: 'bg-red-100 text-red-700' },
   };
   const { label, color } = map[plan] || map.trial;
@@ -69,28 +69,28 @@ export default function DashboardLayout() {
   // Theme
   const theme = isNight
     ? {
-        outerBg: '#000000',
-        surface: '#000000',
-        border: 'rgba(255,255,255,0.12)',
-        sidebarBg: '#000000',
-        sidebarBorder: 'rgba(255,255,255,0.12)',
+        outerBg: '#08080F',
+        surface: '#0d1117',
+        border: 'rgba(255,255,255,0.07)',
+        sidebarBg: '#0d1117',
+        sidebarBorder: 'rgba(249,115,22,0.15)',
         titleColor: '#ffffff',
-        mutedColor: 'rgba(255,255,255,0.50)',
-        hoverBg: 'rgba(255,255,255,0.07)',
-        activeBg: 'rgba(124,58,237,0.25)',
-        activeText: '#c4b5fd',
+        mutedColor: 'rgba(255,255,255,0.45)',
+        hoverBg: 'rgba(255,255,255,0.06)',
+        activeBg: 'rgba(244,63,94,0.18)',
+        activeText: '#f97316',
       }
     : {
         outerBg: '#f9fafb',
         surface: '#ffffff',
         border: '#e5e7eb',
         sidebarBg: 'rgba(255,255,255,0.97)',
-        sidebarBorder: 'rgba(124,58,237,0.12)',
+        sidebarBorder: 'rgba(249,115,22,0.15)',
         titleColor: '#111827',
         mutedColor: '#6b7280',
-        hoverBg: '#f5f3ff',
-        activeBg: '#ede9fe',
-        activeText: '#7c3aed',
+        hoverBg: '#fff7ed',
+        activeBg: '#fff1eb',
+        activeText: '#f43f5e',
       };
 
   // Socket
@@ -139,7 +139,7 @@ export default function DashboardLayout() {
     '/dashboard/analytics': 'אנליטיקות',
     '/dashboard/customers': 'לקוחות',
     '/dashboard/settings': 'הגדרות',
-    '/dashboard/bot': 'סימולטור בוט',
+    '/dashboard/ai': 'עוזר AI',
   }[location.pathname] || 'דשבורד';
 
   // Shared sidebar content renderer
@@ -175,9 +175,9 @@ export default function DashboardLayout() {
           <div className="px-3 py-3">
             <div
               className="flex items-center gap-3 p-3 rounded-xl"
-              style={{ background: isNight ? 'rgba(124,58,237,0.15)' : '#f5f3ff' }}
+              style={{ background: isNight ? 'rgba(249,115,22,0.10)' : '#fff7ed' }}
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-tori-500 to-tori-700 flex items-center justify-center text-white font-bold shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f97316] to-[#f43f5e] flex items-center justify-center text-white font-bold shrink-0">
                 {business?.name?.[0] || 'E'}
               </div>
               <div className="min-w-0">
@@ -227,14 +227,19 @@ export default function DashboardLayout() {
           style={{ maxHeight: expanded ? 60 : 48 }}
         >
           {expanded ? (
-            <div className="flex items-center gap-2 px-3 py-2.5 bg-green-50 rounded-xl border border-green-100">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-              <Bot size={14} className="text-green-600 shrink-0" />
-              <span className="text-green-700 text-xs font-semibold whitespace-nowrap">בוט פעיל</span>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ background: isNight ? 'rgba(34,197,94,0.08)' : '#f0fdf4', border: '1px solid #bbf7d0' }}>
+              <div className="relative w-1.5 h-1.5 shrink-0">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <div className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-50" />
+              </div>
+              <span className="text-green-600 text-xs font-medium whitespace-nowrap">בוט פעיל</span>
             </div>
           ) : (
             <div className="flex justify-center py-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <div className="relative w-1.5 h-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <div className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-50" />
+              </div>
             </div>
           )}
         </div>
@@ -246,7 +251,7 @@ export default function DashboardLayout() {
             style={{ maxHeight: expanded ? 60 : 0, opacity: expanded ? 1 : 0 }}
           >
             <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-8 h-8 rounded-full bg-tori-100 flex items-center justify-center text-tori-700 font-bold text-sm shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#fff1eb] flex items-center justify-center text-[#f43f5e] font-bold text-sm shrink-0">
                 {business?.owner_name?.[0] || 'U'}
               </div>
               <div className="min-w-0">
@@ -324,8 +329,8 @@ export default function DashboardLayout() {
             </div>
 
             <div className="px-3 py-3 border-b" style={{ borderColor: theme.border }}>
-              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: isNight ? 'rgba(124,58,237,0.15)' : '#f5f3ff' }}>
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-tori-500 to-tori-700 flex items-center justify-center text-white font-bold shrink-0">
+              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: isNight ? 'rgba(249,115,22,0.10)' : '#fff7ed' }}>
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f97316] to-[#f43f5e] flex items-center justify-center text-white font-bold shrink-0">
                   {business?.name?.[0] || 'E'}
                 </div>
                 <div className="min-w-0">
@@ -357,7 +362,7 @@ export default function DashboardLayout() {
 
             <div className="p-3 border-t" style={{ borderColor: theme.border }}>
               <div className="flex items-center gap-3 px-3 py-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-tori-100 flex items-center justify-center text-tori-700 font-bold text-sm">
+                <div className="w-8 h-8 rounded-full bg-[#fff1eb] flex items-center justify-center text-[#f43f5e] font-bold text-sm">
                   {business?.owner_name?.[0] || 'U'}
                 </div>
                 <div className="min-w-0">
@@ -411,28 +416,19 @@ export default function DashboardLayout() {
 
           <div className="flex items-center gap-2">
             {/* Live bot indicator */}
-            <motion.div
-              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-full cursor-default select-none"
+            <div
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-default select-none"
               style={{
-                background: isNight
-                  ? 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(16,185,129,0.10) 100%)'
-                  : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                border: `1px solid ${isNight ? 'rgba(34,197,94,0.30)' : '#86efac'}`,
-                boxShadow: isNight ? '0 0 12px rgba(34,197,94,0.12)' : '0 1px 8px rgba(34,197,94,0.15)',
+                background: isNight ? 'rgba(34,197,94,0.08)' : '#f0fdf4',
+                border: `1px solid ${isNight ? 'rgba(34,197,94,0.18)' : '#bbf7d0'}`,
               }}
-              animate={{ boxShadow: isNight
-                ? ['0 0 8px rgba(34,197,94,0.08)', '0 0 18px rgba(34,197,94,0.20)', '0 0 8px rgba(34,197,94,0.08)']
-                : ['0 1px 4px rgba(34,197,94,0.10)', '0 1px 14px rgba(34,197,94,0.28)', '0 1px 4px rgba(34,197,94,0.10)'],
-              }}
-              transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
             >
-              <div className="relative shrink-0">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <div className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-60" />
+              <div className="relative shrink-0 w-1.5 h-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <div className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-50" />
               </div>
-              <Bot size={13} className="text-green-600 shrink-0 hidden sm:block" />
-              <span className="text-green-700 text-xs font-bold hidden sm:block whitespace-nowrap">בוט פעיל</span>
-            </motion.div>
+              <span className="text-green-600 text-xs font-medium hidden sm:block whitespace-nowrap">בוט פעיל</span>
+            </div>
 
             {/* Notifications bell */}
             <div className="relative" ref={notifsRef}>
@@ -466,7 +462,7 @@ export default function DashboardLayout() {
                       {notifications.length > 0 && (
                         <button
                           onClick={markAllRead}
-                          className="text-xs font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1"
+                          className="text-xs font-medium text-[#f97316] hover:text-[#f43f5e] flex items-center gap-1"
                         >
                           <CheckCheck size={13} />
                           סמן הכל כנקרא
@@ -488,22 +484,22 @@ export default function DashboardLayout() {
                             className="flex items-start gap-3 px-4 py-3 border-b last:border-0 transition-colors"
                             style={{
                               borderColor: theme.border,
-                              background: !n.read ? (isNight ? 'rgba(124,58,237,0.08)' : '#faf5ff') : 'transparent',
+                              background: !n.read ? (isNight ? 'rgba(249,115,22,0.08)' : '#fff7ed') : 'transparent',
                             }}
                           >
                             <div
                               className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-                              style={{ background: n.type === 'appointment' ? '#ede9fe' : '#fee2e2' }}
+                              style={{ background: n.type === 'appointment' ? '#fff1eb' : '#fee2e2' }}
                             >
                               {n.type === 'appointment'
-                                ? <Calendar size={14} className="text-violet-600" />
+                                ? <Calendar size={14} className="text-[#f97316]" />
                                 : <X size={14} className="text-red-500" />
                               }
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-sm font-semibold" style={{ color: theme.titleColor }}>{n.title}</span>
-                                {!n.read && <div className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />}
+                                {!n.read && <div className="w-2 h-2 rounded-full bg-[#f97316] shrink-0" />}
                               </div>
                               <div className="text-xs mt-0.5" style={{ color: theme.mutedColor }}>{n.message}</div>
                               <div className="flex items-center gap-1 mt-1" style={{ color: theme.mutedColor, opacity: 0.6 }}>
@@ -577,12 +573,12 @@ export default function DashboardLayout() {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -20, scale: 0.92 }}
                 className="border rounded-2xl p-4 shadow-2xl min-w-64 max-w-sm pointer-events-auto"
-                style={{ background: theme.surface, borderColor: theme.border, borderRight: `4px solid ${n.type === 'appointment' ? '#7c3aed' : '#f43f5e'}` }}
+                style={{ background: theme.surface, borderColor: theme.border, borderRight: `4px solid ${n.type === 'appointment' ? '#f97316' : '#f43f5e'}` }}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`p-1.5 rounded-lg ${n.type === 'appointment' ? 'bg-violet-100' : 'bg-red-100'}`}>
+                  <div className={`p-1.5 rounded-lg ${n.type === 'appointment' ? 'bg-[#fff1eb]' : 'bg-red-100'}`}>
                     {n.type === 'appointment'
-                      ? <Calendar size={14} className="text-violet-600" />
+                      ? <Calendar size={14} className="text-[#f97316]" />
                       : <X size={14} className="text-red-500" />
                     }
                   </div>

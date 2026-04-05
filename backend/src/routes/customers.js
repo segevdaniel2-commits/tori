@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
     const search = req.query.search;
     const offset = (page - 1) * limit;
 
-    let where = 'WHERE c.business_id = ?';
+    let where = "WHERE c.business_id = ? AND c.whatsapp_phone NOT LIKE '999%'";
     const params = [req.business.id];
 
     if (search) {

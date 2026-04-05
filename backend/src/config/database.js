@@ -253,6 +253,11 @@ const init = async () => {
     "ALTER TABLE customer_associations ADD COLUMN staff_id INTEGER REFERENCES staff(id) ON DELETE SET NULL",
     "ALTER TABLE businesses ADD COLUMN bot_tone TEXT DEFAULT 'friendly'",
     "ALTER TABLE businesses ADD COLUMN green_invoice_api_key TEXT",
+    "ALTER TABLE businesses ADD COLUMN google_refresh_token TEXT",
+    "ALTER TABLE businesses ADD COLUMN google_calendar_synced_at TEXT",
+    "ALTER TABLE customers ADD COLUMN source TEXT DEFAULT 'whatsapp'",
+    "ALTER TABLE businesses ADD COLUMN whatsapp_number TEXT",
+    "ALTER TABLE appointments ADD COLUMN google_event_id TEXT",
   ];
   for (const m of migrations) {
     try { db.run(m); } catch (_) { /* column already exists */ }
