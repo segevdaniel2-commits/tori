@@ -2,7 +2,7 @@
   "name": "tori",
   "version": "1.0.0",
   "scripts": {
-    "start": "cd backend && node src/index.js",
+    "start": "cd backend && node src/index.js --env-loaded",
     "postinstall": "npm --prefix backend install"
   }
 }
