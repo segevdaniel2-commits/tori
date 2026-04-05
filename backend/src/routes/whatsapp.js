@@ -97,9 +97,7 @@ router.post('/webhook', async (req, res) => {
 
 async function sendWhatsAppMessage(to, text) {
   const phoneId = process.env.WHATSAPP_PHONE_ID || '1064513836752035';
-  const token = process.env.WHATSAPP_TOKEN;
-
-  console.log(`[WhatsApp] phoneId=${phoneId} token=${token ? token.slice(0,20)+'...' : 'MISSING'}`);
+  const token = process.env.WHATSAPP_TOKEN || process.env.WA_TOKEN_FALLBACK;
 
   if (!phoneId || !token) {
     console.log(`[WhatsApp] DEV MODE - Would send to ${to}: ${text.slice(0, 80)}`);
