@@ -97,7 +97,9 @@ router.post('/webhook', async (req, res) => {
 
 async function sendWhatsAppMessage(to, text) {
   const phoneId = process.env.WHATSAPP_PHONE_ID || '1064513836752035';
-  const token = process.env.WHATSAPP_TOKEN || 'EAF2po7ue21EBRN1C590qZCRR0QmqaY4G4wwTgi0b6Yjh40Lu0bbUMvLfehNlycAz1pSk6Ov6TUWVfMWUR3AGX4lvHCD2U7jgbxDyahSHbjrnKeZCpZA1qFGtByWuRoH56HCVi3T1QdCEWw6FD2k4Su6lXE3ff6XmHZBXTBMyf2KbWvSVqN10Lu7ZAPUMmH9RLH2uGEdjp0qPH0548zDOBZB1nbkP8S5CoLhYqMfYZBHzIhudL324ki0fiLXSz27TqPUZCT7CRoNSSgK4F8F74xKXsjVLDQZDZD';
+  const token = process.env.WHATSAPP_TOKEN;
+
+  console.log(`[WhatsApp] phoneId=${phoneId} token=${token ? token.slice(0,20)+'...' : 'MISSING'}`);
 
   if (!phoneId || !token) {
     console.log(`[WhatsApp] DEV MODE - Would send to ${to}: ${text.slice(0, 80)}`);
@@ -106,7 +108,7 @@ async function sendWhatsAppMessage(to, text) {
 
   try {
     await axios.post(
-      `https://graph.facebook.com/v19.0/${encodeURIComponent(phoneId)}/messages`,
+      `https://graph.facebook.com/v19.0/${phoneId}/messages`,
       {
         messaging_product: 'whatsapp',
         to,
