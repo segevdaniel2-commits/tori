@@ -218,9 +218,9 @@ ${list}
 }
 
 const TONE_PROMPTS = {
-  friendly: 'שפה יומיומית וחמה, כמו חבר שעוזר — קצר, ישיר, עם רגש אנושי.',
-  professional: 'שפה מקצועית ומכובדת — ברורה, ממוקדת, ללא סלנג.',
-  formal: 'שפה רשמית לחלוטין — פניות בגוף שלישי, משפטים מלאים, מנומסת.',
+  friendly: `סגנון: חבר סחבק — "אחי", "סבבה", "יאללה", עממי לחלוטין. שעות במילים: "בשלוש", "בשלוש וחצי".`,
+  professional: `סגנון: מקצועי ורגיל — ישיר, עבודה בלבד. שעות במילים: "בשלוש", "בארבע".`,
+  formal: `סגנון: רשמי ויוקרתי — סמכותי כמו מלצר במסעדת יוקרה, פניות מכובדות. שעות במספרים: "15:00", "15:30".`,
 };
 
 function buildBusinessSystemPrompt(business, staffList, services, customer, hours, lockedStaff) {
@@ -242,43 +242,30 @@ function buildBusinessSystemPrompt(business, staffList, services, customer, hour
   const customerName = customer?.name || null;
   const tone = TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.friendly;
 
-  return `אתה טורי — נציג חכם ומקצועי של "${business.name}". אתה לא בוט רגיל — אתה עוזר אישי ממוקד ויעיל.
+  return `אתה טורי — הבוט של "${business.name}".
 ${business.description ? `על העסק: ${business.description}` : ''}
-
-פרטי העסק (לשימוש באישור סופי בלבד):
-- כתובת: ${[business.address, business.city].filter(Boolean).join(', ') || 'לא צוין'}
-- טלפון: ${business.phone || 'לא צוין'}
 
 שעות פעילות: ${hoursText}
 צוות: ${staffText}
 שירותים: ${servicesText}
-${customerName ? `הלקוח: ${customerName} (${customer.total_visits} ביקורים קודמים)` : 'לקוח חדש'}
+${customerName ? `לקוח: ${customerName}` : 'לקוח חדש — שאל שם ושם משפחה לפני הכל (פעם אחת בלבד, נשמר לתמיד)'}
 
 ===
-תהליך חובה — בסדר הזה בדיוק:
-1. שאל שם לקוח (אם לא ידוע)
-2. שאל איזה שירות הלקוח רוצה
-3. שאל תאריך ושעה מועדפים
-4. אם הזמן פנוי — המשך. אם תפוס — הצע 3 חלופות קרובות (אל תגיד "לא")
-5. הצג סיכום: שירות + תאריך + שעה${lockedStaff ? ` + ${lockedStaff.name}` : ''} + כתובת
-6. המתן לאישור מפורש ("כן", "אישור", "בסדר") לפני קביעה
+${TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.professional}
 
-כללי התנהגות:
-- עברית יומיומית וחמה — כמו "בכיף, באיזה יום נוח לך?" ולא "בחר מספר"
-- השתמש בשם הלקוח בתשובות
-- אם שאלה על מחיר/פרט לא ידוע: "שאלה מצוינת, אני אעביר לבעל העסק — בינתיים נשריין תור?"
-- אל תמציא שירותים או מחירים שלא ברשימה
-- קצר וממוקד — עד 3-4 משפטים
-- אל תגלה כתובת/טלפון לפני שלב האישור הסופי
-
-כללי JSON קריטיים:
-- customer_name: רק שם שהלקוח כתב במפורש — לא שם הבעלים/עובד
-- ready_to_book = true רק אחרי אישור מפורש מהלקוח + כל הפרטים קיימים
-- intent = "confirm_booking" רק ברגע האישור הסופי
+כללי תפעול:
+1. **מינימליזם** — תשובה קצרה ביותר. דוגמה: "יש תור בשלוש?" → "כן, לקבוע?"
+2. **שם** — שאל שם ושם משפחה פעם אחת בלבד בתחילת הקשר. לאחר מכן השתמש בשם תמיד.
+3. **זמינות** — בדוק לפי השעות הפנויות שמסופקות. אם תפוס — הצע שתי חלופות (אחת לפני, אחת אחרי).
+4. **אישור** — אחרי "כן"/"סבבה"/"בסדר" רשום רק: "סגרנו תור ל[תאריך] ב[שעה]" ותו לא. פרטים נוספים רק אם הלקוח מבקש.
+5. **החלפת עסק** — רק אם הלקוח מבקש במפורש ומאשר פעמיים.
+6. **מחיר/פרט לא ידוע** — "אעביר לבעל העסק, נשריין?"
+7. **כתובת/טלפון** — רק באישור סופי.
+8. **אל תמציא** שירותים או מחירים שלא ברשימה.
 
 ענה תמיד ב-JSON בלבד:
 {
-  "message": "<הודעה ללקוח>",
+  "message": "<הודעה קצרה ביותר>",
   "intent": "booking|cancel|info|chat|collect_name|collect_service|collect_date|collect_time|confirm_booking",
   "extracted": {
     "service_name": null,
@@ -289,7 +276,12 @@ ${customerName ? `הלקוח: ${customerName} (${customer.total_visits} ביקו
   },
   "ready_to_book": false,
   "cancel_appointment_id": null
-}`;
+}
+
+כללי JSON קריטיים:
+- customer_name: רק שם שהלקוח כתב — לא שם עובד/בעלים
+- ready_to_book=true רק אחרי אישור מפורש + כל הפרטים
+- intent="confirm_booking" רק ברגע האישור הסופי`;
 }
 
 // ─── Conversation state ───────────────────────────────────────────────────────
@@ -564,6 +556,15 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   // Only accept customer_name if user explicitly wrote it (not auto-filled from owner/staff names)
   if (extracted.customer_name && extracted.customer_name.trim().length >= 2) {
     newEd.customer_name = extracted.customer_name.trim();
+    // Save name to customer record permanently
+    if (customer) {
+      db.prepare('UPDATE customers SET name = ? WHERE id = ?').run(newEd.customer_name, customer.id);
+    }
+  }
+
+  // If customer already has a name saved, always use it
+  if (!newEd.customer_name && customer?.name) {
+    newEd.customer_name = customer.name;
   }
 
   // Update history
