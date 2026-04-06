@@ -12,15 +12,20 @@ let db = null;
 // ─── Persistence helpers ──────────────────────────────────────────────────────
 const saveDb = () => {
   if (!db) return;
-  const dir = path.dirname(path.resolve(DB_PATH));
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const data = db.export();
-  fs.writeFileSync(DB_PATH, Buffer.from(data));
+  try {
+    const dir = path.dirname(path.resolve(DB_PATH));
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const data = db.export();
+    fs.writeFileSync(DB_PATH, Buffer.from(data));
+  } catch (err) {
+    console.error('[DB] SAVE FAILED:', err.message);
+  }
 };
 
-setInterval(saveDb, 10_000);
+setInterval(saveDb, 5_000);
 process.on('exit', saveDb);
 process.on('SIGINT', () => { saveDb(); process.exit(0); });
+process.on('SIGTERM', () => { saveDb(); process.exit(0); });
 
 // ─── better-sqlite3 compatible API ───────────────────────────────────────────
 const getLastInsertRowid = () => {
@@ -237,10 +242,27 @@ const SCHEMA = `
 const init = async () => {
   const SQL = await initSqlJs();
 
-  if (fs.existsSync(DB_PATH)) {
-    db = new SQL.Database(fs.readFileSync(DB_PATH));
+  const resolvedPath = path.resolve(DB_PATH);
+  console.log(`[DB] DB_PATH resolved to: ${resolvedPath}`);
+
+  if (fs.existsSync(resolvedPath)) {
+    const stat = fs.statSync(resolvedPath);
+    console.log(`[DB] Loading existing DB file (${stat.size} bytes)`);
+    db = new SQL.Database(fs.readFileSync(resolvedPath));
   } else {
+    console.log('[DB] No existing DB file found — creating fresh database');
     db = new SQL.Database();
+  }
+
+  // Test write permission immediately
+  try {
+    const dir = path.dirname(resolvedPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(resolvedPath + '.test', 'ok');
+    fs.unlinkSync(resolvedPath + '.test');
+    console.log('[DB] Write permission OK');
+  } catch (err) {
+    console.error('[DB] WRITE PERMISSION ERROR:', err.message);
   }
 
   // Run schema (CREATE IF NOT EXISTS, safe to re-run)
@@ -264,6 +286,18 @@ const init = async () => {
   }
 
   saveDb();
+
+  // Verify save worked
+  try {
+    if (fs.existsSync(resolvedPath)) {
+      const stat = fs.statSync(resolvedPath);
+      console.log(`[DB] DB saved successfully (${stat.size} bytes)`);
+    } else {
+      console.error('[DB] DB file does not exist after save — persistence will NOT work!');
+    }
+  } catch (err) {
+    console.error('[DB] Could not verify save:', err.message);
+  }
 
   dbProxy = makeDbProxy();
   console.log(`[DB] SQLite (sql.js) ready: ${DB_PATH}`);
