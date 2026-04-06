@@ -129,6 +129,8 @@ router.post('/register', async (req, res) => {
     const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(businessId);
     delete business.password;
 
+    console.log(`[Auth] Business registered successfully: id=${businessId}, name=${cleanName}, email=${cleanEmail}, plan=${business.plan}, is_active=${business.is_active}`);
+
     const token = jwt.sign({ businessId }, process.env.JWT_SECRET, JWT_OPTS);
 
     // Send welcome email (non-blocking)
