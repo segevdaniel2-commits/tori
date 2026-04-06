@@ -280,6 +280,7 @@ const init = async () => {
     "ALTER TABLE customers ADD COLUMN source TEXT DEFAULT 'whatsapp'",
     "ALTER TABLE businesses ADD COLUMN whatsapp_number TEXT",
     "ALTER TABLE appointments ADD COLUMN google_event_id TEXT",
+    "ALTER TABLE customers ADD COLUMN default_service_id INTEGER REFERENCES services(id) ON DELETE SET NULL",
   ];
   for (const m of migrations) {
     try { db.run(m); } catch (_) { /* column already exists */ }

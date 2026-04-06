@@ -508,6 +508,12 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
 
   if (lockedStaff) contextHint += `\n[מערכת: הלקוח בחר לעבוד עם ${lockedStaff.name}]`;
 
+  // Hint about default service
+  if (customer?.default_service_id && !ed.service_id) {
+    const defaultSvc = services.find(s => s.id === customer.default_service_id);
+    if (defaultSvc) contextHint += `\n[מערכת: השירות הרגיל של הלקוח: ${defaultSvc.name} — השתמש בו אוטומטית אלא אם ביקש אחר]`;
+  }
+
   const systemPrompt = buildBusinessSystemPrompt(business, staffList, services, customer, hours, lockedStaff);
 
   const messages = [
@@ -565,6 +571,25 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   // If customer already has a name saved, always use it
   if (!newEd.customer_name && customer?.name) {
     newEd.customer_name = customer.name;
+  }
+
+  // Lock default service: save when first chosen, use automatically unless customer requests a different one
+  if (newEd.service_id && customer) {
+    if (!customer.default_service_id) {
+      // First time — save as default
+      db.prepare('UPDATE customers SET default_service_id = ? WHERE id = ?').run(newEd.service_id, customer.id);
+    } else if (newEd.service_id !== customer.default_service_id) {
+      // Customer explicitly chose a different service — update default
+      db.prepare('UPDATE customers SET default_service_id = ? WHERE id = ?').run(newEd.service_id, customer.id);
+    }
+  }
+  // Auto-fill service from customer default if not yet specified this session
+  if (!newEd.service_id && customer?.default_service_id) {
+    const defaultSvc = services.find(s => s.id === customer.default_service_id);
+    if (defaultSvc) {
+      newEd.service_id = defaultSvc.id;
+      newEd.service_name = defaultSvc.name;
+    }
   }
 
   // Update history
