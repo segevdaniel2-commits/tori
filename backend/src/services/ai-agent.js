@@ -290,7 +290,13 @@ ${customerName ? `שם הלקוח: ${customerName} (לקוח חוזר — ${cust
   "cancel_appointment_id": null
 }
 
-ready_to_book = true רק כשיש: service_id + date + time + customer_name`;
+כללי booking חשובים:
+- ready_to_book = true **רק** כאשר: (1) הלקוח אישר מפורשות ("כן", "אישור", "בסדר") AND (2) יש service_id + date + time + customer_name
+- intent = "confirm_booking" רק ברגע האישור הסופי
+- אל תמלא customer_name מהשם של הבעלים או העובד — רק ממה שהלקוח כתב בעצמו
+- אם חסר שם לקוח — שאל "מה שמך?" לפני הכל
+- תהליך חובה: שם לקוח ← שירות ← תאריך ← שעה ← הצגת סיכום ← המתנה לאישור
+- אחרי שהצגת סיכום — המתן ל"כן" לפני שמגדיר ready_to_book=true`;
 }
 
 // ─── Conversation state ───────────────────────────────────────────────────────
@@ -546,16 +552,26 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   const replyMessage = parsed.message || 'סורי, לא הבנתי. נסה שוב 😊';
   const extracted = parsed.extracted || {};
 
-  // Merge extracted data with previous
+  // Merge extracted data with previous — only accept values the USER explicitly provided
   const newEd = { ...ed };
   if (extracted.service_name) {
-    const svc = services.find(s => s.name.includes(extracted.service_name) || extracted.service_name.includes(s.name));
+    const svc = services.find(s =>
+      s.name.toLowerCase().includes(extracted.service_name.toLowerCase()) ||
+      extracted.service_name.toLowerCase().includes(s.name.toLowerCase())
+    );
     if (svc) { newEd.service_id = svc.id; newEd.service_name = svc.name; }
   }
-  if (extracted.service_id) { newEd.service_id = extracted.service_id; }
-  if (resolvedDate || extracted.date) newEd.date = resolvedDate || extracted.date;
-  if (resolvedTime || extracted.time) newEd.time = resolvedTime || extracted.time;
-  if (extracted.customer_name) newEd.customer_name = extracted.customer_name;
+  if (extracted.service_id && services.find(s => s.id === extracted.service_id)) {
+    newEd.service_id = extracted.service_id;
+  }
+  if (resolvedDate) newEd.date = resolvedDate;
+  else if (extracted.date && /^\d{4}-\d{2}-\d{2}$/.test(extracted.date)) newEd.date = extracted.date;
+  if (resolvedTime) newEd.time = resolvedTime;
+  else if (extracted.time && /^\d{2}:\d{2}$/.test(extracted.time)) newEd.time = extracted.time;
+  // Only accept customer_name if user explicitly wrote it (not auto-filled from owner/staff names)
+  if (extracted.customer_name && extracted.customer_name.trim().length >= 2) {
+    newEd.customer_name = extracted.customer_name.trim();
+  }
 
   // Update history
   history.push({ role: 'assistant', content: replyMessage });
@@ -563,13 +579,24 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   // Save conversation
   saveConversation(db, phone, { extracted_data: newEd, history });
 
-  // Handle ready_to_book
-  if (parsed.ready_to_book && newEd.service_id && newEd.date && newEd.time && newEd.customer_name) {
-    const staffForBooking = lockedStaff ? [lockedStaff] : staffList;
-    await bookAppointment(db, phone, businessId, business, newEd, services, staffForBooking, io);
+  // Book only when ALL 4 fields confirmed AND intent is confirm_booking
+  const canBook = parsed.ready_to_book
+    && parsed.intent === 'confirm_booking'
+    && newEd.service_id
+    && newEd.date
+    && newEd.time
+    && newEd.customer_name;
 
-    // Reset extracted data after booking
-    saveConversation(db, phone, { extracted_data: {} });
+  if (canBook) {
+    // Verify slot is still available
+    const service = services.find(s => s.id === newEd.service_id);
+    const staffForSlots = lockedStaff || staffList[0] || null;
+    const available = getAvailableSlots(db, business, staffForSlots, service, newEd.date);
+    if (available.includes(newEd.time)) {
+      const staffForBooking = lockedStaff ? [lockedStaff] : staffList;
+      await bookAppointment(db, phone, businessId, business, newEd, services, staffForBooking, io);
+      saveConversation(db, phone, { extracted_data: {} });
+    }
   }
 
   // Handle cancellation
