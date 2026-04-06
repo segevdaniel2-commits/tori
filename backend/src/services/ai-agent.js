@@ -359,6 +359,8 @@ async function handleBusinessSelection(db, phone, text, conv, io) {
   `).all();
 
   if (!businesses.length) {
+    const allBiz = db.prepare('SELECT id, name, is_active, plan, subscription_status, trial_ends_at FROM businesses').all();
+    console.log('[AI] No active businesses found. All businesses in DB:', JSON.stringify(allBiz));
     return 'שלום! מצטער, אין עסקים פעילים כרגע. נסה שוב מאוחר יותר.';
   }
 

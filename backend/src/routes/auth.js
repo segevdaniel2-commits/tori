@@ -192,6 +192,13 @@ router.get('/me', authMiddleware, (req, res) => {
   res.json({ business: req.business, staff, services });
 });
 
+// GET /api/auth/debug — shows all businesses (no passwords) for diagnosing DB state
+router.get('/debug', authMiddleware, (req, res) => {
+  const db = getDb();
+  const businesses = db.prepare('SELECT id, name, email, is_active, plan, subscription_status, trial_ends_at, created_at FROM businesses').all();
+  res.json({ count: businesses.length, businesses });
+});
+
 function getDefaultServices(type) {
   const map = {
     barber_men: [
