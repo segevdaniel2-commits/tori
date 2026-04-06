@@ -1,26 +1,28 @@
-const Groq = require('groq-sdk');
+const axios = require('axios');
 const { getDb } = require('../config/database');
 
-// Lazy init: only instantiate when an API key is available
-let _groq = null;
-function getGroq() {
-  if (!_groq) {
-    if (!process.env.GROQ_API_KEY) {
-      console.warn('[AI] GROQ_API_KEY not set, AI responses will be unavailable');
-      return null;
+async function groqChat(messages, temperature = 0.4, maxTokens = 600) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('GROQ_API_KEY not set');
+
+  const models = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+  let lastErr;
+  for (const model of models) {
+    try {
+      const res = await axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        { model, messages, temperature, max_tokens: maxTokens, response_format: { type: 'json_object' } },
+        { headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, timeout: 15000 }
+      );
+      return res.data.choices[0].message.content;
+    } catch (err) {
+      const detail = err.response?.data?.error?.message || err.message;
+      console.error(`[AI] Groq error (${model}):`, detail);
+      lastErr = err;
     }
-    _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }
-  return _groq;
+  throw lastErr;
 }
-// Alias for existing usage throughout this file
-const groq = new Proxy({}, {
-  get(_, prop) {
-    const client = getGroq();
-    if (!client) throw new Error('Groq not configured');
-    return client[prop];
-  }
-});
 
 // ─── Hebrew helpers ───────────────────────────────────────────────────────────
 
@@ -527,25 +529,9 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   }
 
   let aiResponse;
-  const MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
-  let lastErr;
-  for (const model of MODELS) {
-    try {
-      const completion = await groq.chat.completions.create({
-        model,
-        messages,
-        temperature: 0.4,
-        max_tokens: 600,
-        response_format: { type: 'json_object' },
-      });
-      aiResponse = completion.choices[0].message.content;
-      break;
-    } catch (err) {
-      console.error(`[AI] Groq error (${model}):`, err.message);
-      lastErr = err;
-    }
-  }
-  if (!aiResponse) {
+  try {
+    aiResponse = await groqChat(messages);
+  } catch (err) {
     return 'סורי, משהו השתבש אצלנו 😅 נסה שוב בעוד רגע!';
   }
 
