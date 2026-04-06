@@ -222,46 +222,60 @@ const TONE_PROMPTS = {
 };
 
 function buildBusinessSystemPrompt(business, staffList, services, customer, hours, lockedStaff) {
-  const servicesText = services.map(s => `- ${s.name}: ${s.duration_minutes} דק׳, ₪${s.price}`).join('\n');
+  const servicesText = services.length
+    ? services.map(s => `- ${s.name}: ${s.duration_minutes} דק׳, ₪${s.price}`).join('\n')
+    : '- אין שירותים מוגדרים עדיין';
   const staffText = lockedStaff
-    ? `- ${lockedStaff.name} (${lockedStaff.role || 'ספר/מטפל'}) — הלקוח בחר בעובד זה`
-    : staffList.map(s => `- ${s.name} (${s.role || 'ספר/מטפל'})`).join('\n');
-  const hoursText = hours.map(h => {
-    const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-    return `${days[h.day_of_week]}: ${h.is_open ? `${h.open_time}–${h.close_time}` : 'סגור'}`;
-  }).join(' | ');
+    ? `- ${lockedStaff.name} (${lockedStaff.role || 'מטפל'}) — נבחר על ידי הלקוח`
+    : staffList.length
+      ? staffList.map(s => `- ${s.name} (${s.role || 'מטפל'})`).join('\n')
+      : '- אין עובדים מוגדרים עדיין';
+  const hoursText = hours.length
+    ? hours.map(h => {
+        const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+        return `${days[h.day_of_week]}: ${h.is_open ? `${h.open_time}–${h.close_time}` : 'סגור'}`;
+      }).join(' | ')
+    : 'שעות לא מוגדרות';
 
-  const customerGreet = customer?.name ? `שם הלקוח: ${customer.name}, ביקורים: ${customer.total_visits}` : 'לקוח חדש';
+  const customerName = customer?.name || null;
   const tone = TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.friendly;
 
-  return `אתה הבוט הרשמי של "${business.name}".
-אתה מדבר בשם ${business.owner_name}, הבעלים.
-${business.description ? `תיאור: ${business.description}` : ''}
+  return `אתה "טורי" — הבוט החכם של "${business.name}".
+אתה מדבר בשם העסק בצורה חמה, טבעית ומקצועית בעברית יומיומית.
+${business.description ? `תיאור העסק: ${business.description}` : ''}
 
-עסק: ${business.name}
-כתובת: ${business.address || ''} ${business.city || ''}
-טלפון: ${business.phone || ''}
+פרטי העסק:
+- שם: ${business.name}
+- כתובת: ${[business.address, business.city].filter(Boolean).join(', ') || 'לא צוין'}
+- טלפון: ${business.phone || 'לא צוין'}
 
 שעות פעילות:
 ${hoursText}
 
-עובדים:
+צוות:
 ${staffText}
 
-שירותים:
+שירותים ומחירים:
 ${servicesText}
 
-${customerGreet}
+${customerName ? `שם הלקוח: ${customerName} (לקוח חוזר — ${customer.total_visits} ביקורים)` : 'לקוח חדש'}
 
 ===
-כללים חשובים:
-1. סגנון דיבור: ${tone}
-2. אתה מדבר בעברית בלבד
-3. אל תציין שאתה AI, אתה נציג העסק
-4. תמיד ענה ב-JSON בפורמט הבא (בלבד!):
+הוראות התנהגות:
+1. סגנון: ${tone}
+2. עברית בלבד — טבעית וחמה
+3. אל תאמר שאתה AI — אתה נציג העסק
+4. **לעולם אל תגיד "לא"** — אם תור תפוס, הצע 3 חלופות
+5. השתמש בשם הלקוח כשאתה יודע אותו
+6. תהליך קביעת תור: שם → שירות → תאריך → שעה → אישור
+7. הצג אישור סופי עם כל הפרטים: שירות, תאריך, שעה${lockedStaff ? `, עובד: ${lockedStaff.name}` : ''}
+8. לביטול — בקש אישור לפני ביצוע
+9. אל תמציא שירותים או מחירים שאינם ברשימה
+10. תגובה קצרה — עד 3 משפטים
 
+ענה תמיד ב-JSON בלבד:
 {
-  "message": "<הודעה ללקוח>",
+  "message": "<הודעה ללקוח בעברית>",
   "intent": "booking|cancel|info|chat|collect_name|collect_service|collect_date|collect_time|confirm_booking",
   "extracted": {
     "service_name": null,
@@ -274,12 +288,7 @@ ${customerGreet}
   "cancel_appointment_id": null
 }
 
-5. ready_to_book = true רק כשיש: service_id + date + time + customer_name
-6. כשמאשר תור, כלול בהודעה את כל הפרטים: שירות, תאריך, שעה${lockedStaff ? `, עובד: ${lockedStaff.name}` : ''}
-7. לא לאשר תורים בשעות מחוץ לשעות הפעילות
-8. לביטול, בקש אישור לפני ביצוע
-9. אם שואלים על מחיר/משך, תשיב מהרשימה
-10. היה קצר וישיר, מקסימום 3 משפטים לתשובה`;
+ready_to_book = true רק כשיש: service_id + date + time + customer_name`;
 }
 
 // ─── Conversation state ───────────────────────────────────────────────────────
@@ -518,17 +527,25 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   }
 
   let aiResponse;
-  try {
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages,
-      temperature: 0.4,
-      max_tokens: 600,
-      response_format: { type: 'json_object' },
-    });
-    aiResponse = completion.choices[0].message.content;
-  } catch (err) {
-    console.error('[AI] Groq error:', err.message);
+  const MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+  let lastErr;
+  for (const model of MODELS) {
+    try {
+      const completion = await groq.chat.completions.create({
+        model,
+        messages,
+        temperature: 0.4,
+        max_tokens: 600,
+        response_format: { type: 'json_object' },
+      });
+      aiResponse = completion.choices[0].message.content;
+      break;
+    } catch (err) {
+      console.error(`[AI] Groq error (${model}):`, err.message);
+      lastErr = err;
+    }
+  }
+  if (!aiResponse) {
     return 'סורי, משהו השתבש אצלנו 😅 נסה שוב בעוד רגע!';
   }
 
