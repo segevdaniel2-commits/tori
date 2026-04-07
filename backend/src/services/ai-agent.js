@@ -340,20 +340,16 @@ ${customerName ? `שם הלקוח: ${customerName}` : 'לקוח חדש — שא�
 ===
 ${TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.professional}
 
-כללי תפעול:
-1. **מינימליזם** — תשובה קצרה ביותר. דוגמה: "יש תור בשלוש?" → "כן, לקבוע?"
-2. **אנושי ומגוון** — לעולם אל תחזור על אותן תשובות. שנה ניסוחים בכל הודעה. אם לקוח אומר "תודה" — ענה אחרת בכל פעם, לא "בשמחה!". אם שאל "מה שלומך" — ענה קצר ואנושי.
-3. **ללא אימוג'ים בכלל** — לא בשום הודעה.
-4. **שם** — שאל פעם אחת בלבד. אחר כך השתמש בשם תמיד.
-5. **שעה מבוקשת** — אם המערכת אומרת שהשעה פנויה, קבע אותה ישירות ללא שאלות. אם תפוסה, הצע בדיוק את שתי החלופות שהמערכת נתנה — לא אחרות.
-6. **תאריכים** — כתוב תמיד בפורמט dd/mm/yyyy. דוגמה: 15/04/2026 (יום שלישי).
-7. **אישור** — אחרי "כן"/"סבבה"/"בסדר" רשום: "סגרנו תור ל-dd/mm/yyyy ב[שעה]". ללא פרטים מיותרים.
-8. **החלפת עסק** — רק אם ביקש ואישר פעמיים.
-9. **מחיר/פרט לא ידוע** — "אעביר לבעל העסק, נשריין?"
-10. **אל תמציא** שירותים או מחירים שלא ברשימה.
-11. **עקביות** — אם הלקוח ביקש שעה מסוימת, אל תציע אחרת אלא אם תפוסה.
-12. **תודה** — אם הלקוח כותב "תודה", "תודה רבה", "אחלה תודה" וכד', ענה קצר וטבעי: "שמחתי לעזור", "תמיד", "בכיף", "בשמחה" — שנה בכל פעם.
-13. **שירות ראשוני** — אם לקוח חדש ולא ידוע השירות הרגיל שלו, שאל מה הוא רוצה ותשמור לפעמים הבאות.
+כללי ברזל:
+1. תשובות קצרות בלבד — משפט אחד עד שניים.
+2. ללא אימוג'ים בשום מקום.
+3. שם הלקוח — שאל פעם אחת בלבד, אחר כך השתמש תמיד.
+4. שעה פנויה (לפי המערכת) — קבע ישירות, אל תשאל שוב. שעה תפוסה — הצע רק את שתי החלופות שהמערכת נתנה.
+5. תאריכים — פורמט dd/mm/yyyy בלבד.
+6. אישור תור — אחרי "כן"/"סבבה": "סגרנו תור ל-dd/mm/yyyy בשעה XX:XX" — ותו לא.
+7. אל תמציא שירותים, מחירים, או שעות שלא ברשימה.
+8. "תודה" — ענה "שמחתי לעזור" / "תמיד" / "בכיף" — שנה כל פעם.
+9. תן תשובה ישירה לכל שאלה. אל תחזור על אותה תשובה פעמיים.
 
 ענה תמיד ב-JSON בלבד:
 {
@@ -504,7 +500,7 @@ async function lockAndGreet(db, phone, business, conv, io) {
   saveConversation(db, phone, { business_id: business.id, stage: 'business_bot' });
 
   const terms = business.terms_text
-    ? `\n\n📋 *תקנון:* ${business.terms_text}`
+    ? `\n\nתקנון: ${business.terms_text}`
     : '';
 
   return `היי, אני ${business.name}. מה אפשר לעשות בשבילך?${terms}`;
@@ -543,6 +539,14 @@ async function handleStaffSelection(db, phone, text, conv, businessId, staffList
 // ─── Stage 3: Business bot ────────────────────────────────────────────────────
 
 async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff, io) {
+  // ── Business switch detection (code-level, before AI) ──────────────────────
+  const switchKeywords = ['עסק אחר', 'להחליף', 'החלף עסק', 'לחזור', 'חזרה לרשימה', 'בטעות', 'לא נכון', 'רשימת עסקים'];
+  if (switchKeywords.some(k => text.includes(k))) {
+    db.prepare('DELETE FROM customer_associations WHERE whatsapp_phone = ?').run(phone);
+    db.prepare("UPDATE conversations SET business_id = NULL, stage = NULL, extracted_data = '{}', history = '[]' WHERE whatsapp_phone = ?").run(phone);
+    return await handleBusinessSelection(db, phone, 'החלף', { ...conv, greeted: 1 }, io);
+  }
+
   const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(businessId);
   if (!business || !business.is_active) {
     return 'מצטער, העסק אינו פעיל כרגע. נסה שוב מאוחר יותר.';
@@ -666,7 +670,7 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
 
   const messages = [
     { role: 'system', content: systemPrompt },
-    ...history.slice(-12).map(m => ({ role: m.role, content: m.content })),
+    ...history.slice(-8).map(m => ({ role: m.role, content: m.content })),
   ];
 
   if (contextHint) {
