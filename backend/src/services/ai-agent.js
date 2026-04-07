@@ -316,6 +316,95 @@ function findNearestSlots(slots, requestedTime) {
   return { before, after };
 }
 
+// ─── Quick-reply: handle simple messages without AI ──────────────────────────
+// Greetings, thanks, and confused short replies that need no intelligence.
+
+const GREETING_RE = /^(היי+|הי+|שלום|אהלן|מה שלומך?|מה שלומ|מה קורה|מה נשמע|מה המצב|מה חדש|בוקר טוב|ערב טוב|צהריים טובים|לילה טוב|הכל בסדר\??|מה?)$/i;
+const THANKS_RE = /^(תודה|תודה רבה|תנקיו|תנקס|תנקיו רבה|תודה אחי|תודה גבר|תודה חבר|אחלה תודה)(\s.*)?$/i;
+const CONFUSED_RE = /^(מה\??|מה זה\??|לא הבנתי|לא קלטתי|\?\?)$/i;
+
+const GREETING_REPLIES = [
+  'מה קורה, מה אפשר לעשות בשבילך?',
+  'הכל אחלה, מה אפשר לעזור?',
+  'היי, מה אפשר לעשות בשבילך?',
+  'שלום, במה אוכל לעזור?',
+];
+const THANKS_REPLIES = ['תמיד', 'שמחתי לעזור', 'בכיף', 'כיף לעזור'];
+const CONFUSED_REPLIES = [
+  'אני כאן לקביעת תורים — רוצה לקבוע, לבטל, להזיז, או לראות מה יש לך?',
+  'אפשר לקבוע תור, לבטל, להזיז — מה תרצה?',
+  'אני מנהל תורים — רוצה לקבוע או לשנות תור?',
+];
+
+function quickReply(text, customerName) {
+  const t = text.trim();
+  const greet = customerName ? `, ${customerName.split(' ')[0]}` : '';
+
+  if (GREETING_RE.test(t)) {
+    const r = GREETING_REPLIES[Math.floor(Math.random() * GREETING_REPLIES.length)];
+    return r.replace('היי,', `היי${greet},`).replace('מה קורה,', `מה קורה${greet},`);
+  }
+  if (THANKS_RE.test(t)) {
+    return THANKS_REPLIES[Math.floor(Math.random() * THANKS_REPLIES.length)];
+  }
+  if (CONFUSED_RE.test(t)) {
+    return CONFUSED_REPLIES[Math.floor(Math.random() * CONFUSED_REPLIES.length)];
+  }
+  return null;
+}
+
+// When the AI completely fails, give a smart reply based on keywords in the text
+// instead of a generic "I didn't understand" message.
+function intelligentFallback(text, customerName) {
+  const t = text.toLowerCase();
+  const name = customerName ? `, ${customerName.split(' ')[0]}` : '';
+
+  if (CANCEL_KEYWORDS.some(k => t.includes(k)))
+    return 'רוצה לבטל תור? תגיד לי איזה תור ואני אטפל בזה.';
+  if (RESCHEDULE_KEYWORDS.some(k => t.includes(k)))
+    return 'רוצה להזיז תור? תגיד לי לאיזה תאריך ושעה.';
+  if (VIEW_KEYWORDS.some(k => t.includes(k)))
+    return 'רגע אחד, אני בודק את התורים שלך.';
+  if (/תור|לקבוע|לקבע|רוצה לבוא|רוצה להגיע|פנוי|מתי אפשר/.test(t))
+    return `מה אפשר לעשות${name}? תגיד לי תאריך ושעה ואני אבדוק.`;
+  if (/מחיר|כמה עולה|כמה זה|מה עולה/.test(t))
+    return 'מה השירות שרצית לדעת עליו את המחיר?';
+  if (/שעות|מתי פתוח|מתי סגור/.test(t))
+    return 'שאל ואני אענה על השעות.';
+
+  // Generic but contextual
+  return `לא הצלחתי לעבד את הבקשה${name}. תרצה לקבוע תור, לבטל, או להזיז?`;
+}
+
+// ─── JSON recovery ────────────────────────────────────────────────────────────
+// Try multiple extraction strategies before giving up on an AI response.
+
+function tryParseAiResponse(raw) {
+  if (!raw) return null;
+
+  // 1. Direct parse
+  try { return JSON.parse(raw); } catch {}
+
+  // 2. Find first {...} block (model might have wrapped with extra text)
+  const block = raw.match(/\{[\s\S]*\}/);
+  if (block) {
+    try { return JSON.parse(block[0]); } catch {}
+    // 3. Clean common model artifacts and retry
+    const cleaned = block[0]
+      .replace(/[\u0000-\u001F\u007F]/g, ' ') // control chars
+      .replace(/,\s*([}\]])/g, '$1');          // trailing commas
+    try { return JSON.parse(cleaned); } catch {}
+  }
+
+  // 4. Extract just the message field
+  const msgMatch = raw.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  if (msgMatch) {
+    return { message: msgMatch[1], intent: 'chat', extracted: {}, ready_to_book: false };
+  }
+
+  return null;
+}
+
 // ─── Security & intent keywords ──────────────────────────────────────────────
 
 const SECURITY_THREATS = [
@@ -1122,6 +1211,13 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   const hours = db.prepare('SELECT * FROM business_hours WHERE business_id = ? ORDER BY day_of_week').all(businessId);
   const customer = db.prepare('SELECT * FROM customers WHERE business_id = ? AND whatsapp_phone = ?').get(businessId, phone);
 
+  // ── Quick-reply: greetings / thanks / confusion — no AI needed ────────────
+  const quick = quickReply(text, customer?.name || null);
+  if (quick) {
+    saveConversation(db, phone, {}); // bump last_message_at
+    return quick;
+  }
+
   const ed0 = JSON.parse(
     db.prepare('SELECT extracted_data FROM conversations WHERE whatsapp_phone=?').get(phone)?.extracted_data || '{}'
   );
@@ -1309,30 +1405,26 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
     messages.push({ role: 'system', content: contextHint });
   }
 
-  const FALLBACK_REPLIES = [
-    'לא קלטתי, תגיד לי שוב?',
-    'תחזור על זה?',
-    'מה אמרת? לא שמעתי טוב.',
-    'תגיד שוב, רגע.',
-  ];
-
   let aiResponse;
   try {
     aiResponse = await groqChat(messages);
   } catch (err) {
-    console.error('[AI] All retries failed:', err.message);
-    return FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
+    // Log full error detail for Railway debugging
+    const detail = err.response?.data?.error?.message || err.message;
+    const status = err.response?.status;
+    console.error(`[AI] All retries failed | status=${status} | ${detail}`);
+    console.error('[AI] Failed message count:', messages.length, '| system prompt length:', messages[0]?.content?.length);
+    // Intelligent fallback based on what the customer sent
+    return intelligentFallback(text, customer?.name);
   }
 
-  let parsed;
-  try {
-    parsed = JSON.parse(aiResponse);
-  } catch (e) {
-    console.error('[AI] JSON parse error:', aiResponse);
-    return FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
+  const parsed = tryParseAiResponse(aiResponse);
+  if (!parsed) {
+    console.error('[AI] JSON unrecoverable. Raw (200 chars):', String(aiResponse).slice(0, 200));
+    return intelligentFallback(text, customer?.name);
   }
 
-  const replyMessage = parsed.message || FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
+  const replyMessage = parsed.message || intelligentFallback(text, customer?.name);
   const extracted = parsed.extracted || {};
 
   // Merge extracted data with previous — only accept values the USER explicitly provided
