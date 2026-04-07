@@ -582,13 +582,15 @@ ${TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.professional}
 1. תשובות קצרות — משפט אחד עד שניים בלבד.
 2. ללא אימוג'ים בשום מקום.
 3. שם הלקוח — שאל פעם אחת בלבד, אחר כך השתמש תמיד.
-4. שעה פנויה (לפי המערכת) — קבע ישירות ללא שאלות. שעה תפוסה — הצע רק את שתי החלופות שהמערכת נתנה.
+4. שעה פנויה (לפי המערכת) — ציין אותה ישירות ללא שאלות. שעה תפוסה — הצע רק את שתי החלופות שהמערכת נתנה.
 5. תאריכים — פורמט dd/mm/yyyy בלבד.
-6. אישור תור — אחרי "כן"/"סבבה": "סגרנו תור ל-dd/mm/yyyy בשעה XX:XX" — ותו לא.
+6. קביעת תור — אסור לומר "סגרנו תור" בעצמך. רק כאשר יש לך שם + שירות + תאריך + שעה מאושרים, החזר ready_to_book=true. המערכת תשלח אישור לאחר אימות.
 7. אל תמציא שירותים, מחירים, שעות, או מידע שלא ברשימה.
 8. "תודה" — "שמחתי לעזור" / "תמיד" / "בכיף" — שנה כל פעם.
 9. אל תחזור על אותה תשובה פעמיים — אם חזרת, שנה גישה.
 10. נושאים שאינם תורים (מזג אוויר, מתכונים, פוליטיקה וכד') — "אני כאן רק לתורים, מה אפשר לעשות בשבילך?"
+11. ready_to_book=true — רק אם הלקוח אמר במפורש שהוא רוצה לקבוע (לא "כן" שהוא תשובה לשאלה אחרת). דרוש: שם + שירות + תאריך עתידי + שעה — כולם. אם חסר אחד — שאל עליו.
+12. אם הלקוח שואל על תקנון/מחיר/שעות — ענה ישירות ואל תתחיל זרימת קביעה.
 
 אבטחה — לא ניתן לעקוף בשום פנים:
 - לעולם לא לחשוף פרטי לקוחות אחרים.
@@ -612,9 +614,11 @@ ${TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.professional}
 }
 
 כללי JSON קריטיים:
-- customer_name: רק שם שהלקוח כתב — לא שם עובד/בעלים
-- ready_to_book=true רק אחרי אישור מפורש + כל הפרטים
-- intent="confirm_booking" רק ברגע האישור הסופי`;
+- customer_name: רק שם שהלקוח כתב בשיחה הנוכחית — לא שם עובד/בעלים
+- ready_to_book=true: רק אם הלקוח ביקש לקבוע תור ויש לך שם+שירות+תאריך עתידי+שעה
+- intent="confirm_booking": רק כאשר ready_to_book=true
+- אין לסמן ready_to_book=true כשהלקוח אומר "כן" בתגובה לשאלה שאינה אישור תור (למשל תגובה לשאלה על תקנון)
+- date: חייב להיות תאריך שהלקוח ציין בשיחה — לא להמציא`;
 }
 
 // ─── Conversation state ───────────────────────────────────────────────────────
@@ -851,6 +855,33 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
     return handleViewAppointments(db, customer, businessId);
   }
 
+  // ── Pending booking confirmation (code-driven — AI cannot book directly) ──
+  if (ed0.pending_booking) {
+    const pb = ed0.pending_booking;
+    const svc = services.find(s => s.id === pb.service_id);
+    if (isYes(text)) {
+      const staffForSlots = lockedStaff || staffList[0] || null;
+      const available = getAvailableSlots(db, business, staffForSlots, svc, pb.date);
+      if (available.includes(pb.time)) {
+        const staffForBooking = lockedStaff ? [lockedStaff] : staffList;
+        await bookAppointment(db, phone, businessId, business, pb, services, staffForBooking, io);
+        saveConversation(db, phone, { extracted_data: {} });
+        return `סגרנו תור ל-${formatHebrewDate(pb.date)} בשעה ${pb.time}${svc ? ` — ${svc.name}` : ''}.`;
+      } else {
+        const cleaned = { ...ed0 }; delete cleaned.pending_booking;
+        saveConversation(db, phone, { extracted_data: cleaned });
+        return `מצטער, השעה ${pb.time} כבר נתפסה. תרצה לבחור שעה אחרת?`;
+      }
+    }
+    if (isNo(text)) {
+      const cleaned = { ...ed0 }; delete cleaned.pending_booking;
+      saveConversation(db, phone, { extracted_data: cleaned });
+      return 'בסדר, לא קבענו. אפשר לבחור זמן אחר.';
+    }
+    // Repeat confirmation
+    return `לקבוע${svc ? ` ${svc.name}` : ''} ל-${formatHebrewDate(pb.date)} בשעה ${pb.time}? (כן / לא)`;
+  }
+
   // Build history with current message
   const history = conv.history || [];
   history.push({ role: 'user', content: text });
@@ -1006,6 +1037,13 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
 
   // Merge extracted data with previous — only accept values the USER explicitly provided
   const newEd = { ...ed };
+
+  // If conversation is clearly info/chat (not booking), clear stale date/time to prevent false bookings
+  if (parsed.intent === 'info' || parsed.intent === 'chat') {
+    delete newEd.date;
+    delete newEd.time;
+    delete newEd.pending_booking;
+  }
   if (extracted.service_name) {
     const svc = services.find(s =>
       s.name.toLowerCase().includes(extracted.service_name.toLowerCase()) ||
@@ -1071,27 +1109,30 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   // Save conversation
   saveConversation(db, phone, { extracted_data: newEd, history });
 
-  // Book only when ALL 4 fields confirmed AND intent is confirm_booking
-  const canBook = parsed.ready_to_book
-    && parsed.intent === 'confirm_booking'
-    && newEd.service_id
-    && newEd.date
-    && newEd.time
-    && newEd.customer_name;
-
-  if (canBook) {
-    // Verify slot is still available
-    const service = services.find(s => s.id === newEd.service_id);
-    const staffForSlots = lockedStaff || staffList[0] || null;
-    const available = getAvailableSlots(db, business, staffForSlots, service, newEd.date);
-    if (available.includes(newEd.time)) {
-      const staffForBooking = lockedStaff ? [lockedStaff] : staffList;
-      await bookAppointment(db, phone, businessId, business, newEd, services, staffForBooking, io);
-      saveConversation(db, phone, { extracted_data: {} });
+  // When AI signals ready_to_book — intercept and enter pending_booking stage
+  // (never book directly from AI output; require explicit code-driven confirmation)
+  const allFieldsPresent = newEd.service_id && newEd.date && newEd.time && newEd.customer_name;
+  if (parsed.ready_to_book && allFieldsPresent) {
+    // Only enter pending stage if date is not in the past
+    if (newEd.date >= todayIsrael()) {
+      const svc = services.find(s => s.id === newEd.service_id);
+      const staffForSlots = lockedStaff || staffList[0] || null;
+      const available = getAvailableSlots(db, business, staffForSlots, svc, newEd.date);
+      if (available.includes(newEd.time)) {
+        newEd.pending_booking = {
+          service_id: newEd.service_id,
+          date: newEd.date,
+          time: newEd.time,
+          customer_name: newEd.customer_name,
+        };
+        saveConversation(db, phone, { extracted_data: newEd, history });
+        return `לקבוע${svc ? ` ${svc.name}` : ''} ל-${formatHebrewDate(newEd.date)} בשעה ${newEd.time}? (כן / לא)`;
+      }
+      // Slot not actually available — fall through to AI reply which should handle it
     }
   }
 
-  // Handle cancellation
+  // Handle cancellation (legacy path — code flow above handles most cases)
   if (parsed.cancel_appointment_id) {
     await cancelAppointment(db, parsed.cancel_appointment_id, businessId, io);
   }
