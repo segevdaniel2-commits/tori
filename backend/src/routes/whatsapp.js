@@ -6,7 +6,49 @@ const { getDb } = require('../config/database');
 const axios = require('axios');
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'tori-verify-2024-xR7vN4kL';
-const APP_SECRET = process.env.WHATSAPP_APP_SECRET; // Meta App Secret for signature verification
+const APP_SECRET = process.env.WHATSAPP_APP_SECRET;
+const FormData = require('form-data');
+
+// ─── Whisper transcription via Groq ──────────────────────────────────────────
+async function transcribeAudio(mediaId) {
+  const token = process.env.WHATSAPP_TOKEN || process.env.WA_TOKEN_FALLBACK;
+  const groqKey = process.env.GROQ_API_KEY;
+  if (!token || !groqKey) return null;
+
+  try {
+    // 1. Get media URL from WhatsApp
+    const mediaRes = await axios.get(`https://graph.facebook.com/v19.0/${mediaId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      timeout: 10000,
+    });
+    const mediaUrl = mediaRes.data?.url;
+    if (!mediaUrl) return null;
+
+    // 2. Download audio
+    const audioRes = await axios.get(mediaUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: 'arraybuffer',
+      timeout: 30000,
+    });
+
+    // 3. Send to Groq Whisper
+    const form = new FormData();
+    form.append('file', Buffer.from(audioRes.data), { filename: 'audio.ogg', contentType: 'audio/ogg' });
+    form.append('model', 'whisper-large-v3-turbo');
+    form.append('language', 'he');
+    form.append('response_format', 'text');
+
+    const whisperRes = await axios.post(
+      'https://api.groq.com/openai/v1/audio/transcriptions',
+      form,
+      { headers: { ...form.getHeaders(), Authorization: `Bearer ${groqKey}` }, timeout: 30000 }
+    );
+    return typeof whisperRes.data === 'string' ? whisperRes.data.trim() : null;
+  } catch (err) {
+    console.error('[Whisper] Transcription error:', err.response?.data || err.message);
+    return null;
+  }
+}
 
 // Verify Meta's X-Hub-Signature-256 header
 function verifyMetaSignature(req) {
@@ -58,10 +100,26 @@ router.post('/webhook', async (req, res) => {
         if (!value.messages || !value.messages.length) continue;
 
         for (const message of value.messages) {
-          if (message.type !== 'text') continue;
-
           const phone = message.from;
-          const text = message.text?.body || '';
+          let text = '';
+
+          if (message.type === 'text') {
+            text = message.text?.body || '';
+          } else if (message.type === 'audio') {
+            const mediaId = message.audio?.id;
+            if (mediaId) {
+              const transcribed = await transcribeAudio(mediaId);
+              if (transcribed) {
+                text = transcribed;
+                console.log(`[WhatsApp] Audio transcribed for ${phone}: ${text.slice(0, 80)}`);
+              } else {
+                await sendWhatsAppMessage(phone, 'לא הצלחתי לשמוע את ההקלטה. תוכל לכתוב?');
+                continue;
+              }
+            } else continue;
+          } else {
+            continue;
+          }
 
           // Validate phone (digits only, 7–15 chars per E.164)
           if (!/^\d{7,15}$/.test(phone)) continue;

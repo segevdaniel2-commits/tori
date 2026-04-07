@@ -125,6 +125,80 @@ function formatHebrewDate(dateStr) {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} (${HEBREW_DAYS[d.getDay()]})`;
 }
 
+// ─── Gender detection ─────────────────────────────────────────────────────────
+
+const FEMALE_NAMES = new Set([
+  'נועה','מיה','מיכל','שירה','רינת','יעל','עדן','אביגיל','רחל','דנה','שרה','מרים',
+  'חנה','רבקה','לאה','דינה','אורית','ענת','יפית','גלית','כרמית','ריקי','תמי',
+  'שושנה','פנינה','רותם','שקד','נטע','ליה','אלה','יהל','אורה','הדס','הילה','נילי',
+  'ורד','מור','טל','יובל','שחר','ליאת','לירון','נגה','רוני','איילת','אסנת','תמר',
+  'ספיר','יסמין','מלי','מלכה','שלומית','שלי','אורנה','שולמית','זהבה','אסתר','לילי',
+  'עינב','גפן','כרמל','שני','לינוי','ניצן','אגם','ינבל','אינבל','בר','לי','ים',
+  'אלמוג','כלנית','צופיה','ליאור','אביטל','חגית','מירב','עדי','קרן','דפנה','יפה',
+  'שמחה','רינה','ציפי','ברכה','פרל','רחלי','שפרה','בתיה','נחמה','שרית',
+]);
+
+const FEMALE_BUSINESS_TYPES = new Set(['barber_women', 'nails', 'lashes', 'cosmetics']);
+const FEMALE_SERVICE_KEYWORDS = ['נשים', 'לקים', "ג'ל", 'אקריל', 'פדיקור', 'ריסים', 'גבות', 'מניקור'];
+const MALE_SERVICE_KEYWORDS = ['גברים', 'זקן', 'גילוח'];
+
+function inferGenderFromName(name) {
+  if (!name) return null;
+  const first = name.trim().split(/\s+/)[0];
+  if (FEMALE_NAMES.has(first)) return 'female';
+  return null;
+}
+
+function inferGenderFromContext(businessType, serviceName) {
+  if (FEMALE_BUSINESS_TYPES.has(businessType)) return 'female';
+  if (serviceName) {
+    const lower = serviceName.toLowerCase();
+    if (MALE_SERVICE_KEYWORDS.some(k => lower.includes(k))) return 'male';
+    if (FEMALE_SERVICE_KEYWORDS.some(k => lower.includes(k))) return 'female';
+  }
+  return null;
+}
+
+// ─── Regular pattern detection ────────────────────────────────────────────────
+
+function detectRegularPattern(db, customerId, businessId) {
+  const apts = db.prepare(`
+    SELECT starts_at FROM appointments
+    WHERE customer_id = ? AND business_id = ? AND status = 'confirmed'
+    ORDER BY starts_at DESC LIMIT 8
+  `).all(customerId, businessId);
+  if (apts.length < 2) return null;
+  const counts = {};
+  for (const a of apts) {
+    const d = new Date(a.starts_at);
+    const day = d.getDay();
+    const time = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const key = `${day}|${time}`;
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  for (const [key, count] of Object.entries(counts)) {
+    if (count >= 2) {
+      const [day, time] = key.split('|');
+      return { day: HEBREW_DAYS[parseInt(day)], time };
+    }
+  }
+  return null;
+}
+
+// ─── Nearest available slot ───────────────────────────────────────────────────
+
+function findNearestSlots(slots, requestedTime) {
+  if (!slots.length || !requestedTime) return { before: null, after: null };
+  const reqMins = timeToMinutes(requestedTime);
+  let before = null, after = null;
+  for (const slot of slots) {
+    const sm = timeToMinutes(slot);
+    if (sm < reqMins) before = slot;
+    else if (sm > reqMins && !after) after = slot;
+  }
+  return { before, after };
+}
+
 // ─── Availability helpers ──────────────────────────────────────────────────
 
 function isBusinessOpen(business, hours, dateStr) {
@@ -223,7 +297,7 @@ const TONE_PROMPTS = {
   formal: `סגנון: מקצועי ומכובד — חם אבל רשמי, כמו רופא שמכיר את המטופל שלו. שעות במספרים: "15:00", "15:30". מגוון בתשובות, לא תסריטאי.`,
 };
 
-function buildBusinessSystemPrompt(business, staffList, services, customer, hours, lockedStaff) {
+function buildBusinessSystemPrompt(business, staffList, services, customer, hours, lockedStaff, gender) {
   const servicesText = services.length
     ? services.map(s => `- ${s.name}: ${s.duration_minutes} דק׳, ₪${s.price}`).join('\n')
     : '- אין שירותים מוגדרים עדיין';
@@ -240,7 +314,9 @@ function buildBusinessSystemPrompt(business, staffList, services, customer, hour
     : 'שעות לא מוגדרות';
 
   const customerName = customer?.name || null;
-  const tone = TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.friendly;
+  const genderNote = (gender || customer?.gender) === 'female'
+    ? 'הלקוחה — נקבה. דבר אליה תמיד בלשון נקבה: "את", "רצית", "בחרת", "יש לך".'
+    : 'הלקוח — זכר. דבר אליו תמיד בלשון זכר: "אתה", "רצית", "בחרת", "יש לך".';
 
   return `אתה טורי — הבוט של "${business.name}".
 ${business.description ? `על העסק: ${business.description}` : ''}
@@ -248,23 +324,24 @@ ${business.description ? `על העסק: ${business.description}` : ''}
 שעות פעילות: ${hoursText}
 צוות: ${staffText}
 שירותים: ${servicesText}
-${customerName ? `לקוח: ${customerName}` : 'לקוח חדש — שאל שם ושם משפחה לפני הכל (פעם אחת בלבד, נשמר לתמיד)'}
+${customerName ? `שם הלקוח: ${customerName}` : 'לקוח חדש — שאל שם ושם משפחה פעם אחת בלבד (נשמר לתמיד)'}
+מגדר: ${genderNote}
 
 ===
 ${TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.professional}
 
 כללי תפעול:
 1. **מינימליזם** — תשובה קצרה ביותר. דוגמה: "יש תור בשלוש?" → "כן, לקבוע?"
-2. **אנושי ומגוון** — אל תחזור על אותן תשובות. שנה ניסוחים, הגב בצורה טבעית לכל הודעה. אם לקוח אומר "תודה" — ענה בצורה אנושית ולא "בשמחה!".
-3. **ללא אימוג'ים בכלל** — לא בתזכורות, לא בהודעות, לא בשום מקום.
-4. **שם** — שאל שם ושם משפחה פעם אחת בלבד. לאחר מכן השתמש בשם תמיד.
-5. **זמינות** — בדוק לפי השעות הפנויות. אם תפוס — הצע שתי חלופות (אחת לפני, אחת אחרי).
-6. **אישור** — אחרי "כן"/"סבבה"/"בסדר" רשום רק: "סגרנו תור ל[תאריך] ב[שעה]". פרטים נוספים רק אם ביקש.
-7. **החלפת עסק** — רק אם ביקש במפורש ואישר פעמיים.
-8. **מחיר/פרט לא ידוע** — "אעביר לבעל העסק, נשריין?"
-9. **כתובת/טלפון** — רק באישור סופי.
+2. **אנושי ומגוון** — לעולם אל תחזור על אותן תשובות. שנה ניסוחים בכל הודעה. אם לקוח אומר "תודה" — ענה אחרת בכל פעם, לא "בשמחה!". אם שאל "מה שלומך" — ענה קצר ואנושי.
+3. **ללא אימוג'ים בכלל** — לא בשום הודעה.
+4. **שם** — שאל פעם אחת בלבד. אחר כך השתמש בשם תמיד.
+5. **שעה מבוקשת** — אם המערכת אומרת שהשעה פנויה, קבע אותה ישירות ללא שאלות. אם תפוסה, הצע בדיוק את שתי החלופות שהמערכת נתנה — לא אחרות.
+6. **תאריכים** — כתוב תמיד בפורמט dd/mm/yyyy. דוגמה: 15/04/2026 (יום שלישי).
+7. **אישור** — אחרי "כן"/"סבבה"/"בסדר" רשום: "סגרנו תור ל-dd/mm/yyyy ב[שעה]". ללא פרטים מיותרים.
+8. **החלפת עסק** — רק אם ביקש ואישר פעמיים.
+9. **מחיר/פרט לא ידוע** — "אעביר לבעל העסק, נשריין?"
 10. **אל תמציא** שירותים או מחירים שלא ברשימה.
-11. **תגובות חכמות** — אם לקוח כותב "מה שלומך" תענה בטבעיות. אם הוא מתלונן — תגיב באמפתיה. תהיה נוכח בשיחה, לא אוטומט.
+11. **עקביות** — אם הלקוח ביקש שעה מסוימת, אל תציע אחרת אלא אם תפוסה.
 
 ענה תמיד ב-JSON בלבד:
 {
@@ -496,16 +573,51 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   }
   if (ed.customer_name) contextHint += `\n[מערכת: שם לקוח שנמסר: ${ed.customer_name}]`;
 
-  // Check available slots if we have date
+  // Determine gender
+  const currentGender = customer?.gender || 'male';
+  let detectedGender = null;
+  // Try to infer from service chosen this turn
+  if (resolvedTime || ed.service_name) {
+    detectedGender = inferGenderFromContext(business.type, ed.service_name || null);
+  }
+  // Try from name if we just got one
+  if (!detectedGender && ed.customer_name) {
+    detectedGender = inferGenderFromName(ed.customer_name);
+  }
+  // Check if customer explicitly requests gender change
+  if (/לשון נקבה|אני אישה|אני בת/.test(text)) detectedGender = 'female';
+  if (/לשון זכר|אני גבר|אני בן/.test(text)) detectedGender = 'male';
+
+  const gender = detectedGender || currentGender;
+
+  // Check available slots with smart time handling
   const dateToCheck = resolvedDate || ed.date;
+  const timeRequested = resolvedTime || null;
+  const staffForSlots = lockedStaff || staffList[0] || null;
+  const svcForSlots = ed.service_id ? services.find(s => s.id === ed.service_id) : services[0];
+
   if (dateToCheck) {
-    const staffForSlots = lockedStaff || staffList[0] || null;
-    const defaultService = ed.service_id ? services.find(s => s.id === ed.service_id) : services[0];
-    const slots = getAvailableSlots(db, business, staffForSlots, defaultService, dateToCheck);
-    if (slots.length > 0) {
-      contextHint += `\n[מערכת: שעות פנויות ב-${formatHebrewDate(dateToCheck)}: ${slots.slice(0, 8).join(', ')}]`;
+    const slots = getAvailableSlots(db, business, staffForSlots, svcForSlots, dateToCheck);
+    if (timeRequested) {
+      // Customer requested a specific time — be deterministic
+      if (slots.includes(timeRequested)) {
+        contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} פנויה. קבע אותה ישירות ללא שאלות נוספות על שעה.]`;
+      } else {
+        const { before, after } = findNearestSlots(slots, timeRequested);
+        const opts = [before, after].filter(Boolean);
+        if (opts.length) {
+          contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} תפוסה. הצע בדיוק את: ${opts.join(' או ')} — לא שעות אחרות.]`;
+        } else {
+          contextHint += `\n[מערכת: אין שעות פנויות ב-${formatHebrewDate(dateToCheck)}.]`;
+        }
+      }
     } else {
-      contextHint += `\n[מערכת: אין שעות פנויות ב-${formatHebrewDate(dateToCheck)}]`;
+      // No specific time — show available
+      if (slots.length > 0) {
+        contextHint += `\n[מערכת: שעות פנויות ב-${formatHebrewDate(dateToCheck)}: ${slots.slice(0, 8).join(', ')}]`;
+      } else {
+        contextHint += `\n[מערכת: אין שעות פנויות ב-${formatHebrewDate(dateToCheck)}]`;
+      }
     }
   }
 
@@ -517,7 +629,15 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
     if (defaultSvc) contextHint += `\n[מערכת: השירות הרגיל של הלקוח: ${defaultSvc.name} — השתמש בו אוטומטית אלא אם ביקש אחר]`;
   }
 
-  const systemPrompt = buildBusinessSystemPrompt(business, staffList, services, customer, hours, lockedStaff);
+  // Regular customer pattern
+  if (customer?.id) {
+    const pattern = detectRegularPattern(db, customer.id, businessId);
+    if (pattern) {
+      contextHint += `\n[מערכת: לקוח קבוע — בדרך כלל מגיע ביום ${pattern.day} ב-${pattern.time}. אם לא ביקש תאריך/שעה, הצע לו את התור הקבוע שלו.]`;
+    }
+  }
+
+  const systemPrompt = buildBusinessSystemPrompt(business, staffList, services, customer, hours, lockedStaff, gender);
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -532,7 +652,7 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   try {
     aiResponse = await groqChat(messages);
   } catch (err) {
-    return 'סורי, משהו השתבש אצלנו 😅 נסה שוב בעוד רגע!';
+    return 'סורי, משהו השתבש. נסה שוב בעוד רגע.';
   }
 
   let parsed;
@@ -540,10 +660,10 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
     parsed = JSON.parse(aiResponse);
   } catch (e) {
     console.error('[AI] JSON parse error:', aiResponse);
-    return 'סורי, קרתה שגיאה טכנית 😅 נסה שוב!';
+    return 'סורי, קרתה שגיאה טכנית. נסה שוב.';
   }
 
-  const replyMessage = parsed.message || 'סורי, לא הבנתי. נסה שוב 😊';
+  const replyMessage = parsed.message || 'סורי, לא הבנתי. נסה שוב.';
   const extracted = parsed.extracted || {};
 
   // Merge extracted data with previous — only accept values the USER explicitly provided
@@ -574,6 +694,18 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   // If customer already has a name saved, always use it
   if (!newEd.customer_name && customer?.name) {
     newEd.customer_name = customer.name;
+  }
+
+  // Save detected gender if changed
+  if (detectedGender && customer && detectedGender !== currentGender) {
+    db.prepare('UPDATE customers SET gender = ? WHERE id = ?').run(detectedGender, customer.id);
+  }
+  // Infer gender from name once we have it
+  if (newEd.customer_name && customer && currentGender === 'male' && !detectedGender) {
+    const nameGender = inferGenderFromName(newEd.customer_name);
+    if (nameGender === 'female') {
+      db.prepare('UPDATE customers SET gender = ? WHERE id = ?').run('female', customer.id);
+    }
   }
 
   // Lock default service: save when first chosen, use automatically unless customer requests a different one
