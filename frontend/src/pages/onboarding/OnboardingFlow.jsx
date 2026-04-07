@@ -382,9 +382,25 @@ function Toggle({ value, onChange }) {
   );
 }
 
+const TERMS_BUSINESS_TYPES = ['nails', 'lashes', 'cosmetics'];
+
 // ─── Success screen ───────────────────────────────────────────────────────────
-function SuccessScreen({ onDone }) {
+function SuccessScreen({ onDone, businessType }) {
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [termsText, setTermsText] = useState('');
+  const [termsSaved, setTermsSaved] = useState(false);
+  const [termsSaving, setTermsSaving] = useState(false);
+  const showTerms = TERMS_BUSINESS_TYPES.includes(businessType) && !termsSaved;
+
+  async function handleSaveTerms() {
+    if (!termsText.trim()) { setTermsSaved(true); return; }
+    setTermsSaving(true);
+    try {
+      await api.put('/businesses/settings', { terms_text: termsText.trim() });
+      setTermsSaved(true);
+    } catch { /* non-critical */ setTermsSaved(true); }
+    finally { setTermsSaving(false); }
+  }
 
   async function handleGoogleConnect() {
     setGoogleLoading(true);
@@ -499,6 +515,36 @@ function SuccessScreen({ onDone }) {
           <h1 className="text-3xl font-black text-white mb-2">העסק שלך מוכן!</h1>
           <p className="text-gray-400 text-sm">ברוך הבא לטורי. הכל מוגדר ומוכן.</p>
         </div>
+
+        {/* Terms card — only for nails/lashes/cosmetics */}
+        {showTerms && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="border border-white/[0.08] rounded-2xl bg-white/[0.03] p-6 mb-4"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 text-lg">📋</div>
+              <div>
+                <p className="text-white font-bold text-sm">תקנון העסק שלך</p>
+                <p className="text-gray-500 text-xs">יישלח ללקוחות בהודעה הראשונה בוואטסאפ</p>
+              </div>
+            </div>
+            <textarea
+              value={termsText}
+              onChange={e => setTermsText(e.target.value)}
+              className={inputCls + ' resize-none text-sm'}
+              rows={3}
+              placeholder="ביטול תור יש לבצע 24 שעות מראש. איחור מעל 10 דקות יגרור ביטול..."
+            />
+            <button
+              onClick={handleSaveTerms}
+              disabled={termsSaving}
+              className="mt-3 w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm transition-colors disabled:opacity-50"
+            >
+              {termsSaving ? 'שומר...' : termsText.trim() ? 'שמור תקנון' : 'דלג'}
+            </button>
+          </motion.div>
+        )}
 
         {/* Google Calendar card */}
         <motion.div
@@ -673,7 +719,7 @@ export default function OnboardingFlow() {
     } finally { setLoading(false); }
   }
 
-  if (success) return <SuccessScreen onDone={() => navigate('/dashboard')} />;
+  if (success) return <SuccessScreen onDone={() => navigate('/dashboard')} businessType={businessType} />;
 
   const STEP_LABELS = ['סוג עסק', 'פרטי עסק', 'שירותים', 'הגדרות', 'חשבון'];
 

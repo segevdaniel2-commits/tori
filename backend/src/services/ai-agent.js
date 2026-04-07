@@ -334,7 +334,7 @@ ${business.description ? `על העסק: ${business.description}` : ''}
 שעות פעילות: ${hoursText}
 צוות: ${staffText}
 שירותים: ${servicesText}
-${customerName ? `שם הלקוח: ${customerName}` : 'לקוח חדש — שאל שם ושם משפחה פעם אחת בלבד (נשמר לתמיד)'}
+${customerName ? `שם הלקוח: ${customerName}` : 'לקוח חדש — שאל שם ושם משפחה כבר בהודעה הראשונה (נשמר לתמיד, לא תשאל שוב)'}
 מגדר: ${genderNote}
 
 ===
@@ -352,6 +352,8 @@ ${TONE_PROMPTS[business.bot_tone] || TONE_PROMPTS.professional}
 9. **מחיר/פרט לא ידוע** — "אעביר לבעל העסק, נשריין?"
 10. **אל תמציא** שירותים או מחירים שלא ברשימה.
 11. **עקביות** — אם הלקוח ביקש שעה מסוימת, אל תציע אחרת אלא אם תפוסה.
+12. **תודה** — אם הלקוח כותב "תודה", "תודה רבה", "אחלה תודה" וכד', ענה קצר וטבעי: "שמחתי לעזור", "תמיד", "בכיף", "בשמחה" — שנה בכל פעם.
+13. **שירות ראשוני** — אם לקוח חדש ולא ידוע השירות הרגיל שלו, שאל מה הוא רוצה ותשמור לפעמים הבאות.
 
 ענה תמיד ב-JSON בלבד:
 {
@@ -463,10 +465,13 @@ async function handleBusinessSelection(db, phone, text, conv, io) {
 
   const businessList = businesses.map((b, i) => `${i + 1}. ${b.name}${b.city ? ` - ${b.city}` : ''}`).join('\n');
 
-  // Try to match by name
+  // Try to match by name or owner name
   const lower = text.toLowerCase();
   for (const b of businesses) {
     if (lower.includes(b.name.toLowerCase()) || b.name.toLowerCase().includes(lower)) {
+      return await lockAndGreet(db, phone, b, conv, io);
+    }
+    if (b.owner_name && lower.includes(b.owner_name.toLowerCase())) {
       return await lockAndGreet(db, phone, b, conv, io);
     }
   }
@@ -632,6 +637,16 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   }
 
   if (lockedStaff) contextHint += `\n[מערכת: הלקוח בחר לעבוד עם ${lockedStaff.name}]`;
+
+  // Anti-loop: detect if bot is repeating itself
+  const recentBotMsgs = history.filter(m => m.role === 'assistant');
+  if (recentBotMsgs.length >= 2) {
+    const last = recentBotMsgs[recentBotMsgs.length - 1]?.content || '';
+    const prev2 = recentBotMsgs[recentBotMsgs.length - 2]?.content || '';
+    if (last.length > 5 && last.slice(0, 25) === prev2.slice(0, 25)) {
+      contextHint += '\n[מערכת: אזהרה — חזרת על אותה תשובה. שנה גישה לחלוטין. אם חסר שם — שאל עכשיו. אם חסרה שעה — שאל. אם הכל ידוע — הצע לקבוע ישירות.]';
+    }
+  }
 
   // Hint about default service
   if (customer?.default_service_id && !ed.service_id) {

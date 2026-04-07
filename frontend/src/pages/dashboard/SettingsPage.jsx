@@ -125,6 +125,7 @@ function GeneralSettings() {
     buffer_minutes: business?.buffer_minutes ?? 15,
     cancellation_hours: business?.cancellation_hours ?? 24,
     bot_tone: business?.bot_tone || 'friendly',
+    terms_text: business?.terms_text || '',
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -153,6 +154,18 @@ function GeneralSettings() {
           <label className={labelCls(isNight)}>תיאור קצר</label>
           <textarea {...f('description')} className={inputCls(isNight) + ' resize-none'} rows={2} placeholder="תיאור שיופיע ללקוחות בבוט..." />
         </div>
+      </Section>
+
+      <Section title="תקנון העסק">
+        <p className={`text-xs ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
+          התקנון יישלח ללקוחות בהודעה הראשונה בוואטסאפ. מתאים לקוסמטיקאיות, ציפורניים, ריסים ועסקים שדורשים אישור מדיניות.
+        </p>
+        <textarea
+          {...f('terms_text')}
+          className={inputCls(isNight) + ' resize-none'}
+          rows={4}
+          placeholder="לדוגמה: ביטול תור יש לבצע 24 שעות מראש. איחור של מעל 10 דקות יגרור ביטול התור..."
+        />
       </Section>
 
       <Section title="מיקום ויצירת קשר">

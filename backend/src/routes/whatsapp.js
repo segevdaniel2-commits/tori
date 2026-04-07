@@ -34,9 +34,10 @@ async function transcribeAudio(mediaId) {
     // 3. Send to Groq Whisper
     const form = new FormData();
     form.append('file', Buffer.from(audioRes.data), { filename: 'audio.ogg', contentType: 'audio/ogg' });
-    form.append('model', 'whisper-large-v3-turbo');
+    form.append('model', 'whisper-large-v3');
     form.append('language', 'he');
     form.append('response_format', 'text');
+    form.append('prompt', 'שיחה בעברית ישראלית. הלקוח מדבר על קביעת תור לספר, תספורת, גוונים, צבע, פן, ג\'ל, ריסים, עיסוי, קוסמטיקה. מילים נפוצות: תור, שלום, רוצה, מתי, שעה, יום, ראשון, שני, שלישי, רביעי, חמישי, שישי, מחר, היום, שעה, בוקר, צהריים, ערב.');
 
     const whisperRes = await axios.post(
       'https://api.groq.com/openai/v1/audio/transcriptions',
