@@ -34,6 +34,20 @@ async function groqChat(messages, temperature = 0.4, maxTokens = 600) {
   throw lastErr;
 }
 
+// ─── Israel timezone helpers ──────────────────────────────────────────────────
+
+const ISRAEL_TZ = 'Asia/Jerusalem';
+
+function nowIsrael() {
+  // Returns current Israel datetime as naive string: "YYYY-MM-DDTHH:MM:SS"
+  return new Date().toLocaleString('sv-SE', { timeZone: ISRAEL_TZ }).replace(' ', 'T');
+}
+
+function todayIsrael() {
+  // Returns current Israel date: "YYYY-MM-DD"
+  return new Date().toLocaleDateString('sv-SE', { timeZone: ISRAEL_TZ });
+}
+
 // ─── Hebrew helpers ───────────────────────────────────────────────────────────
 
 const HEBREW_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
@@ -49,10 +63,11 @@ const HEBREW_NUMBER_WORDS = {
 };
 
 function resolveHebrewDate(text) {
-  const now = new Date();
+  const todayStr = todayIsrael();
+  const now = new Date(todayStr + 'T12:00:00'); // noon Israel time as anchor
   const lower = text.toLowerCase();
 
-  if (/היום|עכשיו/.test(lower)) return formatDate(now);
+  if (/היום|עכשיו/.test(lower)) return todayStr;
   if (/מחר/.test(lower)) { const d = new Date(now); d.setDate(d.getDate() + 1); return formatDate(d); }
   if (/מחרתיים/.test(lower)) { const d = new Date(now); d.setDate(d.getDate() + 2); return formatDate(d); }
   if (/שלשום/.test(lower)) { const d = new Date(now); d.setDate(d.getDate() - 1); return formatDate(d); }
@@ -126,7 +141,8 @@ function resolveHebrewTime(text) {
 }
 
 function formatDate(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  // Always format using Israel timezone
+  return d.toLocaleDateString('sv-SE', { timeZone: ISRAEL_TZ });
 }
 
 function formatHebrewDate(dateStr) {
@@ -233,6 +249,35 @@ const CONFIRM_NO   = ['לא', 'בטל בקשה', 'שכח', 'נשאיר', 'השא
 function isYes(text) { return CONFIRM_YES.some(k => text.includes(k)); }
 function isNo(text)  { return CONFIRM_NO.some(k => text.includes(k)); }
 
+// ─── View appointments ────────────────────────────────────────────────────────
+
+const VIEW_KEYWORDS = ['מה התור שלי', 'יש לי תור', 'מתי התור', 'התורים שלי', 'הצג תורים', 'מה יש לי', 'אילו תורים', 'תורים קרובים'];
+
+function handleViewAppointments(db, customer, businessId) {
+  if (!customer) return 'אין לך תורים קבועים כרגע.';
+  const now = nowIsrael();
+  const apts = db.prepare(`
+    SELECT a.starts_at, sv.name as service_name
+    FROM appointments a LEFT JOIN services sv ON a.service_id = sv.id
+    WHERE a.customer_id = ? AND a.business_id = ? AND a.status = 'confirmed' AND a.starts_at > ?
+    ORDER BY a.starts_at ASC LIMIT 5
+  `).all(customer.id, businessId, now);
+
+  if (!apts.length) return 'אין לך תורים קרובים.';
+
+  if (apts.length === 1) {
+    const date = apts[0].starts_at.split('T')[0];
+    const time = apts[0].starts_at.split('T')[1].slice(0, 5);
+    return `התור שלך: ${formatHebrewDate(date)} בשעה ${time}${apts[0].service_name ? ` — ${apts[0].service_name}` : ''}.`;
+  }
+  const list = apts.map(a => {
+    const date = a.starts_at.split('T')[0];
+    const time = a.starts_at.split('T')[1].slice(0, 5);
+    return `${formatHebrewDate(date)} ${time}${a.service_name ? ` — ${a.service_name}` : ''}`;
+  }).join('\n');
+  return `התורים שלך:\n${list}`;
+}
+
 // ─── Cancellation flow ────────────────────────────────────────────────────────
 
 async function handleCancellationFlow(db, phone, text, conv, businessId, customer, io) {
@@ -272,13 +317,12 @@ async function handleCancellationFlow(db, phone, text, conv, businessId, custome
 
   // Initial — load upcoming appointments
   if (!customer) return 'לא מצאתי תורים קרובים על המספר הזה.';
-  const now = new Date().toISOString();
   const apts = db.prepare(`
     SELECT a.id, a.starts_at, sv.name as service_name
     FROM appointments a LEFT JOIN services sv ON a.service_id=sv.id
     WHERE a.customer_id=? AND a.business_id=? AND a.status='confirmed' AND a.starts_at>?
     ORDER BY a.starts_at ASC LIMIT 5
-  `).all(customer.id, businessId, now);
+  `).all(customer.id, businessId, nowIsrael());
 
   if (!apts.length) return 'אין לך תורים קרובים.';
 
@@ -375,13 +419,12 @@ async function handleRescheduleFlow(db, phone, text, conv, businessId, customer,
 
   // Initial — load appointments
   if (!customer) return 'לא מצאתי תורים קרובים.';
-  const now = new Date().toISOString();
   const apts = db.prepare(`
     SELECT a.id, a.starts_at, sv.name as service_name
     FROM appointments a LEFT JOIN services sv ON a.service_id=sv.id
     WHERE a.customer_id=? AND a.business_id=? AND a.status='confirmed' AND a.starts_at>?
     ORDER BY a.starts_at ASC LIMIT 5
-  `).all(customer.id, businessId, now);
+  `).all(customer.id, businessId, nowIsrael());
 
   if (!apts.length) return 'אין לך תורים קרובים להזזה.';
 
@@ -582,6 +625,17 @@ function getConversation(db, phone) {
     db.prepare('INSERT INTO conversations (whatsapp_phone) VALUES (?)').run(phone);
     conv = db.prepare('SELECT * FROM conversations WHERE whatsapp_phone = ?').get(phone);
   }
+
+  // Reset context after 24h of inactivity (keep business association)
+  if (conv.last_message_at) {
+    const hoursSince = (Date.now() - new Date(conv.last_message_at + 'Z').getTime()) / 3_600_000;
+    if (hoursSince > 24) {
+      db.prepare("UPDATE conversations SET extracted_data='{}', history='[]' WHERE whatsapp_phone=?").run(phone);
+      conv.extracted_data = '{}';
+      conv.history = '[]';
+    }
+  }
+
   return {
     ...conv,
     extracted_data: JSON.parse(conv.extracted_data || '{}'),
@@ -792,6 +846,11 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
     return await handleRescheduleFlow(db, phone, text, conv, businessId, customer, services, lockedStaff, staffList, business, io);
   }
 
+  // ── View appointments ──────────────────────────────────────────────────────
+  if (VIEW_KEYWORDS.some(k => text.includes(k))) {
+    return handleViewAppointments(db, customer, businessId);
+  }
+
   // Build history with current message
   const history = conv.history || [];
   history.push({ role: 'user', content: text });
@@ -804,6 +863,11 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   let contextHint = '';
   if (resolvedDate) contextHint += `\n[מערכת: זיהיתי תאריך: ${resolvedDate} (${formatHebrewDate(resolvedDate)})]`;
   if (resolvedTime) contextHint += `\n[מערכת: זיהיתי שעה: ${resolvedTime}]`;
+
+  // Past date check
+  if (resolvedDate && resolvedDate < todayIsrael()) {
+    contextHint += `\n[מערכת: התאריך ${resolvedDate} כבר עבר. הודע ללקוח שלא ניתן לקבוע בעבר ובקש תאריך עתידי.]`;
+  }
 
   // If we have partial data from previous turns, inject
   const ed = conv.extracted_data || {};
@@ -864,6 +928,20 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
   }
 
   if (lockedStaff) contextHint += `\n[מערכת: הלקוח בחר לעבוד עם ${lockedStaff.name}]`;
+
+  // Duplicate booking check
+  if (customer && dateToCheck && !(resolvedDate && resolvedDate < todayIsrael())) {
+    const existing = db.prepare(`
+      SELECT a.starts_at, sv.name as service_name
+      FROM appointments a LEFT JOIN services sv ON a.service_id=sv.id
+      WHERE a.customer_id=? AND a.business_id=? AND a.status='confirmed'
+        AND date(a.starts_at)=? AND a.starts_at>?
+    `).get(customer.id, businessId, dateToCheck, nowIsrael());
+    if (existing) {
+      const t = existing.starts_at.split('T')[1].slice(0, 5);
+      contextHint += `\n[מערכת: הלקוח כבר קבע תור ב-${formatHebrewDate(dateToCheck)} בשעה ${t}${existing.service_name ? ` (${existing.service_name})` : ''}. הודע לו ואל תקבע כפול.]`;
+    }
+  }
 
   // Anti-loop: detect if bot is repeating itself
   const recentBotMsgs = history.filter(m => m.role === 'assistant');

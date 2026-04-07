@@ -9,6 +9,20 @@ const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'tori-verify-2024-xR7v
 const APP_SECRET = process.env.WHATSAPP_APP_SECRET;
 const FormData = require('form-data');
 
+// ─── Message deduplication ────────────────────────────────────────────────────
+const processedMessageIds = new Set();
+const DEDUP_MAX = 5000; // keep at most 5000 IDs before clearing the oldest half
+function isDuplicate(msgId) {
+  if (!msgId) return false;
+  if (processedMessageIds.has(msgId)) return true;
+  processedMessageIds.add(msgId);
+  if (processedMessageIds.size > DEDUP_MAX) {
+    const entries = [...processedMessageIds];
+    entries.slice(0, DEDUP_MAX / 2).forEach(id => processedMessageIds.delete(id));
+  }
+  return false;
+}
+
 // ─── Whisper transcription via Groq ──────────────────────────────────────────
 async function transcribeAudio(mediaId) {
   const token = process.env.WHATSAPP_TOKEN || process.env.WA_TOKEN_FALLBACK;
@@ -101,6 +115,8 @@ router.post('/webhook', async (req, res) => {
         if (!value.messages || !value.messages.length) continue;
 
         for (const message of value.messages) {
+          if (isDuplicate(message.id)) continue;
+
           const phone = message.from;
           let text = '';
 
