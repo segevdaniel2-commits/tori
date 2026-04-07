@@ -1,24 +1,34 @@
 const axios = require('axios');
 const { getDb } = require('../config/database');
 
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 async function groqChat(messages, temperature = 0.4, maxTokens = 600) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('GROQ_API_KEY not set');
 
   const models = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
   let lastErr;
-  for (const model of models) {
-    try {
-      const res = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        { model, messages, temperature, max_tokens: maxTokens, response_format: { type: 'json_object' } },
-        { headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, timeout: 15000 }
-      );
-      return res.data.choices[0].message.content;
-    } catch (err) {
-      const detail = err.response?.data?.error?.message || err.message;
-      console.error(`[AI] Groq error (${model}):`, detail);
-      lastErr = err;
+
+  // 3 full rounds across both models before giving up
+  for (let round = 0; round < 3; round++) {
+    for (const model of models) {
+      try {
+        const res = await axios.post(
+          'https://api.groq.com/openai/v1/chat/completions',
+          { model, messages, temperature, max_tokens: maxTokens, response_format: { type: 'json_object' } },
+          { headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, timeout: 20000 }
+        );
+        return res.data.choices[0].message.content;
+      } catch (err) {
+        const status = err.response?.status;
+        const detail = err.response?.data?.error?.message || err.message;
+        console.error(`[AI] Groq error (${model}, round ${round}):`, detail);
+        lastErr = err;
+        // Rate limit — wait before retry
+        if (status === 429) await sleep(2000 * (round + 1));
+        else await sleep(500);
+      }
     }
   }
   throw lastErr;
@@ -648,11 +658,19 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
     messages.push({ role: 'system', content: contextHint });
   }
 
+  const FALLBACK_REPLIES = [
+    'לא קלטתי, תגיד לי שוב?',
+    'תחזור על זה?',
+    'מה אמרת? לא שמעתי טוב.',
+    'תגיד שוב, רגע.',
+  ];
+
   let aiResponse;
   try {
     aiResponse = await groqChat(messages);
   } catch (err) {
-    return 'סורי, משהו השתבש. נסה שוב בעוד רגע.';
+    console.error('[AI] All retries failed:', err.message);
+    return FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
   }
 
   let parsed;
@@ -660,10 +678,10 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
     parsed = JSON.parse(aiResponse);
   } catch (e) {
     console.error('[AI] JSON parse error:', aiResponse);
-    return 'סורי, קרתה שגיאה טכנית. נסה שוב.';
+    return FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
   }
 
-  const replyMessage = parsed.message || 'סורי, לא הבנתי. נסה שוב.';
+  const replyMessage = parsed.message || FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
   const extracted = parsed.extracted || {};
 
   // Merge extracted data with previous — only accept values the USER explicitly provided
