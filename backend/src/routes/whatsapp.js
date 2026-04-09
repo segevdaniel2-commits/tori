@@ -244,5 +244,54 @@ router.post('/simulate/reset', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/whatsapp/diag — public diagnostic endpoint
+// Tests Groq API + WhatsApp token without auth, so we can debug from browser
+router.get('/diag', async (req, res) => {
+  const results = {};
+
+  // 1. Groq API
+  try {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) { results.groq = { ok: false, error: 'GROQ_API_KEY not set' }; }
+    else {
+      const r = await axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        { model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }], max_tokens: 5 },
+        { headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' }, timeout: 8000 }
+      );
+      results.groq = { ok: true, model: r.data.model, tokens: r.data.usage?.total_tokens };
+    }
+  } catch (e) {
+    results.groq = { ok: false, status: e.response?.status, error: e.response?.data?.error?.message || e.message };
+  }
+
+  // 2. WhatsApp token
+  try {
+    const token = process.env.WHATSAPP_TOKEN || process.env.WA_TOKEN_FALLBACK;
+    const phoneId = process.env.WHATSAPP_PHONE_ID || '1064513836752035';
+    if (!token) { results.whatsapp = { ok: false, error: 'WHATSAPP_TOKEN not set' }; }
+    else {
+      const r = await axios.get(`https://graph.facebook.com/v19.0/${phoneId}`, {
+        headers: { Authorization: `Bearer ${token}` }, timeout: 8000
+      });
+      results.whatsapp = { ok: true, phone_number: r.data.display_phone_number, verified: r.data.verified_name };
+    }
+  } catch (e) {
+    results.whatsapp = { ok: false, status: e.response?.status, error: e.response?.data?.error?.message || e.message };
+  }
+
+  // 3. Env vars present
+  results.env = {
+    GROQ_API_KEY: !!process.env.GROQ_API_KEY,
+    WHATSAPP_TOKEN: !!(process.env.WHATSAPP_TOKEN || process.env.WA_TOKEN_FALLBACK),
+    WHATSAPP_PHONE_ID: !!process.env.WHATSAPP_PHONE_ID,
+    WHATSAPP_VERIFY_TOKEN: !!process.env.WHATSAPP_VERIFY_TOKEN,
+    WHATSAPP_APP_SECRET: !!process.env.WHATSAPP_APP_SECRET,
+  };
+
+  const allOk = results.groq?.ok && results.whatsapp?.ok;
+  res.status(allOk ? 200 : 503).json({ ok: allOk, timestamp: new Date().toISOString(), ...results });
+});
+
 module.exports = router;
 module.exports.sendWhatsAppMessage = sendWhatsAppMessage;
