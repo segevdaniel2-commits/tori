@@ -64,6 +64,10 @@ initDb().then(() => {
   // Stripe webhook must use raw body, register before express.json()
   app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
+  // WhatsApp webhook must also use raw body for signature verification
+  app.use('/api/whatsapp/webhook', express.raw({ type: 'application/json' }));
+  app.use('/webhook/webhook', express.raw({ type: 'application/json' }));
+
   // ── Security headers ────────────────────────────────────────────────────────
   app.use(helmet({
     contentSecurityPolicy: {

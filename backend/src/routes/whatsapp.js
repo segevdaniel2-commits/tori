@@ -70,9 +70,11 @@ function verifyMetaSignature(req) {
   if (!APP_SECRET) return true; // skip in dev if not configured (warn at startup)
   const sig = req.headers['x-hub-signature-256'];
   if (!sig) return false;
+  // Use raw body buffer if available (express.raw middleware), else fall back to JSON string
+  const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
   const expected = 'sha256=' + crypto
     .createHmac('sha256', APP_SECRET)
-    .update(JSON.stringify(req.body))
+    .update(rawBody)
     .digest('hex');
   return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
 }
@@ -105,7 +107,7 @@ router.post('/webhook', async (req, res) => {
   res.status(200).json({ status: 'ok' });
 
   try {
-    const body = req.body;
+    const body = Buffer.isBuffer(req.body) ? JSON.parse(req.body.toString()) : req.body;
     if (!body.object || body.object !== 'whatsapp_business_account') return;
 
     for (const entry of (body.entry || [])) {
