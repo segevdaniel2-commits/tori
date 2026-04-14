@@ -91,9 +91,9 @@ async function syncGoogleCalendar(businessId, refreshToken) {
 
   const now = new Date();
   const threeMonthsAgo = new Date(now);
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 12);
   const oneMonthAhead = new Date(now);
-  oneMonthAhead.setMonth(oneMonthAhead.getMonth() + 1);
+  oneMonthAhead.setMonth(oneMonthAhead.getMonth() + 6);
 
   // Fetch all events in range
   const response = await calendar.events.list({
@@ -178,9 +178,9 @@ async function syncGoogleCalendar(businessId, refreshToken) {
       }
     }
 
-    // ── Create appointment only for today and future ──────────────────────────
+    // ── Create appointment for all events in range ───────────────────────────
     console.log(`[Google Sync] Event: "${event.summary}" startDate=${startDate} customerId=${customerId}`);
-    if (startDate >= todayStr && customerId) {
+    if (customerId) {
       let alreadyExists = null;
       try {
         alreadyExists = db.prepare(
