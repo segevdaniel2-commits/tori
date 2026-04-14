@@ -250,22 +250,28 @@ router.post('/chat', async (req, res) => {
       { role: 'user', content: message.trim() },
     ];
 
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages,
-        temperature: 0.2,
-        max_tokens: 250,
-      }),
-    });
+    // Try models in order — fallback if one is unavailable
+    const MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-70b-versatile', 'llama-3.1-8b-instant'];
+    let reply = null;
 
-    const json = await groqRes.json();
-    const reply = json.choices?.[0]?.message?.content;
+    for (const model of MODELS) {
+      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model, messages, temperature: 0.1, max_tokens: 350 }),
+      });
+
+      const json = await groqRes.json();
+      if (json.error) {
+        console.warn(`[OwnerBot] Model ${model} failed:`, json.error?.message || json.error);
+        continue;
+      }
+      reply = json.choices?.[0]?.message?.content;
+      if (reply) { console.log(`[OwnerBot] Used model: ${model}`); break; }
+    }
 
     if (!reply) {
       return res.status(500).json({ error: 'No response from AI' });
