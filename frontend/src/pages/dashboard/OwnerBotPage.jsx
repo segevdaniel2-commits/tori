@@ -22,10 +22,23 @@ function useNightMode() {
   return isNight;
 }
 
+const CHAT_STORAGE_KEY = 'ownerbot_chat';
+const CHAT_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+function loadSavedChat() {
+  try {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return [];
+    const { messages, savedAt } = JSON.parse(raw);
+    if (Date.now() - savedAt > CHAT_TTL_MS) { localStorage.removeItem(CHAT_STORAGE_KEY); return []; }
+    return messages || [];
+  } catch { return []; }
+}
+
 export default function OwnerBotPage() {
   const { business } = useAuthStore();
   const isNight = useNightMode();
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => loadSavedChat());
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -41,6 +54,13 @@ export default function OwnerBotPage() {
   const titleClr = isNight ? '#ffffff' : '#111827';
   const inputBg  = isNight ? 'rgba(255,255,255,0.04)' : '#ffffff';
   const inputBdr = isNight ? 'rgba(255,255,255,0.10)' : '#d1d5db';
+
+  // Save messages to localStorage on every change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify({ messages, savedAt: Date.now() }));
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (!isEmpty) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -84,6 +104,7 @@ export default function OwnerBotPage() {
   }
 
   function reset() {
+    localStorage.removeItem(CHAT_STORAGE_KEY);
     setMessages([]);
     setInput('');
     setError(null);

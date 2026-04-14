@@ -222,7 +222,14 @@ ${upcomingText}
 - שמות לקוחות וטלפונים — תן אותם כפי שהם, ללא עיבוד
 - אם השאלה מעורפלת או לא קשורה לעסק — שאל "על מה אתה שואל?" או "לא הבנתי, תנסח מחדש"
 - אם ברכו אותך (היי, שלום וכו') — ענה בברכה קצרה ושאל במה תוכל לעזור
-- אסור להוציא טלפון של לקוח אלא אם ביקשו אותו במפורש לפי שם`;
+- אסור להוציא טלפון של לקוח אלא אם ביקשו אותו במפורש לפי שם
+
+9. קביעת תורים (חשוב מאוד!):
+   - אם בעל העסק מבקש לקבוע תור, אסוף: שם לקוח, טלפון, שירות, תאריך (YYYY-MM-DD), שעה (HH:MM)
+   - אם חסר מידע — שאל עליו
+   - כשיש את כל הפרטים — ענה בדיוק בפורמט: BOOK:{שם}|{טלפון}|{שירות}|{תאריך}|{שעה}
+   - דוגמה: BOOK:דני כהן|0501234567|תספורת|2026-04-15|10:00
+   - אחרי ה-BOOK אל תוסיף שום טקסט נוסף`;
 }
 
 // ─── POST /api/owner-bot/chat ─────────────────────────────────────────────────
@@ -275,6 +282,45 @@ router.post('/chat', async (req, res) => {
 
     if (!reply) {
       return res.status(500).json({ error: 'No response from AI' });
+    }
+
+    // ── Detect and execute booking action ─────────────────────────────────────
+    // Format: BOOK:{customerName}|{phone}|{service}|{date YYYY-MM-DD}|{time HH:MM}
+    const bookMatch = reply.match(/BOOK:([^|]+)\|([^|]+)\|([^|]+)\|(\d{4}-\d{2}-\d{2})\|(\d{2}:\d{2})/);
+    if (bookMatch) {
+      const [, customerName, phone, serviceName, date, time] = bookMatch;
+      try {
+        const svc = ctx.services.find(s => s.name.includes(serviceName.trim()) || serviceName.trim().includes(s.name));
+        const dur = svc?.duration_minutes || 30;
+        const startsAt = `${date}T${time}:00`;
+        const endsAt = new Date(new Date(startsAt).getTime() + dur * 60000).toISOString().slice(0, 19);
+        const cleanPhone = phone.replace(/[\s\-]/g, '');
+
+        // Conflict check
+        const conflict = db.prepare(`SELECT id FROM appointments WHERE business_id = ? AND status != 'cancelled' AND starts_at < ? AND ends_at > ?`).get(req.business.id, endsAt, startsAt);
+        if (conflict) {
+          return res.json({ reply: `השעה ${time} תפוסה — יש כבר תור באותה שעה. תרצה לבחור שעה אחרת?` });
+        }
+
+        // Get or create customer
+        let customer = db.prepare('SELECT id FROM customers WHERE business_id = ? AND whatsapp_phone = ?').get(req.business.id, cleanPhone);
+        if (!customer) {
+          const r = db.prepare('INSERT INTO customers (business_id, whatsapp_phone, name) VALUES (?, ?, ?)').run(req.business.id, cleanPhone || `owner_${Date.now()}`, customerName.trim());
+          customer = { id: r.lastInsertRowid };
+        }
+
+        const staff = ctx.staff[0];
+        db.prepare(`INSERT INTO appointments (business_id, customer_id, staff_id, service_id, starts_at, ends_at, price, status, source) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmed', 'owner_bot')`)
+          .run(req.business.id, customer.id, staff?.id || null, svc?.id || null, startsAt, endsAt, svc?.price || null);
+
+        const io = req.app.get('io');
+        if (io) io.to(`business_${req.business.id}`).emit('appointment:created', { starts_at: startsAt });
+
+        const humanReply = reply.replace(/BOOK:[^\n]+/, `✓ נקבע תור ל${customerName.trim()} ב-${date} בשעה ${time}${svc ? ` (${svc.name})` : ''}.`);
+        return res.json({ reply: humanReply });
+      } catch (bookErr) {
+        console.error('[OwnerBot] Booking error:', bookErr.message);
+      }
     }
 
     res.json({ reply });
