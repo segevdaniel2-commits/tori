@@ -282,6 +282,8 @@ const init = async () => {
     "ALTER TABLE appointments ADD COLUMN google_event_id TEXT",
     "ALTER TABLE customers ADD COLUMN default_service_id INTEGER REFERENCES services(id) ON DELETE SET NULL",
     "ALTER TABLE customers ADD COLUMN gender TEXT DEFAULT 'male'",
+    "ALTER TABLE businesses ADD COLUMN hide_stats INTEGER DEFAULT 0",
+    "ALTER TABLE businesses ADD COLUMN logo_url TEXT",
   ];
   for (const m of migrations) {
     try { db.run(m); } catch (_) { /* column already exists */ }

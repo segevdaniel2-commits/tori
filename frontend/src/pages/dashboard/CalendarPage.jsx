@@ -959,8 +959,8 @@ export default function CalendarPage() {
 
       {/* ── Desktop time grid ───────────────────────────────────────────────── */}
       <div
-        className={`hidden sm:flex flex-col flex-1 rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
-        style={{ background: isNight ? '#0d1117' : '#ffffff' }}
+        className={`hidden sm:flex flex-col rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
+        style={{ background: isNight ? '#0d1117' : '#ffffff', maxHeight: 'calc(100vh - 220px)' }}
       >
         {/* Summary bar */}
         <div className={`flex items-center justify-between px-5 py-3 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>

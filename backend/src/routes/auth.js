@@ -201,6 +201,25 @@ router.get('/debug', authMiddleware, (req, res) => {
   res.json({ count: businesses.length, businesses });
 });
 
+// POST /api/auth/admin-reset — reset password for any account (requires ADMIN_SECRET header)
+router.post('/admin-reset', async (req, res) => {
+  const adminSecret = req.headers['x-admin-secret'];
+  if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const { email, new_password } = req.body;
+  if (!email || !new_password || new_password.length < 8) {
+    return res.status(400).json({ error: 'email and new_password (min 8 chars) required' });
+  }
+  const cleanEmail = validator.normalizeEmail(String(email));
+  const db = getDb();
+  const business = db.prepare('SELECT id FROM businesses WHERE email = ?').get(cleanEmail);
+  if (!business) return res.status(404).json({ error: 'Email not found' });
+  const hashed = await bcrypt.hash(new_password, 12);
+  db.prepare('UPDATE businesses SET password = ?, is_active = 1 WHERE email = ?').run(hashed, cleanEmail);
+  res.json({ ok: true, message: `Password reset for ${cleanEmail}` });
+});
+
 function getDefaultServices(type) {
   const map = {
     barber_men: [

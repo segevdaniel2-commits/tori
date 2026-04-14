@@ -5,8 +5,9 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Users, Calendar, DollarSign, Download, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { TrendingUp, Users, Calendar, DollarSign, Download, Loader2, ChevronRight, ChevronLeft, EyeOff } from 'lucide-react';
 import { useAnalyticsApi } from '../../hooks/useApi';
+import { useAuthStore } from '../../store/useStore';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 
@@ -129,33 +130,33 @@ function MonthPicker({ value, onChange }) {
   );
 }
 
-function StatCard({ title, value, subtitle, icon: Icon, color = 'tori', loading }) {
+function StatCard({ title, value, subtitle, icon: Icon, color = 'orange', loading }) {
   const colorMap = {
-    tori: { bg: 'bg-tori-50', icon: 'text-tori-600', border: 'border-tori-100' },
-    coral: { bg: 'bg-red-50', icon: 'text-coral-500', border: 'border-red-100' },
-    green: { bg: 'bg-green-50', icon: 'text-green-600', border: 'border-green-100' },
-    amber: { bg: 'bg-amber-50', icon: 'text-amber-600', border: 'border-amber-100' },
+    orange: { gradient: 'from-[#f97316] to-[#f43f5e]', bg: 'bg-[#fff1eb]', text: 'text-[#f97316]', border: 'border-[#f97316]/15' },
+    coral:  { gradient: 'from-[#f43f5e] to-[#f97316]', bg: 'bg-[#fff1eb]', text: 'text-[#f43f5e]', border: 'border-[#f43f5e]/15' },
+    cyan:   { gradient: 'from-[#06b6d4] to-[#0891b2]', bg: 'bg-cyan-50',   text: 'text-cyan-600',   border: 'border-cyan-100' },
+    green:  { gradient: 'from-[#10b981] to-[#059669]', bg: 'bg-green-50',  text: 'text-green-600',  border: 'border-green-100' },
   };
-  const c = colorMap[color] || colorMap.tori;
+  const c = colorMap[color] || colorMap.orange;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-white rounded-2xl p-4 sm:p-6 border ${c.border} shadow-sm`}
+      className={`bg-white rounded-2xl p-4 border ${c.border} shadow-sm`}
     >
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <span className="text-gray-600 text-sm font-medium">{title}</span>
-        <div className={`w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center`}>
-          <Icon size={18} className={c.icon} />
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-gray-500 text-xs font-semibold uppercase tracking-wide">{title}</span>
+        <div className={`w-8 h-8 rounded-xl ${c.bg} flex items-center justify-center`}>
+          <Icon size={15} className={c.text} />
         </div>
       </div>
       {loading ? (
-        <div className="h-8 w-24 bg-gray-100 rounded-lg animate-pulse" />
+        <div className="h-7 w-20 bg-gray-100 rounded-lg animate-pulse" />
       ) : (
-        <div className="text-3xl font-black text-gray-900">{value}</div>
+        <div className="text-2xl font-black text-gray-900">{value}</div>
       )}
-      {subtitle && <p className="text-gray-400 text-sm mt-1">{subtitle}</p>}
+      {subtitle && <p className="text-gray-400 text-xs mt-0.5">{subtitle}</p>}
     </motion.div>
   );
 }
@@ -180,6 +181,8 @@ export default function AnalyticsPage() {
   const [days, setDays] = useState(30);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const analyticsApi = useAnalyticsApi();
+  const { business } = useAuthStore();
+  const hideStats = !!(business?.hide_stats);
 
   const { data: overview, isLoading: loadingOverview } = useQuery({
     queryKey: ['analytics-overview'],
@@ -265,10 +268,16 @@ export default function AnalyticsPage() {
       </div>
 
       {/* KPI cards */}
+      {hideStats && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 text-gray-400 text-xs">
+          <EyeOff size={13} />
+          נתוני הכנסות ולקוחות מוסתרים — ניתן לשנות בהגדרות &gt; כללי &gt; פרטיות
+        </div>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="הכנסות החודש"
-          value={overview ? `₪${overview.monthlyRevenue?.toLocaleString()}` : '-'}
+          value={hideStats ? '••••' : overview ? `₪${overview.monthlyRevenue?.toLocaleString()}` : '-'}
           subtitle="החודש הנוכחי"
           icon={DollarSign}
           color="green"
@@ -279,20 +288,20 @@ export default function AnalyticsPage() {
           value={overview?.monthlyAppointments ?? '-'}
           subtitle={`${overview?.avgPerDay ?? 0} בממוצע ליום`}
           icon={Calendar}
-          color="tori"
+          color="orange"
           loading={loadingOverview}
         />
         <StatCard
           title="סה״כ לקוחות"
-          value={overview?.totalCustomers ?? '-'}
+          value={hideStats ? '••••' : overview?.totalCustomers ?? '-'}
           subtitle="לקוחות רשומים"
           icon={Users}
-          color="amber"
+          color="cyan"
           loading={loadingOverview}
         />
         <StatCard
           title="סה״כ הכנסות"
-          value={overview ? `₪${overview.totalRevenue?.toLocaleString()}` : '-'}
+          value={hideStats ? '••••' : overview ? `₪${overview.totalRevenue?.toLocaleString()}` : '-'}
           subtitle="מאז ההקמה"
           icon={TrendingUp}
           color="coral"
@@ -310,7 +319,7 @@ export default function AnalyticsPage() {
                 key={d}
                 onClick={() => setDays(d)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  days === d ? 'bg-tori-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  days === d ? 'bg-gradient-to-r from-[#f97316] to-[#f43f5e] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 {d} יום
@@ -327,15 +336,15 @@ export default function AnalyticsPage() {
             <AreaChart data={revenueData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
               <defs>
                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `₪${v}`} />
               <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="revenue" name="הכנסות" stroke="#7c3aed" fill="url(#revenueGrad)" strokeWidth={2.5} dot={false} />
+              <Area type="monotone" dataKey="revenue" name="הכנסות" stroke="#f43f5e" fill="url(#revenueGrad)" strokeWidth={2.5} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         )}
@@ -376,7 +385,7 @@ export default function AnalyticsPage() {
                 <XAxis dataKey="hour" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" name="תורים" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" name="תורים" fill="#f43f5e" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -387,16 +396,16 @@ export default function AnalyticsPage() {
       {monthlyReport && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h3 className="font-bold text-gray-900 text-lg mb-4">סיכום חודשי: {month}</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: 'סה״כ תורים', value: monthlyReport.summary.total },
-              { label: 'הושלמו', value: monthlyReport.summary.completed },
-              { label: 'הכנסות', value: `₪${monthlyReport.summary.revenue?.toLocaleString()}` },
-              { label: 'לקוחות חדשים', value: monthlyReport.newCustomers },
+              { label: 'סה״כ תורים', value: monthlyReport.summary.total, color: 'text-[#f97316]' },
+              { label: 'הושלמו', value: monthlyReport.summary.completed, color: 'text-green-600' },
+              { label: 'הכנסות', value: `₪${monthlyReport.summary.revenue?.toLocaleString()}`, color: 'text-[#f43f5e]' },
+              { label: 'לקוחות חדשים', value: monthlyReport.newCustomers, color: 'text-cyan-600' },
             ].map((s, i) => (
-              <div key={i} className="bg-gray-50 rounded-xl p-4 text-center">
-                <div className="text-2xl font-black text-gray-900">{s.value}</div>
-                <div className="text-gray-500 text-sm mt-1">{s.label}</div>
+              <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
+                <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
+                <div className="text-gray-400 text-xs mt-0.5">{s.label}</div>
               </div>
             ))}
           </div>

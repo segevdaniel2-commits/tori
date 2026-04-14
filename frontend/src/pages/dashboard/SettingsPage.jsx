@@ -122,10 +122,12 @@ function GeneralSettings() {
     address: business?.address || '',
     city: business?.city || '',
     phone: business?.phone || '',
+    logo_url: business?.logo_url || '',
     buffer_minutes: business?.buffer_minutes ?? 15,
     cancellation_hours: business?.cancellation_hours ?? 24,
     bot_tone: business?.bot_tone || 'friendly',
     terms_text: business?.terms_text || '',
+    hide_stats: !!(business?.hide_stats),
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -145,6 +147,23 @@ function GeneralSettings() {
 
   return (
     <div className="space-y-4">
+      {/* Profile picture */}
+      <Section title="תמונת פרופיל / לוגו">
+        <div className="flex items-center gap-4">
+          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl shrink-0 overflow-hidden border ${isNight ? 'border-white/10' : 'border-gray-200'}`}
+            style={{ background: form.logo_url ? 'transparent' : 'linear-gradient(135deg,#f97316,#f43f5e)' }}>
+            {form.logo_url
+              ? <img src={form.logo_url} alt="לוגו" className="w-full h-full object-cover" onError={() => setForm(p => ({ ...p, logo_url: '' }))} />
+              : (business?.name?.[0] || 'E')}
+          </div>
+          <div className="flex-1">
+            <label className={labelCls(isNight)}>קישור לתמונה (URL)</label>
+            <input {...f('logo_url')} className={inputCls(isNight)} dir="ltr" placeholder="https://..." />
+            <p className={`text-xs mt-1 ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>הדבק קישור לתמונה מהאינטרנט (JPG, PNG)</p>
+          </div>
+        </div>
+      </Section>
+
       <Section title="פרטי העסק">
         <div>
           <label className={labelCls(isNight)}>שם העסק</label>
@@ -221,6 +240,17 @@ function GeneralSettings() {
               <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{t.desc}</div>
             </button>
           ))}
+        </div>
+      </Section>
+
+      {/* Privacy — hide revenue / customer counts */}
+      <Section title="פרטיות ונתונים">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>הסתר נתוני הכנסות ולקוחות</div>
+            <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>מספרי הכנסות וכמות לקוחות לא יוצגו בדשבורד</div>
+          </div>
+          <Toggle value={form.hide_stats} onChange={v => setForm(p => ({ ...p, hide_stats: v }))} />
         </div>
       </Section>
 
@@ -531,7 +561,7 @@ function ServicesSettings() {
                     onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
                     className={inputCls(isNight) + ' flex-1 py-2'} />
                   <div className="flex items-center gap-1 shrink-0">
-                    <input type="number" value={editForm.duration_minutes}
+                    <input type="number" min="5" step="5" value={editForm.duration_minutes}
                       onChange={e => setEditForm(f => ({ ...f, duration_minutes: Number(e.target.value) }))}
                       className={inputCls(isNight) + ' w-16 py-2 text-center'} />
                     <span className={`text-xs shrink-0 ${mutedText}`}>דק׳</span>
@@ -622,77 +652,78 @@ function StaffSettings() {
     } catch { alert('שגיאה'); }
   }
 
+  const activeStaff = staff.filter(s => s.is_active !== 0);
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {business?.plan === 'basic' && (
-        <div className="bg-amber-500/10 border border-amber-500/25 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle size={16} className="text-amber-400 mt-0.5 shrink-0" />
-          <div>
-            <div className="font-semibold text-amber-600 text-sm">תוכנית Basic: עובד אחד בלבד</div>
-            <div className="text-amber-500/70 text-xs mt-0.5">שדרג לתוכנית Business כדי להוסיף עובדים נוספים</div>
-          </div>
+        <div className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs ${isNight ? 'border-amber-500/20 bg-amber-500/8 text-amber-400' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+          <AlertCircle size={13} className="shrink-0" />
+          תוכנית Basic מאפשרת עובד אחד. שדרג ל-Business להוספת עובדים נוספים.
         </div>
       )}
 
-      {staff.map(s => (
-        <div key={s.id} className={`flex items-center gap-3 p-3 rounded-xl border ${isNight ? 'border-white/[0.08] bg-white/[0.03]' : 'border-gray-200 bg-white'}`}>
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
-            style={{ background: s.color }}>
-            {s.name?.[0]}
+      {/* Staff grid */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {activeStaff.map(s => (
+          <div key={s.id} className={`relative flex items-center gap-3 p-3 rounded-2xl border transition-all ${isNight ? 'border-white/[0.07] bg-white/[0.03]' : 'border-gray-100 bg-gray-50/80 shadow-sm'}`}>
+            {/* Avatar */}
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
+              style={{ background: `linear-gradient(135deg, ${s.color}, ${s.color}bb)` }}>
+              {s.name?.[0]}
+            </div>
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className={`font-semibold text-sm truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{s.name}</div>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
+                <span className={`text-xs ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{s.role === 'owner' ? 'בעלים' : 'עובד'}</span>
+              </div>
+            </div>
+            {/* Delete */}
+            {s.role !== 'owner' && (
+              <button onClick={() => handleDelete(s.id)}
+                className={`shrink-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all ${isNight ? 'text-gray-700 hover:bg-red-500/20 hover:text-red-400' : 'text-gray-300 hover:bg-red-50 hover:text-red-500'}`}>
+                <X size={13} />
+              </button>
+            )}
           </div>
-          <div className="flex-1">
-            <div className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>{s.name}</div>
-            <div className={`text-xs ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{s.role === 'owner' ? 'בעלים' : 'עובד'}</div>
-          </div>
-          <div className="flex gap-1 shrink-0">
-            {STAFF_COLORS.map(c => (
-              <div key={c} className="w-4 h-4 rounded-full cursor-pointer transition-all"
-                style={{ background: c, outline: s.color === c ? `2px solid ${c}` : 'none', outlineOffset: 2 }} />
-            ))}
-          </div>
-          {s.role !== 'owner' && (
-            <button onClick={() => handleDelete(s.id)}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isNight ? 'bg-white/5 hover:bg-red-500/20 text-gray-500 hover:text-red-400' : 'bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500'}`}>
-              <Trash2 size={14} />
-            </button>
-          )}
-        </div>
-      ))}
+        ))}
+      </div>
 
+      {/* Add form / button */}
       {showAdd ? (
-        <Section title="עובד חדש">
+        <div className={`border rounded-2xl p-4 space-y-3 ${isNight ? 'border-white/[0.10] bg-white/[0.03]' : 'border-gray-200 bg-gray-50 shadow-sm'}`}>
+          <p className={`text-xs font-bold uppercase tracking-widest ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>עובד חדש</p>
+          <input value={newStaff.name} onChange={e => setNewStaff(f => ({ ...f, name: e.target.value }))} className={inputCls(isNight)} placeholder="שם העובד" />
           <div>
-            <label className={labelCls(isNight)}>שם</label>
-            <input value={newStaff.name} onChange={e => setNewStaff(f => ({ ...f, name: e.target.value }))} className={inputCls(isNight)} placeholder="שם העובד" />
-          </div>
-          <div>
-            <label className={labelCls(isNight)}>צבע יומן</label>
-            <div className="flex gap-2 flex-wrap">
+            <p className={`text-xs mb-2 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>צבע ביומן</p>
+            <div className="flex gap-1.5 flex-wrap">
               {STAFF_COLORS.map(c => (
                 <button key={c} type="button" onClick={() => setNewStaff(f => ({ ...f, color: c }))}
-                  className="w-8 h-8 rounded-full transition-all"
-                  style={{ background: c, outline: newStaff.color === c ? `3px solid ${c}` : 'none', outlineOffset: 2 }} />
+                  className="w-7 h-7 rounded-full transition-all"
+                  style={{ background: c, outline: newStaff.color === c ? `2px solid ${c}` : 'none', outlineOffset: 2 }} />
               ))}
             </div>
           </div>
-          <div className="flex gap-2 pt-1">
-            <button onClick={handleAdd} disabled={saving}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r ${ACCENT} flex items-center justify-center gap-2`}>
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-              הוסף עובד
+          <div className="flex gap-2">
+            <button onClick={handleAdd} disabled={saving || !newStaff.name}
+              className={`flex-1 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r ${ACCENT} flex items-center justify-center gap-1.5 disabled:opacity-40`}>
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+              הוסף
             </button>
             <button onClick={() => setShowAdd(false)}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isNight ? 'bg-white/5 border border-white/10 text-gray-500 hover:text-white' : 'bg-gray-100 border border-gray-200 text-gray-500 hover:text-gray-700'}`}>
-              <X size={14} />
+              className={`px-4 py-2 rounded-xl text-sm transition-all ${isNight ? 'bg-white/5 text-gray-500 hover:text-white' : 'bg-gray-200 text-gray-500 hover:text-gray-700'}`}>
+              ביטול
             </button>
           </div>
-        </Section>
+        </div>
       ) : (
         <button onClick={() => setShowAdd(true)}
-          className={`w-full py-3 rounded-xl border border-dashed text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-            isNight ? 'border-white/15 text-gray-500 hover:text-gray-300 hover:border-white/25' : 'border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400'
+          className={`w-full py-2.5 rounded-xl border border-dashed text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+            isNight ? 'border-white/15 text-gray-500 hover:text-gray-300 hover:border-white/30' : 'border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400'
           }`}>
-          <Plus size={15} />
+          <Plus size={14} />
           הוסף עובד
         </button>
       )}
@@ -713,11 +744,13 @@ function CheckoutForm({ plan, onSuccess, onCancel }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || submitted) return;
+    setSubmitted(true);
     setLoading(true); setError('');
     try {
       const { data } = await api.post('/stripe/subscribe', { plan });
@@ -727,7 +760,10 @@ function CheckoutForm({ plan, onSuccess, onCancel }) {
       });
       if (stripeError) throw new Error(stripeError.message);
       if (paymentIntent?.status === 'succeeded') onSuccess();
-    } catch (err) { setError(err.message || 'שגיאה בתשלום'); }
+    } catch (err) {
+      setError(err.message || 'שגיאה בתשלום');
+      setSubmitted(false); // allow retry only after explicit error
+    }
     finally { setLoading(false); }
   }
 
@@ -743,7 +779,7 @@ function CheckoutForm({ plan, onSuccess, onCancel }) {
       </div>
       {error && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 flex items-center gap-2"><AlertCircle size={14} />{error}</div>}
       <div className="flex gap-3">
-        <button type="submit" disabled={!stripe || loading}
+        <button type="submit" disabled={!stripe || loading || submitted}
           className={`flex-1 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r ${ACCENT} flex items-center justify-center gap-2 disabled:opacity-50`}>
           {loading ? <Loader2 size={15} className="animate-spin" /> : <CreditCard size={15} />}
           {loading ? 'מעבד...' : 'שלם עכשיו'}
@@ -1011,14 +1047,15 @@ function IntegrationsSettings() {
                 {isGoogleConnected ? 'מחובר' : 'לא מחובר'}
               </span>
             </div>
-            <p className={`text-sm mb-4 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
+            <p className={`text-sm mb-3 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
               ייבא תורים ולקוחות מהיומן שלך ישירות לטורי — פעם אחת, בלחיצה.
             </p>
             {googleNotice && (
-              <div className={`flex items-center gap-2 text-sm px-3 py-2.5 rounded-xl mb-3 border ${
+              <div className={`flex items-start gap-2 text-sm px-3 py-2.5 rounded-xl mb-3 border ${
                 googleNotice.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-600' : 'bg-red-500/10 border-red-500/20 text-red-500'
               }`}>
-                <Check size={14} />{googleNotice.msg}
+                {googleNotice.type === 'success' ? <Check size={14} className="mt-0.5 shrink-0" /> : <AlertCircle size={14} className="mt-0.5 shrink-0" />}
+                <span>{googleNotice.msg}</span>
               </div>
             )}
             {isGoogleConnected ? (
