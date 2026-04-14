@@ -19,6 +19,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const helmet = require('helmet');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const morgan = require('morgan');
 
@@ -103,6 +104,7 @@ initDb().then(() => {
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
 
+  app.use(cookieParser());
   app.use(compression());
 
   // Use 'combined' (not 'dev') to avoid verbose output in production

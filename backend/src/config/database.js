@@ -10,8 +10,10 @@ const DB_PATH = process.env.DB_PATH || './tori.db';
 let db = null;
 
 // ─── Persistence helpers ──────────────────────────────────────────────────────
+let _inTransaction = false; // Suppress saveDb during active transaction
+
 const saveDb = () => {
-  if (!db) return;
+  if (!db || _inTransaction) return;
   try {
     const dir = path.dirname(path.resolve(DB_PATH));
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -71,10 +73,29 @@ const exec = (sql) => {
   saveDb();
 };
 
+// ─── Transaction support ──────────────────────────────────────────────────────
+// Returns a function; calling that function runs fn() inside BEGIN EXCLUSIVE … COMMIT/ROLLBACK
+const transaction = (fn) => (...args) => {
+  db.run('BEGIN EXCLUSIVE');
+  _inTransaction = true;
+  try {
+    const result = fn(...args);
+    db.run('COMMIT');
+    _inTransaction = false;
+    saveDb();
+    return result;
+  } catch (err) {
+    db.run('ROLLBACK');
+    _inTransaction = false;
+    throw err;
+  }
+};
+
 // ─── The db proxy object (mimics better-sqlite3's db instance) ────────────────
 const makeDbProxy = () => ({
   prepare,
   exec,
+  transaction,
   pragma: () => {}, // no-op, sql.js uses db.run('PRAGMA ...')
   close: () => { saveDb(); },
 });
@@ -284,6 +305,11 @@ const init = async () => {
     "ALTER TABLE customers ADD COLUMN gender TEXT DEFAULT 'male'",
     "ALTER TABLE businesses ADD COLUMN hide_stats INTEGER DEFAULT 0",
     "ALTER TABLE businesses ADD COLUMN logo_url TEXT",
+    // Security: JWT revocation
+    "ALTER TABLE businesses ADD COLUMN token_version INTEGER DEFAULT 0",
+    // Security: TOTP 2FA
+    "ALTER TABLE businesses ADD COLUMN totp_secret TEXT",
+    "ALTER TABLE businesses ADD COLUMN totp_enabled INTEGER DEFAULT 0",
   ];
   for (const m of migrations) {
     try { db.run(m); } catch (_) { /* column already exists */ }

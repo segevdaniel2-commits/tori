@@ -4,9 +4,9 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Building2, Clock, Scissors, Users, CreditCard, Puzzle, QrCode,
+  Building2, Clock, Scissors, Users, CreditCard, Puzzle, QrCode, Shield,
   Plus, Trash2, Edit3, Check, X, Loader2, Save, Copy, ExternalLink,
-  AlertCircle, ChevronDown,
+  AlertCircle, ChevronDown, ShieldCheck, ShieldOff, Smartphone,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useStore';
 
@@ -43,6 +43,7 @@ const TABS = [
   { id: 'staff',        label: 'עובדים',       icon: Users },
   { id: 'billing',      label: 'תשלום',        icon: CreditCard },
   { id: 'integrations', label: 'אינטגרציות',   icon: Puzzle },
+  { id: 'security',     label: 'אבטחה',        icon: Shield },
   { id: 'qr',           label: 'קוד QR',       icon: QrCode },
 ];
 
@@ -1255,6 +1256,176 @@ function QRSettings() {
   );
 }
 
+// ─── Security / 2FA settings ──────────────────────────────────────────────────
+function SecuritySettings() {
+  const isNight = useContext(NightCtx);
+  const [status, setStatus] = useState(null);   // null | true | false
+  const [step, setStep] = useState('idle');      // 'idle' | 'setup' | 'disable'
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [secret, setSecret] = useState('');
+  const [code, setCode] = useState('');
+  const [disablePass, setDisablePass] = useState('');
+  const [disableCode, setDisableCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState(null);
+
+  useEffect(() => {
+    api.get('/auth/2fa/status').then(r => setStatus(r.data.enabled)).catch(() => {});
+  }, []);
+
+  async function startSetup() {
+    setLoading(true); setNotice(null);
+    try {
+      const { data } = await api.post('/auth/2fa/setup');
+      setQrDataUrl(data.qrDataUrl);
+      setSecret(data.secret);
+      setStep('setup');
+      setCode('');
+    } catch { setNotice({ type: 'error', msg: 'שגיאה, נסה שוב' }); }
+    finally { setLoading(false); }
+  }
+
+  async function confirmEnable() {
+    if (code.length < 6) return;
+    setLoading(true); setNotice(null);
+    try {
+      await api.post('/auth/2fa/enable', { code });
+      setStatus(true); setStep('idle');
+      setNotice({ type: 'success', msg: 'אימות דו-שלבי הופעל בהצלחה!' });
+    } catch (err) { setNotice({ type: 'error', msg: err.response?.data?.error || 'קוד שגוי' }); }
+    finally { setLoading(false); }
+  }
+
+  async function confirmDisable() {
+    if (!disablePass || disableCode.length < 6) return;
+    setLoading(true); setNotice(null);
+    try {
+      await api.post('/auth/2fa/disable', { password: disablePass, code: disableCode });
+      setStatus(false); setStep('idle');
+      setNotice({ type: 'success', msg: 'אימות דו-שלבי כובה.' });
+    } catch (err) { setNotice({ type: 'error', msg: err.response?.data?.error || 'שגיאה' }); }
+    finally { setLoading(false); }
+  }
+
+  const card = isNight
+    ? 'bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5'
+    : 'bg-gray-50 border border-gray-200 rounded-2xl p-5';
+  const inputCls2 = isNight
+    ? 'w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#f43f5e]/50'
+    : 'w-full px-3 py-2.5 rounded-xl bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-[#f43f5e]/60 shadow-sm';
+
+  return (
+    <div className="space-y-5">
+      {notice && (
+        <div className={`text-sm px-4 py-3 rounded-xl border ${notice.type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+          {notice.msg}
+        </div>
+      )}
+
+      {/* ── 2FA status card ──────────────────────────────────────────── */}
+      <div className={card}>
+        <div className="flex items-start gap-4">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${status ? 'bg-green-500/15' : isNight ? 'bg-white/[0.06]' : 'bg-gray-200'}`}>
+            {status ? <ShieldCheck size={20} className="text-green-400" /> : <Smartphone size={20} className={isNight ? 'text-gray-400' : 'text-gray-500'} />}
+          </div>
+          <div className="flex-1">
+            <div className={`font-semibold text-sm mb-0.5 ${isNight ? 'text-white' : 'text-gray-900'}`}>
+              אימות דו-שלבי (2FA)
+            </div>
+            <div className={`text-xs ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>
+              {status === null ? 'טוען...' : status ? 'פעיל — הכניסה דורשת קוד מ-Google Authenticator' : 'כבוי — מומלץ להפעיל לאבטחת החשבון'}
+            </div>
+          </div>
+          {status === false && step === 'idle' && (
+            <button onClick={startSetup} disabled={loading}
+              className="shrink-0 px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-[#f97316] to-[#f43f5e] text-white disabled:opacity-50">
+              {loading ? <Loader2 size={14} className="animate-spin" /> : 'הפעל'}
+            </button>
+          )}
+          {status === true && step === 'idle' && (
+            <button onClick={() => { setStep('disable'); setDisablePass(''); setDisableCode(''); setNotice(null); }}
+              className={`shrink-0 px-4 py-2 rounded-xl text-xs font-semibold border ${isNight ? 'border-white/10 text-gray-400 hover:text-red-400' : 'border-gray-300 text-gray-500 hover:text-red-500'}`}>
+              כבה
+            </button>
+          )}
+        </div>
+
+        {/* ── Setup: show QR code ─────────────────────────────────────── */}
+        {step === 'setup' && (
+          <div className="mt-5 space-y-4">
+            <p className={`text-xs ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>
+              סרוק עם <strong>Google Authenticator</strong> או <strong>Authy</strong>:
+            </p>
+            {qrDataUrl && (
+              <div className="flex justify-center">
+                <img src={qrDataUrl} alt="QR Code" className="w-44 h-44 rounded-xl bg-white p-2" />
+              </div>
+            )}
+            <details className="text-xs">
+              <summary className={`cursor-pointer ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>הצג קוד ידני</summary>
+              <code className={`block mt-1 px-3 py-2 rounded-lg font-mono text-xs break-all ${isNight ? 'bg-white/[0.06] text-gray-300' : 'bg-gray-100 text-gray-700'}`}>{secret}</code>
+            </details>
+            <div>
+              <label className={`block text-xs font-semibold mb-1.5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>הכנס את הקוד לאימות</label>
+              <input value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                className={`${inputCls2} text-center text-xl tracking-[0.4em] font-mono`} placeholder="000000" dir="ltr" maxLength={6} />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={confirmEnable} disabled={loading || code.length < 6}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-[#f97316] to-[#f43f5e] text-white disabled:opacity-50 flex items-center justify-center gap-2">
+                {loading ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                אשר והפעל
+              </button>
+              <button onClick={() => { setStep('idle'); setCode(''); setNotice(null); }}
+                className={`px-4 py-2.5 rounded-xl text-sm border ${isNight ? 'border-white/10 text-gray-400' : 'border-gray-300 text-gray-500'}`}>
+                ביטול
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Disable confirmation ────────────────────────────────────── */}
+        {step === 'disable' && (
+          <div className="mt-5 space-y-3">
+            <p className={`text-xs ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>
+              לאישור כיבוי, הכנס סיסמה וקוד נוכחי מהאפליקציה:
+            </p>
+            <input type="password" value={disablePass} onChange={e => setDisablePass(e.target.value)}
+              placeholder="סיסמה" className={inputCls2} dir="ltr" />
+            <input value={disableCode} onChange={e => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className={`${inputCls2} text-center text-xl tracking-[0.4em] font-mono`} placeholder="000000" dir="ltr" maxLength={6} />
+            <div className="flex gap-2">
+              <button onClick={confirmDisable} disabled={loading || !disablePass || disableCode.length < 6}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-500/80 hover:bg-red-500 text-white disabled:opacity-50 flex items-center justify-center gap-2">
+                {loading ? <Loader2 size={14} className="animate-spin" /> : <ShieldOff size={14} />}
+                כבה 2FA
+              </button>
+              <button onClick={() => { setStep('idle'); setNotice(null); }}
+                className={`px-4 py-2.5 rounded-xl text-sm border ${isNight ? 'border-white/10 text-gray-400' : 'border-gray-300 text-gray-500'}`}>
+                ביטול
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Session management ───────────────────────────────────────── */}
+      <div className={card}>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className={`font-semibold text-sm mb-0.5 ${isNight ? 'text-white' : 'text-gray-900'}`}>ניהול סשנים</div>
+            <div className={`text-xs ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>נתק את כל המכשירים האחרים המחוברים לחשבון זה</div>
+          </div>
+          <button onClick={async () => { await api.post('/auth/logout-all'); window.location.href = '/login'; }}
+            className={`shrink-0 px-4 py-2 rounded-xl text-xs font-semibold border ${isNight ? 'border-white/10 text-gray-400 hover:text-red-400 hover:border-red-400/30' : 'border-gray-300 text-gray-500 hover:text-red-500'} transition-colors`}>
+            נתק הכל
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const isNight = useNightMode();
@@ -1270,6 +1441,7 @@ export default function SettingsPage() {
     staff:        <StaffSettings />,
     billing:      <BillingSettings />,
     integrations: <IntegrationsSettings />,
+    security:     <SecuritySettings />,
     qr:           <QRSettings />,
   };
 

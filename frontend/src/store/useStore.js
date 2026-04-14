@@ -2,30 +2,29 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // Auth store
+// Note: token is no longer stored in localStorage — it lives in an httpOnly cookie.
+// setAuth accepts (token, business) OR (business) for backward compatibility.
 export const useAuthStore = create(
   persist(
-    (set, get) => ({
-      token: null,
+    (set) => ({
       business: null,
       isAuthenticated: false,
 
-      setAuth: (token, business) => set({
-        token,
-        business,
-        isAuthenticated: true,
-      }),
+      setAuth: (tokenOrBusiness, maybeBusiness) => {
+        const business = maybeBusiness || tokenOrBusiness;
+        set({ business, isAuthenticated: true });
+      },
 
       updateBusiness: (business) => set({ business }),
 
       logout: () => set({
-        token: null,
         business: null,
         isAuthenticated: false,
       }),
     }),
     {
       name: 'tori-auth',
-      partialize: (state) => ({ token: state.token, business: state.business, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({ business: state.business, isAuthenticated: state.isAuthenticated }),
     }
   )
 );

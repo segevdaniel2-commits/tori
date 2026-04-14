@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/useStore';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 30000,
+  withCredentials: true, // send httpOnly cookie on every request
   headers: {
     'Content-Type': 'application/json',
   },
@@ -40,7 +41,15 @@ export function useAuth() {
   return {
     register: (data) => api.post('/auth/register', data),
     login: (data) => api.post('/auth/login', data),
+    logout: () => api.post('/auth/logout'),
+    logoutAll: () => api.post('/auth/logout-all'),
     me: () => api.get('/auth/me'),
+    // 2FA
+    twoFaStatus: () => api.get('/auth/2fa/status'),
+    twoFaSetup: () => api.post('/auth/2fa/setup'),
+    twoFaEnable: (code) => api.post('/auth/2fa/enable', { code }),
+    twoFaDisable: (password, code) => api.post('/auth/2fa/disable', { password, code }),
+    twoFaVerifyLogin: (tempToken, code) => api.post('/auth/2fa/verify-login', { tempToken, code }),
   };
 }
 
