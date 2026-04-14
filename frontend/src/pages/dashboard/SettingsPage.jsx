@@ -288,10 +288,10 @@ function HoursSettings() {
     }
   }, [hoursData, isError]);
 
-  async function handleSave() {
+  async function handleSave(updatedHours) {
     setSaving(true);
     try {
-      await businessApi.updateHours({ hours });
+      await businessApi.updateHours({ hours: updatedHours || hours });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch { alert('שגיאה בשמירה'); }
@@ -299,7 +299,11 @@ function HoursSettings() {
   }
 
   function setDayField(i, field, value) {
-    setHours(prev => prev.map((h, j) => j === i ? { ...h, [field]: value } : h));
+    setHours(prev => {
+      const updated = prev.map((h, j) => j === i ? { ...h, [field]: value } : h);
+      handleSave(updated);
+      return updated;
+    });
   }
 
   if (isLoading && !hours) return (

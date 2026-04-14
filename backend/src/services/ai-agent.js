@@ -1,5 +1,35 @@
 const axios = require('axios');
 const { getDb } = require('../config/database');
+const { google } = require('googleapis');
+
+async function addToGoogleCalendar(businessId, { customerName, phone, serviceName, startsAt, endsAt }) {
+  try {
+    const db = getDb();
+    const biz = db.prepare('SELECT google_refresh_token FROM businesses WHERE id = ?').get(businessId);
+    if (!biz?.google_refresh_token) return;
+
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
+    oauth2Client.setCredentials({ refresh_token: biz.google_refresh_token });
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    await calendar.events.insert({
+      calendarId: 'primary',
+      resource: {
+        summary: `${customerName}${serviceName ? ` - ${serviceName}` : ''}`,
+        description: phone ? `טלפון: ${phone}` : undefined,
+        start: { dateTime: startsAt, timeZone: 'Asia/Jerusalem' },
+        end:   { dateTime: endsAt,   timeZone: 'Asia/Jerusalem' },
+      },
+    });
+    console.log(`[AI] Added appointment to Google Calendar for ${customerName}`);
+  } catch (err) {
+    console.error('[AI] Google Calendar insert error:', err.message);
+  }
+}
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -1491,6 +1521,15 @@ async function bookAppointment(db, phone, businessId, business, ed, services, st
     if (io) {
       io.to(`business_${businessId}`).emit('appointment:created', appointment);
     }
+
+    // Add to Google Calendar if connected
+    addToGoogleCalendar(businessId, {
+      customerName: ed.customer_name || customer.name || 'לקוח',
+      phone,
+      serviceName: service.name,
+      startsAt,
+      endsAt,
+    });
 
     console.log(`[AI] Booked appointment #${result.lastInsertRowid} for ${phone}`);
   } catch (err) {

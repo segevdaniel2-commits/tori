@@ -26,7 +26,8 @@ function ToriLogo() {
 }
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [loginMode, setLoginMode] = useState('email'); // 'email' | 'phone'
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,7 +40,7 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/login', { email, password });
+      const { data } = await api.post('/auth/login', { email: identifier, password });
       setAuth(data.token, data.business);
       navigate('/dashboard');
     } catch (err) {
@@ -74,15 +75,29 @@ export default function Login() {
             </div>
           )}
 
+          {/* Toggle email/phone */}
+          <div className="flex rounded-xl overflow-hidden border border-white/10 mb-4">
+            <button type="button" onClick={() => { setLoginMode('email'); setIdentifier(''); }}
+              className={`flex-1 py-2 text-sm font-semibold transition-all ${loginMode === 'email' ? 'bg-[#f97316] text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+              אימייל
+            </button>
+            <button type="button" onClick={() => { setLoginMode('phone'); setIdentifier(''); }}
+              className={`flex-1 py-2 text-sm font-semibold transition-all ${loginMode === 'phone' ? 'bg-[#f97316] text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+              טלפון
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-400 mb-1.5">אימייל</label>
+              <label className="block text-sm font-semibold text-gray-400 mb-1.5">
+                {loginMode === 'email' ? 'אימייל' : 'מספר טלפון'}
+              </label>
               <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                type={loginMode === 'email' ? 'email' : 'tel'}
+                value={identifier}
+                onChange={e => setIdentifier(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-[#f43f5e]/60 transition-all"
-                placeholder="you@example.com"
+                placeholder={loginMode === 'email' ? 'you@example.com' : '050-0000000'}
                 dir="ltr"
                 required
               />

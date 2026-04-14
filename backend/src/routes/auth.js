@@ -150,17 +150,27 @@ router.post('/login', async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
     }
-    if (!validator.isEmail(String(email))) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
     if (String(password).length > 128) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const cleanEmail = validator.normalizeEmail(String(email));
-
     const db = getDb();
-    const business = db.prepare('SELECT * FROM businesses WHERE email = ?').get(cleanEmail);
+    const identifier = String(email).trim();
+
+    // Support login by phone number or email
+    let business = null;
+    const looksLikePhone = /^[\d+\-\s()]{7,15}$/.test(identifier);
+    if (looksLikePhone) {
+      const cleanPhone = identifier.replace(/[\s\-()]/g, '');
+      business = db.prepare('SELECT * FROM businesses WHERE phone = ? OR phone = ?').get(cleanPhone, '0' + cleanPhone.replace(/^972/, ''));
+    }
+    if (!business && validator.isEmail(identifier)) {
+      const cleanEmail = validator.normalizeEmail(identifier);
+      business = db.prepare('SELECT * FROM businesses WHERE email = ?').get(cleanEmail);
+    }
+    if (!business) {
+      business = db.prepare('SELECT * FROM businesses WHERE phone = ?').get(identifier);
+    }
 
     // Always run bcrypt even on not-found to prevent timing attacks
     const dummyHash = '$2a$12$invalidhashtopreventtimingattacksonuserenum00000000000';

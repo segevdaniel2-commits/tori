@@ -76,6 +76,17 @@ router.post('/', (req, res) => {
     const customer = db.prepare('SELECT * FROM customers WHERE id = ? AND business_id = ?').get(customer_id, req.business.id);
     if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
+    // Check for conflicting appointment at the same time
+    const conflict = db.prepare(`
+      SELECT a.id, c.name as customer_name FROM appointments a
+      LEFT JOIN customers c ON a.customer_id = c.id
+      WHERE a.business_id = ? AND a.status != 'cancelled'
+        AND a.starts_at < ? AND a.ends_at > ?
+    `).get(req.business.id, ends_at, starts_at);
+    if (conflict) {
+      return res.status(409).json({ error: `השעה תפוסה — יש כבר תור ל${conflict.customer_name || 'לקוח'} באותה שעה` });
+    }
+
     const result = db.prepare(`
       INSERT INTO appointments (business_id, customer_id, staff_id, service_id, starts_at, ends_at, price, notes, status, source)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual')
