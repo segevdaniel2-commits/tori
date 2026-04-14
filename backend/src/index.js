@@ -2,8 +2,12 @@ require('dotenv').config();
 
 // ── Startup env validation ───────────────────────────────────────────────────
 if (!process.env.JWT_SECRET) {
-  console.warn('[Startup] JWT_SECRET not set — using fallback. Set it in environment variables!');
-  process.env.JWT_SECRET = 'tori-super-secret-jwt-key-change-in-prod-2024-xK9mP2nQ';
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[Startup] FATAL: JWT_SECRET not set in production. Exiting.');
+    process.exit(1);
+  }
+  console.warn('[Startup] JWT_SECRET not set — using dev-only fallback. NEVER do this in production!');
+  process.env.JWT_SECRET = 'dev-only-fallback-change-me';
 }
 
 if (!process.env.WHATSAPP_VERIFY_TOKEN) {
@@ -20,7 +24,7 @@ const morgan = require('morgan');
 
 const { init: initDb } = require('./config/database');
 const { startScheduler } = require('./services/scheduler');
-const { authLimiter, apiLimiter, webhookLimiter } = require('./middleware/rateLimiter');
+const { authLimiter, apiLimiter, webhookLimiter, ownerBotLimiter, adminResetLimiter } = require('./middleware/rateLimiter');
 
 const authRoutes = require('./routes/auth');
 const businessRoutes = require('./routes/businesses');
@@ -127,7 +131,7 @@ initDb().then(() => {
   app.use('/api/stripe', stripeRoutes);
   app.use('/api/integrations', integrationsRoutes);
   app.use('/api/calendar', calendarRoutes);
-  app.use('/api/owner-bot', ownerBotRoutes);
+  app.use('/api/owner-bot', ownerBotLimiter, ownerBotRoutes);
 
   // WhatsApp webhook also accessible at root /webhook
   app.use('/webhook', whatsappRoutes);

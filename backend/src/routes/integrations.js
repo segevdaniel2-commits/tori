@@ -288,7 +288,7 @@ router.get('/google/auth', authMiddleware, (req, res) => {
   res.json({ url });
   } catch (err) {
     console.error('[Google Auth] Error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to initiate Google auth' });
   }
 });
 
@@ -345,7 +345,7 @@ router.post('/google/sync', authMiddleware, async (req, res) => {
     res.json({ success: true, ...result });
   } catch (err) {
     console.error('[Google Calendar] Sync error:', err);
-    res.status(500).json({ error: 'Sync failed', details: err.message });
+    res.status(500).json({ error: 'Sync failed' });
   }
 });
 

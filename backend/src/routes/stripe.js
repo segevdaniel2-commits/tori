@@ -11,7 +11,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     res.json({ received: true });
   } catch (err) {
     console.error('[Stripe] Webhook error:', err.message);
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: 'Webhook error' });
   }
 });
 

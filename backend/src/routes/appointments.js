@@ -76,23 +76,30 @@ router.post('/', (req, res) => {
     const customer = db.prepare('SELECT * FROM customers WHERE id = ? AND business_id = ?').get(customer_id, req.business.id);
     if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
-    // Check for conflicting appointment at the same time
-    const conflict = db.prepare(`
-      SELECT a.id, c.name as customer_name FROM appointments a
-      LEFT JOIN customers c ON a.customer_id = c.id
-      WHERE a.business_id = ? AND a.status != 'cancelled'
-        AND a.starts_at < ? AND a.ends_at > ?
-    `).get(req.business.id, ends_at, starts_at);
+    // Conflict check + INSERT in a single transaction to prevent race conditions
+    let appointment;
+    const createTransaction = db.transaction(() => {
+      const conflict = db.prepare(`
+        SELECT a.id, c.name as customer_name FROM appointments a
+        LEFT JOIN customers c ON a.customer_id = c.id
+        WHERE a.business_id = ? AND a.status != 'cancelled'
+          AND a.starts_at < ? AND a.ends_at > ?
+      `).get(req.business.id, ends_at, starts_at);
+      if (conflict) return { conflict, appointmentId: null };
+
+      const result = db.prepare(`
+        INSERT INTO appointments (business_id, customer_id, staff_id, service_id, starts_at, ends_at, price, notes, status, source)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual')
+      `).run(req.business.id, customer_id, staff_id || null, service_id || null, starts_at, ends_at, price || null, cleanNotes, cleanStatus);
+      return { conflict: null, appointmentId: result.lastInsertRowid };
+    });
+
+    const { conflict, appointmentId } = createTransaction();
     if (conflict) {
       return res.status(409).json({ error: `השעה תפוסה — יש כבר תור ל${conflict.customer_name || 'לקוח'} באותה שעה` });
     }
 
-    const result = db.prepare(`
-      INSERT INTO appointments (business_id, customer_id, staff_id, service_id, starts_at, ends_at, price, notes, status, source)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual')
-    `).run(req.business.id, customer_id, staff_id || null, service_id || null, starts_at, ends_at, price || null, cleanNotes, cleanStatus);
-
-    const appointment = db.prepare(`
+    appointment = db.prepare(`
       SELECT a.*, c.name as customer_name, c.whatsapp_phone as customer_phone,
              s.name as staff_name, sv.name as service_name
       FROM appointments a
@@ -100,7 +107,7 @@ router.post('/', (req, res) => {
       LEFT JOIN staff s ON a.staff_id = s.id
       LEFT JOIN services sv ON a.service_id = sv.id
       WHERE a.id = ?
-    `).get(result.lastInsertRowid);
+    `).get(appointmentId);
 
     // Emit socket event
     const io = req.app.get('io');

@@ -22,7 +22,18 @@ function safeUrl(val) {
 
 // GET /api/businesses/settings
 router.get('/settings', (req, res) => {
-  res.json(req.business);
+  const db = getDb();
+  // Fetch full settings row but strip sensitive fields before sending to client
+  const settings = db.prepare(`
+    SELECT id, name, type, owner_name, email, phone, address, city, description,
+           logo_url, plan, is_active, whatsapp_number, buffer_minutes,
+           cancellation_hours, trial_ends_at, created_at, updated_at,
+           terms_text, bot_tone, green_invoice_enabled, hide_stats,
+           subscription_status, stripe_customer_id, stripe_subscription_id
+    FROM businesses WHERE id = ?
+  `).get(req.business.id);
+  // Never expose: password, google_refresh_token, green_invoice_api_key
+  res.json(settings);
 });
 
 // PUT /api/businesses/settings

@@ -28,4 +28,25 @@ const webhookLimiter = rateLimit({
   message: { error: 'Rate limit exceeded' },
 });
 
-module.exports = { authLimiter, apiLimiter, webhookLimiter };
+// Owner Bot limiter — AI calls cost money; cap per business (by JWT is handled in middleware,
+// here we limit by IP as a secondary layer)
+const ownerBotLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'יותר מדי שאלות, נסה שוב בעוד דקה' },
+  skipSuccessfulRequests: false,
+});
+
+// Admin reset limiter — brute force protection on the secret
+const adminResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'יותר מדי ניסיונות, נסה שוב בעוד 15 דקות' },
+  skipSuccessfulRequests: true,
+});
+
+module.exports = { authLimiter, apiLimiter, webhookLimiter, ownerBotLimiter, adminResetLimiter };

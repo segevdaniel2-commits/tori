@@ -106,10 +106,12 @@ function buildSystemPrompt(ctx) {
     ? staff.map(s => `${s.name} (${s.role === 'owner' ? 'בעלים' : 'עובד'})`).join(', ')
     : 'אין עובדים';
 
+  const maskPhone = (p) => p ? `***${String(p).slice(-4)}` : '-';
+
   const todayText = todayAppts.length
     ? todayAppts.map(a => {
         const time = a.starts_at.slice(11, 16);
-        return `  • ${time} — ${a.customer_name || 'לקוח'} | ${a.service_name || '-'} | ₪${a.price || 0} | ${a.customer_phone}`;
+        return `  • ${time} — ${a.customer_name || 'לקוח'} | ${a.service_name || '-'} | ₪${a.price || 0} | ${maskPhone(a.customer_phone)}`;
       }).join('\n')
     : '  אין תורים היום';
 
@@ -124,7 +126,7 @@ function buildSystemPrompt(ctx) {
     : '  אין תורים קרובים';
 
   const topCustomersText = topCustomers.length
-    ? topCustomers.map((c, i) => `  ${i + 1}. ${c.name || 'לא ידוע'} | ${c.whatsapp_phone} | ${c.total_visits} ביקורים | ₪${c.spent}`).join('\n')
+    ? topCustomers.map((c, i) => `  ${i + 1}. ${c.name || 'לא ידוע'} | ${maskPhone(c.whatsapp_phone)} | ${c.total_visits} ביקורים | ₪${c.spent}`).join('\n')
     : '  אין נתונים';
 
   return `אתה עוזר AI של בעל עסק. ענה תמיד בעברית. חובה: תשובה קצרה — משפט אחד בלבד. אל תסביר, אל תחזור על השאלה, אל תפרט. רק התשובה הישירה.
@@ -240,6 +242,19 @@ router.post('/chat', async (req, res) => {
     return res.status(400).json({ error: 'message required' });
   }
 
+  // Validate history: only user/assistant roles, string content, max 20 entries, max 10kb total
+  if (!Array.isArray(history) || history.length > 20) {
+    return res.status(400).json({ error: 'invalid history' });
+  }
+  const historyStr = JSON.stringify(history);
+  if (historyStr.length > 10000) {
+    return res.status(400).json({ error: 'history too large' });
+  }
+  const ALLOWED_ROLES = new Set(['user', 'assistant']);
+  const safeHistory = history
+    .filter(m => m && ALLOWED_ROLES.has(m.role) && typeof m.content === 'string')
+    .map(m => ({ role: m.role, content: m.content.slice(0, 500) }));
+
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
   if (!GROQ_API_KEY) {
     return res.status(503).json({ error: 'AI not configured' });
@@ -250,10 +265,10 @@ router.post('/chat', async (req, res) => {
     const ctx = getBusinessContext(db, req.business.id);
     const systemPrompt = buildSystemPrompt(ctx);
 
-    // Build messages array: system + history (last 10) + new message
+    // Build messages array: system + safeHistory (last 10) + new message
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
+      ...safeHistory.slice(-10),
       { role: 'user', content: message.trim() },
     ];
 
@@ -296,22 +311,29 @@ router.post('/chat', async (req, res) => {
         const endsAt = new Date(new Date(startsAt).getTime() + dur * 60000).toISOString().slice(0, 19);
         const cleanPhone = phone.replace(/[\s\-]/g, '');
 
-        // Conflict check
-        const conflict = db.prepare(`SELECT id FROM appointments WHERE business_id = ? AND status != 'cancelled' AND starts_at < ? AND ends_at > ?`).get(req.business.id, endsAt, startsAt);
-        if (conflict) {
+        // Conflict check + INSERT in a single exclusive transaction to prevent race conditions
+        const bookTransaction = db.transaction(() => {
+          const conflict = db.prepare(
+            `SELECT id FROM appointments WHERE business_id = ? AND status != 'cancelled' AND starts_at < ? AND ends_at > ?`
+          ).get(req.business.id, endsAt, startsAt);
+          if (conflict) return { conflict: true };
+
+          let customer = db.prepare('SELECT id FROM customers WHERE business_id = ? AND whatsapp_phone = ?').get(req.business.id, cleanPhone);
+          if (!customer) {
+            const r = db.prepare('INSERT INTO customers (business_id, whatsapp_phone, name) VALUES (?, ?, ?)').run(req.business.id, cleanPhone || `owner_${Date.now()}`, customerName.trim());
+            customer = { id: r.lastInsertRowid };
+          }
+
+          const staff = ctx.staff[0];
+          db.prepare(`INSERT INTO appointments (business_id, customer_id, staff_id, service_id, starts_at, ends_at, price, status, source) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmed', 'owner_bot')`)
+            .run(req.business.id, customer.id, staff?.id || null, svc?.id || null, startsAt, endsAt, svc?.price || null);
+          return { conflict: false };
+        });
+
+        const txResult = bookTransaction();
+        if (txResult.conflict) {
           return res.json({ reply: `השעה ${time} תפוסה — יש כבר תור באותה שעה. תרצה לבחור שעה אחרת?` });
         }
-
-        // Get or create customer
-        let customer = db.prepare('SELECT id FROM customers WHERE business_id = ? AND whatsapp_phone = ?').get(req.business.id, cleanPhone);
-        if (!customer) {
-          const r = db.prepare('INSERT INTO customers (business_id, whatsapp_phone, name) VALUES (?, ?, ?)').run(req.business.id, cleanPhone || `owner_${Date.now()}`, customerName.trim());
-          customer = { id: r.lastInsertRowid };
-        }
-
-        const staff = ctx.staff[0];
-        db.prepare(`INSERT INTO appointments (business_id, customer_id, staff_id, service_id, starts_at, ends_at, price, status, source) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmed', 'owner_bot')`)
-          .run(req.business.id, customer.id, staff?.id || null, svc?.id || null, startsAt, endsAt, svc?.price || null);
 
         const io = req.app.get('io');
         if (io) io.to(`business_${req.business.id}`).emit('appointment:created', { starts_at: startsAt });
@@ -326,7 +348,7 @@ router.post('/chat', async (req, res) => {
     res.json({ reply });
   } catch (err) {
     console.error('[OwnerBot] Error:', err.message);
-    res.status(500).json({ error: 'AI error', detail: err.message });
+    res.status(500).json({ error: 'שגיאה פנימית, נסה שוב' });
   }
 });
 

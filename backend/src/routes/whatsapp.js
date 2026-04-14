@@ -5,7 +5,7 @@ const { processMessage } = require('../services/ai-agent');
 const { getDb } = require('../config/database');
 const axios = require('axios');
 
-const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'tori-verify-2024-xR7vN4kL';
+const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || null;
 const APP_SECRET = process.env.WHATSAPP_APP_SECRET;
 const FormData = require('form-data');
 
@@ -67,7 +67,16 @@ async function transcribeAudio(mediaId) {
 
 // Verify Meta's X-Hub-Signature-256 header
 function verifyMetaSignature(req) {
-  if (!APP_SECRET) return true; // skip in dev if not configured (warn at startup)
+  if (!APP_SECRET) {
+    // In production, missing APP_SECRET means we cannot verify — reject all requests
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[WhatsApp] WHATSAPP_APP_SECRET not set in production — rejecting webhook');
+      return false;
+    }
+    // In dev, allow without signature (warn only)
+    console.warn('[WhatsApp] WHATSAPP_APP_SECRET not set — skipping signature check (dev only)');
+    return true;
+  }
   const sig = req.headers['x-hub-signature-256'];
   if (!sig) return false;
   // Use raw body buffer if available (express.raw middleware), else fall back to JSON string
@@ -76,6 +85,8 @@ function verifyMetaSignature(req) {
     .createHmac('sha256', APP_SECRET)
     .update(rawBody)
     .digest('hex');
+  // Pad both buffers to the same length before constant-time compare
+  if (sig.length !== expected.length) return false;
   return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
 }
 
@@ -228,7 +239,7 @@ router.post('/simulate', authMiddleware, async (req, res) => {
     res.json({ reply: reply || null });
   } catch (err) {
     console.error('[Simulate] Error:', err.message);
-    res.status(500).json({ error: 'Bot error', detail: err.message });
+    res.status(500).json({ error: 'Bot error' });
   }
 });
 

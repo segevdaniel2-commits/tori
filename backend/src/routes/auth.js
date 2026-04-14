@@ -6,8 +6,9 @@ const validator = require('validator');
 const { getDb } = require('../config/database');
 const { sendWelcome } = require('../services/email');
 const authMiddleware = require('../middleware/auth');
+const { adminResetLimiter } = require('../middleware/rateLimiter');
 
-const JWT_OPTS = { algorithm: 'HS256', expiresIn: '30d' };
+const JWT_OPTS = { algorithm: 'HS256', expiresIn: '7d' };
 
 function sanitizeString(str, maxLen = 200) {
   if (typeof str !== 'string') return null;
@@ -126,8 +127,12 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(businessId);
-    delete business.password;
+    const business = db.prepare(`
+      SELECT id, name, type, owner_name, email, phone, address, city, description,
+             logo_url, plan, is_active, whatsapp_number, buffer_minutes,
+             cancellation_hours, trial_ends_at, created_at, updated_at
+      FROM businesses WHERE id = ?
+    `).get(businessId);
 
     console.log(`[Auth] Business registered successfully: id=${businessId}, name=${cleanName}, email=${cleanEmail}, plan=${business.plan}, is_active=${business.is_active}`);
 
@@ -204,15 +209,8 @@ router.get('/me', authMiddleware, (req, res) => {
   res.json({ business: req.business, staff, services });
 });
 
-// GET /api/auth/debug — shows all businesses (no passwords) for diagnosing DB state
-router.get('/debug', authMiddleware, (req, res) => {
-  const db = getDb();
-  const businesses = db.prepare('SELECT id, name, email, is_active, plan, subscription_status, trial_ends_at, created_at FROM businesses').all();
-  res.json({ count: businesses.length, businesses });
-});
-
 // POST /api/auth/admin-reset — reset password for any account (requires ADMIN_SECRET header)
-router.post('/admin-reset', async (req, res) => {
+router.post('/admin-reset', adminResetLimiter, async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
   if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
     return res.status(403).json({ error: 'Forbidden' });
