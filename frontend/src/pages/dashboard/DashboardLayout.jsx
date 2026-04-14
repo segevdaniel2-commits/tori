@@ -433,7 +433,7 @@ export default function DashboardLayout() {
             {/* Notifications bell */}
             <div className="relative" ref={notifsRef}>
               <button
-                onClick={() => { setShowNotifs(v => !v); if (!showNotifs) markAllRead(); }}
+                onClick={() => setShowNotifs(v => !v)}
                 className="relative p-2 rounded-xl transition-colors"
                 style={{ color: theme.mutedColor, background: showNotifs ? theme.hoverBg : 'transparent' }}
               >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -271,27 +271,47 @@ function HoursSettings() {
   const [hours, setHours] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const initializedRef = useRef(false);
+  const saveTimerRef = useRef(null);
 
   useEffect(() => {
     const defaults = DAY_LABELS.map((_, i) => ({
       day_of_week: i, is_open: i < 5,
       open_time: '09:00', close_time: i === 5 ? '14:00' : '20:00',
     }));
-    if (hoursData !== undefined && !hours) {
+    if (hoursData !== undefined && !initializedRef.current) {
+      initializedRef.current = true;
       const arr = hoursData || [];
       setHours(defaults.map(d => {
         const found = arr.find(h => h.day_of_week === d.day_of_week);
         return found ? { ...d, is_open: !!found.is_open, open_time: found.open_time, close_time: found.close_time } : d;
       }));
-    } else if (isError && !hours) {
+    } else if (isError && !initializedRef.current) {
+      initializedRef.current = true;
       setHours(defaults);
     }
   }, [hoursData, isError]);
 
-  async function handleSave(updatedHours) {
+  // Auto-save when hours change (debounced)
+  useEffect(() => {
+    if (!hours || !initializedRef.current) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      setSaving(true);
+      try {
+        await businessApi.updateHours({ hours });
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } catch { /* silent fail */ }
+      finally { setSaving(false); }
+    }, 600);
+    return () => clearTimeout(saveTimerRef.current);
+  }, [hours]);
+
+  async function handleSave() {
     setSaving(true);
     try {
-      await businessApi.updateHours({ hours: updatedHours || hours });
+      await businessApi.updateHours({ hours });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch { alert('שגיאה בשמירה'); }
@@ -299,11 +319,7 @@ function HoursSettings() {
   }
 
   function setDayField(i, field, value) {
-    setHours(prev => {
-      const updated = prev.map((h, j) => j === i ? { ...h, [field]: value } : h);
-      handleSave(updated);
-      return updated;
-    });
+    setHours(prev => prev.map((h, j) => j === i ? { ...h, [field]: value } : h));
   }
 
   if (isLoading && !hours) return (

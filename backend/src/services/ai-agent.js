@@ -1186,7 +1186,11 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
       const available = getAvailableSlots(db, business, staffForSlots, svc, pb.date);
       if (available.includes(pb.time)) {
         const staffForBooking = lockedStaff ? [lockedStaff] : staffList;
-        await bookAppointment(db, phone, businessId, business, pb, services, staffForBooking, io);
+        const bookResult = await bookAppointment(db, phone, businessId, business, pb, services, staffForBooking, io);
+        if (typeof bookResult === 'string') {
+          // Conflict or error message returned
+          return bookResult;
+        }
         saveConversation(db, phone, { extracted_data: {} });
         return `סגרנו תור ל-${formatHebrewDate(pb.date)} בשעה ${pb.time}${svc ? ` — ${svc.name}` : ''}.`;
       } else {
@@ -1501,6 +1505,16 @@ async function bookAppointment(db, phone, businessId, business, ed, services, st
     } else {
       const res = db.prepare('INSERT INTO customers (business_id, whatsapp_phone, name, total_visits) VALUES (?, ?, ?, 1)').run(businessId, phone, ed.customer_name);
       customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(res.lastInsertRowid);
+    }
+
+    // Check for conflicting appointment
+    const conflict = db.prepare(`
+      SELECT id FROM appointments
+      WHERE business_id = ? AND status != 'cancelled'
+        AND starts_at < ? AND ends_at > ?
+    `).get(businessId, endsAt, startsAt);
+    if (conflict) {
+      return `השעה ${ed.time} תפוסה — יש כבר תור באותה שעה. נסה שעה אחרת.`;
     }
 
     const result = db.prepare(`
