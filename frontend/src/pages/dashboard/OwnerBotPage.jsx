@@ -1,16 +1,28 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, Sparkles, Loader2, RotateCcw } from 'lucide-react';
+import { ArrowUp, Sparkles, Loader2, RotateCcw, CalendarPlus, CalendarX2 } from 'lucide-react';
 import api from '../../hooks/useApi';
 import { useAuthStore } from '../../store/useStore';
 
-const SUGGESTIONS = [
-  'כמה תורים יש לי היום?',
-  'מי הלקוחות הכי נאמנים שלי?',
-  'כמה הכנסתי החודש?',
-  'מה התורים הקרובים שלי?',
-  'איזה שירותים אני מציע?',
-  'מה שעות הפעילות שלי?',
+const ACTION_CARDS = [
+  {
+    id: 'new',
+    icon: CalendarPlus,
+    title: 'קביעת תור חדש',
+    desc: 'קבע תור ללקוח — שם, שירות ושעה',
+    prompt: 'אני רוצה לקבוע תור חדש ללקוח',
+    gradient: 'linear-gradient(135deg, #f97316, #f43f5e)',
+    glow: 'rgba(249,115,22,0.22)',
+  },
+  {
+    id: 'cancel',
+    icon: CalendarX2,
+    title: 'ביטול תור קיים',
+    desc: 'בטל תור של לקוח לפי שם או תאריך',
+    prompt: 'אני רוצה לבטל תור קיים',
+    gradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+    glow: 'rgba(6,182,212,0.18)',
+  },
 ];
 
 function useNightMode() {
@@ -225,27 +237,44 @@ export default function OwnerBotPage() {
             </motion.div>
 
             <div style={{ width: '100%', maxWidth: 600 }}>
-              {/* Suggestion chips */}
-              <div className="flex flex-wrap gap-2 justify-center mb-5">
-                {SUGGESTIONS.map((s, i) => (
-                  <motion.button
-                    key={s}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.04 }}
-                    onClick={() => send(s)}
-                    className="px-3.5 py-2 rounded-full text-xs font-medium border transition-all"
-                    style={{
-                      background: inputBg,
-                      borderColor: border,
-                      color: isNight ? 'rgba(255,255,255,0.6)' : '#4b5563',
-                      boxShadow: isNight ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {s}
-                  </motion.button>
-                ))}
+              {/* Action cards */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {ACTION_CARDS.map((card, i) => {
+                  const Icon = card.icon;
+                  return (
+                    <motion.button
+                      key={card.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 + i * 0.08 }}
+                      onClick={() => send(card.prompt)}
+                      className="flex flex-col items-start gap-3 p-4 rounded-2xl border text-right transition-all"
+                      style={{
+                        background: inputBg,
+                        borderColor: border,
+                        boxShadow: isNight
+                          ? `0 0 0 1px rgba(255,255,255,0.04), 0 4px 20px ${card.glow}`
+                          : `0 2px 12px rgba(0,0,0,0.07), 0 4px 20px ${card.glow}`,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ background: card.gradient, boxShadow: `0 4px 14px ${card.glow}` }}
+                      >
+                        <Icon size={18} className="text-white" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold mb-0.5" style={{ color: titleClr }}>
+                          {card.title}
+                        </div>
+                        <div className="text-xs leading-snug" style={{ color: muted }}>
+                          {card.desc}
+                        </div>
+                      </div>
+                    </motion.button>
+                  );
+                })}
               </div>
 
               {inputBox}
@@ -257,7 +286,7 @@ export default function OwnerBotPage() {
           </div>
         ) : (
           /* CHAT — messages list */
-          <div className="max-w-2xl mx-auto w-full px-4 py-6 space-y-4">
+          <div className="max-w-2xl mx-auto w-full px-4 py-6 space-y-6">
             <AnimatePresence initial={false}>
               {messages.map(msg => (
                 <motion.div
@@ -265,30 +294,50 @@ export default function OwnerBotPage() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.18 }}
-                  className={`flex items-end gap-2.5 ${msg.role === 'user' ? 'justify-start' : 'justify-end'}`}
+                  className={`flex gap-3 ${msg.role === 'user' ? 'justify-start flex-row-reverse' : 'justify-start'}`}
                 >
-                  {msg.role === 'assistant' && (
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mb-0.5"
-                      style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)' }}
-                    >
-                      <Sparkles size={11} className="text-white" />
-                    </div>
-                  )}
-                  <div
-                    className="max-w-[76%] px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
-                    style={msg.role === 'user' ? {
-                      background: 'linear-gradient(135deg, #f97316, #f43f5e)',
-                      color: '#ffffff',
-                      borderRadius: '18px 18px 4px 18px',
-                    } : {
-                      background: isNight ? 'rgba(255,255,255,0.05)' : '#f3f4f6',
-                      color: isNight ? 'rgba(255,255,255,0.88)' : '#1f2937',
-                      border: `1px solid ${isNight ? 'rgba(255,255,255,0.07)' : '#e5e7eb'}`,
-                      borderRadius: '18px 18px 18px 4px',
-                    }}
-                  >
-                    {msg.content}
+                  {/* Avatar */}
+                  <div className="shrink-0 mt-0.5">
+                    {msg.role === 'assistant' ? (
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center"
+                        style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 2px 8px rgba(249,115,22,0.3)' }}
+                      >
+                        <Sparkles size={12} className="text-white" />
+                      </div>
+                    ) : (
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                        style={{ background: isNight ? 'rgba(255,255,255,0.1)' : '#e5e7eb', color: isNight ? 'rgba(255,255,255,0.6)' : '#6b7280' }}
+                      >
+                        {(business?.owner_name?.[0] || 'א').toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bubble */}
+                  <div className="max-w-[80%]">
+                    {msg.role === 'user' ? (
+                      <div
+                        className="px-4 py-2.5 text-sm leading-relaxed"
+                        style={{
+                          background: isNight ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.1)',
+                          color: isNight ? 'rgba(255,255,255,0.9)' : '#1f2937',
+                          border: `1px solid ${isNight ? 'rgba(249,115,22,0.25)' : 'rgba(249,115,22,0.2)'}`,
+                          borderRadius: '18px 4px 18px 18px',
+                        }}
+                      >
+                        {msg.content}
+                      </div>
+                    ) : (
+                      <div
+                        className="text-sm leading-relaxed"
+                        style={{ color: isNight ? 'rgba(255,255,255,0.85)' : '#1f2937' }}
+                      >
+                        {/* Render assistant text, replacing problematic unicode bullet chars */}
+                        {msg.content.replace(/[■▪▸●►]/g, '•')}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -299,26 +348,19 @@ export default function OwnerBotPage() {
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-end gap-2.5 justify-end"
+                className="flex items-end gap-3 justify-start"
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)' }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 2px 8px rgba(249,115,22,0.3)' }}
                 >
-                  <Sparkles size={11} className="text-white" />
+                  <Sparkles size={12} className="text-white" />
                 </div>
-                <div
-                  className="px-4 py-3 flex items-center gap-1.5"
-                  style={{
-                    background: isNight ? 'rgba(255,255,255,0.05)' : '#f3f4f6',
-                    border: `1px solid ${isNight ? 'rgba(255,255,255,0.07)' : '#e5e7eb'}`,
-                    borderRadius: '18px 18px 18px 4px',
-                  }}
-                >
+                <div className="flex items-center gap-1.5 px-1 py-2">
                   {[0, 1, 2].map(i => (
                     <motion.div
                       key={i}
-                      className="w-1.5 h-1.5 rounded-full"
+                      className="w-2 h-2 rounded-full"
                       style={{ background: muted }}
                       animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
                       transition={{ repeat: Infinity, duration: 0.9, delay: i * 0.18 }}

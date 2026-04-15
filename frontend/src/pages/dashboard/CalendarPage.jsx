@@ -115,7 +115,10 @@ function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
 
 function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
   const [status, setStatus] = useState(appt.status);
+  const [notes, setNotes] = useState(appt.notes || '');
+  const [editingNotes, setEditingNotes] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
   const appointmentsApi = useAppointmentsApi();
 
   const start = appt.starts_at.split('T')[1]?.slice(0, 5) || appt.starts_at.slice(11, 16);
@@ -130,6 +133,17 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
       onUpdate();
     } finally {
       setUpdating(false);
+    }
+  }
+
+  async function handleSaveNotes() {
+    setSavingNotes(true);
+    try {
+      await appointmentsApi.update(appt.id, { notes: notes.trim() });
+      setEditingNotes(false);
+      onUpdate();
+    } finally {
+      setSavingNotes(false);
     }
   }
 
@@ -189,12 +203,57 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
             </div>
           </div>
 
-          {appt.price && (
+          {appt.price > 0 && (
             <div className="bg-green-50 border border-green-100 rounded-xl p-3 flex justify-between items-center">
               <span className="text-green-700 font-semibold">מחיר</span>
               <span className="text-green-800 font-black text-lg">₪{appt.price}</span>
             </div>
           )}
+
+          {/* Editable notes */}
+          <div className="border border-gray-100 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-gray-500 text-xs font-semibold">הערה לתור</span>
+              {!editingNotes && (
+                <button
+                  onClick={() => setEditingNotes(true)}
+                  className="text-xs text-[#f97316] hover:text-[#f43f5e] font-medium"
+                >
+                  {notes ? 'ערוך' : '+ הוסף הערה'}
+                </button>
+              )}
+            </div>
+            {editingNotes ? (
+              <div className="space-y-2">
+                <textarea
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  rows={2}
+                  placeholder="הערה לתור..."
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#f97316] resize-none"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveNotes}
+                    disabled={savingNotes}
+                    className="flex items-center gap-1 bg-[#f97316] text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
+                  >
+                    {savingNotes ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                    שמור
+                  </button>
+                  <button
+                    onClick={() => { setNotes(appt.notes || ''); setEditingNotes(false); }}
+                    className="text-xs text-gray-400 px-3 py-1.5 rounded-lg border border-gray-200"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-600 text-sm">{notes || <span className="text-gray-300 italic">אין הערה</span>}</p>
+            )}
+          </div>
 
           {/* Status actions */}
           <div className="flex gap-2 flex-wrap">

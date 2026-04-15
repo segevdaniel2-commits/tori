@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, BarChart3, Users, Settings, LogOut, Menu, X,
-  Bell, Check, CheckCheck, Clock, Sparkles
+  Bell, Check, CheckCheck, Clock, Sparkles, Zap
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -26,6 +26,38 @@ function PlanBadge({ plan }) {
   };
   const { label, color } = map[plan] || map.trial;
   return <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>{label}</span>;
+}
+
+function trialDaysLeft(business) {
+  if (business?.plan !== 'trial' || !business?.trial_ends_at) return null;
+  return Math.max(0, Math.ceil((new Date(business.trial_ends_at) - Date.now()) / 86400000));
+}
+
+function TrialStrip({ business, onUpgrade }) {
+  const days = trialDaysLeft(business);
+  if (days === null) return null;
+  const urgent = days <= 5;
+  return (
+    <div
+      className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl"
+      style={{
+        background: urgent ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
+        border: `1px solid ${urgent ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`,
+      }}
+    >
+      <span className="text-xs font-semibold" style={{ color: urgent ? '#ef4444' : '#d97706' }}>
+        {days === 0 ? 'הניסיון הסתיים' : `${days} ימים נותרו`}
+      </span>
+      <button
+        onClick={onUpgrade}
+        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white shrink-0"
+        style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)' }}
+      >
+        <Zap size={10} />
+        שדרג
+      </button>
+    </div>
+  );
 }
 
 function useNightMode() {
@@ -137,6 +169,10 @@ export default function DashboardLayout() {
     navigate('/');
   }
 
+  function handleUpgrade() {
+    navigate('/dashboard/settings');
+  }
+
   const unread = notifications.filter(n => !n.read).length;
 
   const currentPageTitle = {
@@ -172,12 +208,12 @@ export default function DashboardLayout() {
         <div
           className="overflow-hidden transition-all duration-300 border-b shrink-0"
           style={{
-            maxHeight: expanded ? 80 : 0,
+            maxHeight: expanded ? 140 : 0,
             opacity: expanded ? 1 : 0,
             borderColor: theme.border,
           }}
         >
-          <div className="px-3 py-3">
+          <div className="px-3 py-3 space-y-2">
             <div
               className="flex items-center gap-3 p-3 rounded-xl"
               style={{ background: isNight ? 'rgba(249,115,22,0.10)' : '#fff7ed' }}
@@ -190,6 +226,7 @@ export default function DashboardLayout() {
                 <PlanBadge plan={business?.plan} />
               </div>
             </div>
+            <TrialStrip business={business} onUpgrade={handleUpgrade} />
           </div>
         </div>
 
@@ -333,7 +370,7 @@ export default function DashboardLayout() {
               </button>
             </div>
 
-            <div className="px-3 py-3 border-b" style={{ borderColor: theme.border }}>
+            <div className="px-3 py-3 border-b space-y-2" style={{ borderColor: theme.border }}>
               <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: isNight ? 'rgba(249,115,22,0.10)' : '#fff7ed' }}>
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f97316] to-[#f43f5e] flex items-center justify-center text-white font-bold shrink-0">
                   {business?.name?.[0] || 'E'}
@@ -343,6 +380,7 @@ export default function DashboardLayout() {
                   <PlanBadge plan={business?.plan} />
                 </div>
               </div>
+              <TrialStrip business={business} onUpgrade={() => { handleUpgrade(); toggleSidebar(); }} />
             </div>
 
             <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
@@ -420,6 +458,23 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Trial days + upgrade button (topbar, trial plan only) */}
+            {business?.plan === 'trial' && (() => {
+              const days = trialDaysLeft(business);
+              if (days === null) return null;
+              const urgent = days <= 5;
+              return (
+                <button
+                  onClick={handleUpgrade}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white shrink-0"
+                  style={{ background: urgent ? 'linear-gradient(135deg,#ef4444,#f97316)' : 'linear-gradient(135deg,#f97316,#f43f5e)' }}
+                >
+                  <Zap size={11} />
+                  {days === 0 ? 'שדרג עכשיו' : `${days} ימים · שדרג`}
+                </button>
+              );
+            })()}
+
             {/* Live bot indicator */}
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-default select-none"
@@ -458,13 +513,11 @@ export default function DashboardLayout() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.97 }}
                     transition={{ duration: 0.15 }}
-                    className="fixed sm:absolute right-2 sm:right-0 sm:left-0 top-16 sm:top-full sm:mt-2 sm:w-80 rounded-2xl shadow-2xl border overflow-hidden z-50"
+                    className="absolute left-0 top-full mt-2 rounded-2xl shadow-2xl border overflow-hidden z-50"
                     style={{
                       background: theme.surface,
                       borderColor: theme.border,
-                      left: '8px',
-                      width: 'calc(100vw - 16px)',
-                      maxWidth: 320,
+                      width: 'min(320px, calc(100vw - 16px))',
                     }}
                   >
                     {/* Header */}
@@ -494,7 +547,7 @@ export default function DashboardLayout() {
                     </div>
 
                     {/* List */}
-                    <div className="overflow-y-auto" style={{ maxHeight: 'min(360px, 60vh)' }}>
+                    <div className="overflow-y-auto" style={{ maxHeight: 380 }}>
                       {notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 gap-2">
                           <Bell size={28} style={{ color: theme.mutedColor, opacity: 0.4 }} />

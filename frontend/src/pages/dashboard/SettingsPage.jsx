@@ -147,6 +147,7 @@ function GeneralSettings() {
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const [logoUploading, setLogoUploading] = useState(false);
 
   function handleLogoFile(e) {
@@ -184,7 +185,10 @@ function GeneralSettings() {
       updateBusiness(data);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch { alert('שגיאה בשמירה'); }
+    } catch (err) {
+      setSaveError(err?.response?.data?.error || 'שגיאה בשמירה — נסה שוב');
+      setTimeout(() => setSaveError(null), 4000);
+    }
     finally { setSaving(false); }
   }
 
@@ -350,7 +354,12 @@ function GeneralSettings() {
         </div>
       </Section>
 
-      <SaveBtn onClick={handleSave} saving={saving} saved={saved} />
+      <div className="space-y-2">
+        <SaveBtn onClick={handleSave} saving={saving} saved={saved} />
+        {saveError && (
+          <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{saveError}</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -410,7 +419,7 @@ function HoursSettings() {
       await businessApi.updateHours({ hours });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch { alert('שגיאה בשמירה'); }
+    } catch { /* silent fail — auto-save handles it */ }
     finally { setSaving(false); }
   }
 
@@ -490,6 +499,12 @@ function ServicesSettings() {
   const [addTab, setAddTab] = useState('custom'); // 'custom' | 'preset'
   const [newService, setNewService] = useState({ name: '', duration_minutes: 30, price: '' });
   const [saving, setSaving] = useState(false);
+  const [serviceError, setServiceError] = useState(null);
+
+  function showServiceErr(err) {
+    setServiceError(err?.response?.data?.error || 'שגיאה — נסה שוב');
+    setTimeout(() => setServiceError(null), 4000);
+  }
 
   const activeServices = services.filter(s => s.is_active);
   const activeNames = new Set(activeServices.map(s => s.name));
@@ -499,7 +514,7 @@ function ServicesSettings() {
     try {
       await businessApi.createService({ ...preset, price: Number(preset.price) });
       queryClient.invalidateQueries(['services']);
-    } catch { alert('שגיאה'); }
+    } catch (err) { showServiceErr(err); }
   }
 
   async function handleCustomAdd() {
@@ -510,7 +525,7 @@ function ServicesSettings() {
       queryClient.invalidateQueries(['services']);
       setNewService({ name: '', duration_minutes: 30, price: '' });
       setShowAdd(false);
-    } catch { alert('שגיאה'); }
+    } catch (err) { showServiceErr(err); }
     finally { setSaving(false); }
   }
 
@@ -520,7 +535,7 @@ function ServicesSettings() {
       await businessApi.updateService(id, editForm);
       queryClient.invalidateQueries(['services']);
       setEditingId(null);
-    } catch { alert('שגיאה'); }
+    } catch (err) { showServiceErr(err); }
     finally { setSaving(false); }
   }
 
@@ -529,7 +544,7 @@ function ServicesSettings() {
     try {
       await businessApi.deleteService(id);
       queryClient.invalidateQueries(['services']);
-    } catch { alert('שגיאה'); }
+    } catch (err) { showServiceErr(err); }
   }
 
   if (isLoading) return <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-[#f43f5e]" /></div>;
@@ -731,6 +746,10 @@ function ServicesSettings() {
           ))
         )}
       </div>
+
+      {serviceError && (
+        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{serviceError}</p>
+      )}
     </div>
   );
 }
@@ -745,6 +764,12 @@ function StaffSettings() {
   const [newStaff, setNewStaff] = useState({ name: '', role: 'staff', color: STAFF_COLORS[0] });
   const [showAdd, setShowAdd] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [staffError, setStaffError] = useState(null);
+
+  function showStaffErr(err) {
+    setStaffError(err?.response?.data?.error || 'שגיאה — נסה שוב');
+    setTimeout(() => setStaffError(null), 4000);
+  }
 
   async function handleAdd() {
     if (!newStaff.name) return;
@@ -755,7 +780,7 @@ function StaffSettings() {
       queryClient.invalidateQueries(['staff']);
       setNewStaff({ name: '', role: 'staff', color: STAFF_COLORS[0] });
       setShowAdd(false);
-    } catch { alert('שגיאה'); }
+    } catch (err) { showStaffErr(err); }
     finally { setSaving(false); }
   }
 
@@ -765,7 +790,7 @@ function StaffSettings() {
       await businessApi.deleteStaff(id);
       queryClient.invalidateQueries(['staff-full']);
       queryClient.invalidateQueries(['staff']);
-    } catch { alert('שגיאה'); }
+    } catch (err) { showStaffErr(err); }
   }
 
   const activeStaff = staff.filter(s => s.is_active !== 0);
@@ -842,6 +867,10 @@ function StaffSettings() {
           <Plus size={14} />
           הוסף עובד
         </button>
+      )}
+
+      {staffError && (
+        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{staffError}</p>
       )}
     </div>
   );
