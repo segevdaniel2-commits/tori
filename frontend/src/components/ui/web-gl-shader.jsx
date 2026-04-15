@@ -1,5 +1,19 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
+
+// Detect WebGL support before trying to create a renderer.
+// Some mobile GPUs / browser configs silently return null for the context.
+function checkWebGLSupport() {
+  try {
+    const c = document.createElement('canvas');
+    return !!(
+      window.WebGLRenderingContext &&
+      (c.getContext('webgl') || c.getContext('experimental-webgl'))
+    );
+  } catch {
+    return false;
+  }
+}
 
 export function WebGLShader({ className = "fixed top-0 left-0 w-full h-full block" }) {
   const canvasRef = useRef(null)
@@ -11,9 +25,16 @@ export function WebGLShader({ className = "fixed top-0 left-0 w-full h-full bloc
     uniforms: null,
     animationId: null,
   })
+  // If WebGL fails, just render nothing (transparent canvas) instead of crashing
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     if (!canvasRef.current) return
+    // Skip entirely on devices without WebGL
+    if (!checkWebGLSupport()) {
+      setFailed(true)
+      return
+    }
 
     const canvas = canvasRef.current
     const { current: refs } = sceneRef
@@ -25,8 +46,9 @@ export function WebGLShader({ className = "fixed top-0 left-0 w-full h-full bloc
       }
     `
 
+    // Use mediump instead of highp — highp is not guaranteed on all mobile GPUs
     const fragmentShader = `
-      precision highp float;
+      precision mediump float;
       uniform vec2 resolution;
       uniform float time;
       uniform float xScale;
@@ -50,10 +72,18 @@ export function WebGLShader({ className = "fixed top-0 left-0 w-full h-full bloc
       }
     `
 
+    const handleResize = () => {
+      if (!refs.renderer || !refs.uniforms) return
+      const width = window.innerWidth
+      const height = window.innerHeight
+      refs.renderer.setSize(width, height, false)
+      refs.uniforms.resolution.value = [width, height]
+    }
+
     const initScene = () => {
       refs.scene = new THREE.Scene()
-      refs.renderer = new THREE.WebGLRenderer({ canvas })
-      refs.renderer.setPixelRatio(window.devicePixelRatio)
+      refs.renderer = new THREE.WebGLRenderer({ canvas, powerPreference: 'low-power', antialias: false })
+      refs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
       refs.renderer.setClearColor(new THREE.Color(0x000000))
 
       refs.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, -1)
@@ -100,31 +130,31 @@ export function WebGLShader({ className = "fixed top-0 left-0 w-full h-full bloc
       refs.animationId = requestAnimationFrame(animate)
     }
 
-    const handleResize = () => {
-      if (!refs.renderer || !refs.uniforms) return
-      const width = window.innerWidth
-      const height = window.innerHeight
-      refs.renderer.setSize(width, height, false)
-      refs.uniforms.resolution.value = [width, height]
+    try {
+      initScene()
+      animate()
+      window.addEventListener("resize", handleResize)
+    } catch (err) {
+      console.warn('[WebGLShader] WebGL initialization failed — disabling shader background.', err?.message)
+      setFailed(true)
     }
-
-    initScene()
-    animate()
-    window.addEventListener("resize", handleResize)
 
     return () => {
       if (refs.animationId) cancelAnimationFrame(refs.animationId)
       window.removeEventListener("resize", handleResize)
-      if (refs.mesh) {
-        refs.scene?.remove(refs.mesh)
-        refs.mesh.geometry.dispose()
-        if (refs.mesh.material instanceof THREE.Material) {
-          refs.mesh.material.dispose()
+      try {
+        if (refs.mesh) {
+          refs.scene?.remove(refs.mesh)
+          refs.mesh.geometry.dispose()
+          if (refs.mesh.material instanceof THREE.Material) refs.mesh.material.dispose()
         }
-      }
-      refs.renderer?.dispose()
+        refs.renderer?.dispose()
+      } catch { /* ignore cleanup errors */ }
     }
   }, [])
+
+  // On failure, render nothing — the page still shows its own background gradient
+  if (failed) return null
 
   return (
     <canvas
