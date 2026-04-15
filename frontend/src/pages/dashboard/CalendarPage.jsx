@@ -4,7 +4,7 @@ import { format, addDays, subDays, parseISO, isToday } from 'date-fns';
 import { he } from 'date-fns/locale';
 import {
   ChevronRight, ChevronLeft, ChevronDown, Plus, X, Clock, User, Phone,
-  Scissors, Calendar, Loader2, Check, Trash2, Lock
+  Scissors, Calendar, Loader2, Check, Trash2, Lock, RefreshCw
 } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppointmentsApi, useBusinessApi } from '../../hooks/useApi';
@@ -787,11 +787,21 @@ export default function CalendarPage() {
   const queryClient = useQueryClient();
   const appointmentsApi = useAppointmentsApi();
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { data: appointments = [], isLoading, refetch } = useQuery({
     queryKey: ['appointments', selectedDate],
     queryFn: () => appointmentsApi.list({ date: selectedDate }).then(r => r.data),
     enabled: !!business?.id,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
+
+  const handleMobileRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try { await refetch(); } finally { setIsRefreshing(false); }
+  }, [refetch]);
 
   const { data: staffList = [] } = useQuery({
     queryKey: ['staff'],
@@ -890,19 +900,29 @@ export default function CalendarPage() {
       <div className="sm:hidden mb-3">
         {/* Month + add button row */}
         <div className="flex items-center justify-between mb-2 px-1">
-          <div>
+          <div className="flex items-center gap-2">
             <span className="font-black text-gray-900 text-xl">{formatHeaderDate(selectedDate)}</span>
-            {isTodayFlag && <span className="mr-2 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
+            {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
           </div>
-          {!isTodayFlag && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
-              className="text-xs font-semibold px-3 py-1.5 rounded-full border"
-              style={{ color: '#f43f5e', background: '#fff1eb', borderColor: '#f97316' + '33' }}
+              onClick={handleMobileRefresh}
+              disabled={isRefreshing}
+              className="p-2 rounded-full border border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316] transition-all active:scale-90"
+              aria-label="רענן"
             >
-              היום
+              <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
             </button>
-          )}
+            {!isTodayFlag && (
+              <button
+                onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                className="text-xs font-semibold px-3 py-1.5 rounded-full border"
+                style={{ color: '#f43f5e', background: '#fff1eb', borderColor: '#f97316' + '33' }}
+              >
+                היום
+              </button>
+            )}
+          </div>
         </div>
         {/* Swipeable date strip */}
         <MobileDateStrip selectedDate={selectedDate} onSelect={setSelectedDate} />

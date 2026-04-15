@@ -831,10 +831,24 @@ function minutesToTime(m) {
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 }
 
+// ─── Prompt injection sanitizer ──────────────────────────────────────────────
+// Strips newlines and control characters so user-controlled strings can't break
+// the system prompt structure.
+function sanitizeForPrompt(str, maxLen = 120) {
+  if (!str) return '';
+  return String(str)
+    .replace(/[\r\n\t\x00-\x1F\x7F]/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .slice(0, maxLen);
+}
+
 // ─── System prompt builders ───────────────────────────────────────────────────
 
 function buildSelectionPrompt(businesses) {
-  const list = businesses.map((b, i) => `${i + 1}. *${b.name}* ${b.city || b.address || ''}`).join('\n');
+  const list = businesses.map((b, i) =>
+    `${i + 1}. *${sanitizeForPrompt(b.name, 60)}* ${sanitizeForPrompt(b.city || b.address || '', 60)}`
+  ).join('\n');
   return `אתה טורי (Tori) - עוזר חכם לתיאום תורים בוואטסאפ.
 
 אתה מדבר בעברית בלבד, בגובה העיניים, קצר ולעניין.
@@ -900,11 +914,11 @@ function buildBusinessSystemPrompt(business, staffList, services, customer, hour
 
   const tone = TONE_STYLES[business.bot_tone] || TONE_STYLES.professional;
   const termsLine = business.terms_text
-    ? `תקנון העסק: ${business.terms_text}`
+    ? `תקנון העסק: ${sanitizeForPrompt(business.terms_text, 500)}`
     : '';
 
-  return `אתה טורי — הבוט של "${business.name}". ענה בעברית, קצר וטבעי.
-${business.description ? `על העסק: ${business.description}` : ''}
+  return `אתה טורי — הבוט של "${sanitizeForPrompt(business.name, 60)}". ענה בעברית, קצר וטבעי.
+${business.description ? `על העסק: ${sanitizeForPrompt(business.description, 300)}` : ''}
 שעות: ${hoursText}
 צוות: ${staffText}
 שירותים: ${servicesText}
@@ -956,8 +970,30 @@ function getConversation(db, phone) {
   };
 }
 
+// Keys we actually store in extracted_data — keeps the column bounded
+const ALLOWED_EXTRACTED_KEYS = [
+  'service_id', 'service_name', 'staff_id', 'staff_name',
+  'date', 'time', 'customer_name', 'ready_to_book',
+  'reschedule_stage', 'reschedule_options', 'reschedule_target_id',
+  'cancel_stage', 'cancel_options', 'cancel_target_id',
+  'appointment_id', 'flow', 'greeted_name',
+];
+
+function sanitizeExtractedData(ed) {
+  if (!ed || typeof ed !== 'object') return {};
+  const out = {};
+  for (const key of ALLOWED_EXTRACTED_KEYS) {
+    if (ed[key] !== undefined) {
+      // Truncate any string values to prevent bloat
+      out[key] = typeof ed[key] === 'string' ? ed[key].slice(0, 200) : ed[key];
+    }
+  }
+  return out;
+}
+
 function saveConversation(db, phone, updates) {
-  const ed = updates.extracted_data ? JSON.stringify(updates.extracted_data) : undefined;
+  const rawEd = updates.extracted_data ? sanitizeExtractedData(updates.extracted_data) : undefined;
+  const ed   = rawEd ? JSON.stringify(rawEd) : undefined;
   const hist = updates.history ? JSON.stringify(updates.history.slice(-20)) : undefined;
 
   db.prepare(`
@@ -1502,9 +1538,14 @@ async function bookAppointment(db, phone, businessId, business, ed, services, st
     let customer = db.prepare('SELECT * FROM customers WHERE business_id = ? AND whatsapp_phone = ?').get(businessId, phone);
     if (customer) {
       db.prepare('UPDATE customers SET name = COALESCE(?, name), total_visits = total_visits + 1, last_visit_at = ? WHERE id = ?').run(ed.customer_name, startsAt, customer.id);
+      customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(customer.id);
     } else {
       const res = db.prepare('INSERT INTO customers (business_id, whatsapp_phone, name, total_visits) VALUES (?, ?, ?, 1)').run(businessId, phone, ed.customer_name);
       customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(res.lastInsertRowid);
+    }
+    // Notify dashboard in real-time so the customers list refreshes immediately
+    if (io) {
+      io.to(`business_${businessId}`).emit('customer:upserted', { id: customer.id, name: customer.name, whatsapp_phone: customer.whatsapp_phone });
     }
 
     // Check for conflicting appointment

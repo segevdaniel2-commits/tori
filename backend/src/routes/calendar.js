@@ -6,6 +6,25 @@ const axios = require('axios');
 
 router.use(authMiddleware);
 
+// ─── SSRF guard: block private/internal IP ranges ────────────────────────────
+function isPrivateHostname(hostname) {
+  const h = hostname.toLowerCase();
+  return (
+    h === 'localhost' ||
+    /^127\./.test(h) ||
+    /^0\.0\.0\.0/.test(h) ||
+    /^10\./.test(h) ||
+    /^172\.(1[6-9]|2[0-9]|3[01])\./.test(h) ||
+    /^192\.168\./.test(h) ||
+    /^169\.254\./.test(h) ||    // AWS metadata service
+    /^::1$/.test(h) ||
+    /^fc00:/i.test(h) ||
+    /^fe80:/i.test(h) ||
+    h === '0177.0.0.1' ||       // octal localhost
+    /^0x7f/i.test(h)            // hex localhost
+  );
+}
+
 // ─── Simple iCal parser ───────────────────────────────────────────────────────
 
 function parseICalDate(raw) {
@@ -83,11 +102,12 @@ router.post('/import', async (req, res) => {
     return res.status(400).json({ error: 'ical_url required' });
   }
 
-  // Validate URL
+  // Validate URL and block SSRF
   let url;
   try {
     url = new URL(ical_url.trim());
     if (!['http:', 'https:'].includes(url.protocol)) throw new Error('bad protocol');
+    if (isPrivateHostname(url.hostname)) throw new Error('private host');
   } catch {
     return res.status(400).json({ error: 'כתובת URL לא תקינה' });
   }

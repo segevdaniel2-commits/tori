@@ -1,8 +1,41 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { google } = require('googleapis');
 const authMiddleware = require('../middleware/auth');
 const { getDb } = require('../config/database');
+
+// ─── HMAC-signed OAuth state helpers ─────────────────────────────────────────
+function buildOAuthState(businessId) {
+  const payload = JSON.stringify({ businessId, ts: Date.now() });
+  const sig = crypto
+    .createHmac('sha256', process.env.JWT_SECRET)
+    .update(payload)
+    .digest('hex');
+  return Buffer.from(JSON.stringify({ payload, sig }))
+    .toString('base64')
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function verifyOAuthState(state) {
+  try {
+    const raw = Buffer.from(state.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString();
+    const { payload, sig } = JSON.parse(raw);
+    const expectedSig = crypto
+      .createHmac('sha256', process.env.JWT_SECRET)
+      .update(payload)
+      .digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expectedSig, 'hex'))) {
+      return null;
+    }
+    const data = JSON.parse(payload);
+    // State expires after 10 minutes
+    if (Date.now() - data.ts > 10 * 60 * 1000) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
 
 // ─── OAuth2 client (no auth middleware — callback is public) ──────────────────
 function makeOAuth2Client() {
@@ -274,10 +307,8 @@ router.get('/google/auth', authMiddleware, (req, res) => {
     return res.status(503).json({ error: 'Google integration not configured' });
   }
   const oauth2Client = makeOAuth2Client();
-  // Store businessId in state param (base64) so we get it back in callback
-  const state = Buffer.from(JSON.stringify({
-    businessId: req.business.id,
-  })).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  // Store businessId in HMAC-signed state param so callback can't be forged
+  const state = buildOAuthState(req.business.id);
 
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -302,7 +333,11 @@ router.get('/google/callback', async (req, res) => {
   }
 
   try {
-    const { businessId } = JSON.parse(Buffer.from(state.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString());
+    const stateData = verifyOAuthState(state);
+    if (!stateData) {
+      return res.redirect(`${CLIENT_URL}/dashboard/settings?tab=integrations&google=error`);
+    }
+    const { businessId } = stateData;
     const oauth2Client = makeOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code);
 

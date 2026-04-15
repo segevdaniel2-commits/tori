@@ -17,6 +17,8 @@ if (!process.env.WHATSAPP_VERIFY_TOKEN) {
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
+const cookie = require('cookie');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -57,11 +59,28 @@ initDb().then(() => {
 
   app.set('io', io);
 
-  // Validate businessId is a positive integer before allowing room join
+  // Authenticate Socket.io connections via httpOnly cookie
+  io.use((socket, next) => {
+    try {
+      const cookies = cookie.parse(socket.handshake.headers.cookie || '');
+      const token = cookies.tori_token;
+      if (!token || token.length > 512) return next(new Error('Authentication required'));
+      const payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+      const businessId = parseInt(payload.businessId, 10);
+      if (!businessId || businessId <= 0) return next(new Error('Invalid token'));
+      socket.businessId = businessId;
+      next();
+    } catch {
+      next(new Error('Authentication required'));
+    }
+  });
+
+  // Only allow joining your own business room
   io.on('connection', (socket) => {
     socket.on('join_business', (businessId) => {
       const id = parseInt(businessId, 10);
       if (!id || id <= 0 || !Number.isInteger(id)) return;
+      if (id !== socket.businessId) return; // IDOR guard
       socket.join(`business_${id}`);
     });
   });
@@ -79,9 +98,9 @@ initDb().then(() => {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        styleSrc: ["'self'", 'https://fonts.googleapis.com'], // no unsafe-inline
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'https://api.qrserver.com'],
+        imgSrc: ["'self'", 'https://api.qrserver.com'], // removed data: URI (not needed on API backend)
         connectSrc: ["'self'", CLIENT_URL],
         frameSrc: ["'none'"],
         objectSrc: ["'none'"],

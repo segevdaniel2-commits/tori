@@ -35,7 +35,7 @@ function authMiddleware(req, res, next) {
   const db = getDb();
   const business = db.prepare(`
     SELECT id, name, type, owner_name, email, phone, address, city, description,
-           logo_url, plan, is_active, whatsapp_number, buffer_minutes,
+           logo_url, brand_color, plan, is_active, whatsapp_number, buffer_minutes,
            cancellation_hours, trial_ends_at, stripe_customer_id,
            stripe_subscription_id, created_at, updated_at, token_version,
            totp_enabled

@@ -6,10 +6,11 @@ import {
   Bell, Check, CheckCheck, Clock, Sparkles
 } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore, useDashboardStore, useNotificationStore } from '../../store/useStore';
 
 const NAV_ITEMS = [
-  { path: '/dashboard/ai', label: 'עוזר AI', icon: Sparkles },
+  { path: '/dashboard/ai', label: 'טורי', icon: Sparkles },
   { path: '/dashboard', label: 'יומן', icon: Calendar, exact: true },
   { path: '/dashboard/analytics', label: 'אנליטיקות', icon: BarChart3 },
   { path: '/dashboard/customers', label: 'לקוחות', icon: Users },
@@ -53,7 +54,8 @@ function timeAgo(date) {
 export default function DashboardLayout() {
   const { business, logout } = useAuthStore();
   const { sidebarOpen, toggleSidebar } = useDashboardStore();
-  const { notifications, addNotification, markAllRead } = useNotificationStore();
+  const { notifications, addNotification, markAllRead, clearAll } = useNotificationStore();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const socketRef = useRef(null);
@@ -99,7 +101,7 @@ export default function DashboardLayout() {
     const socketUrl = import.meta.env.VITE_API_URL
       ? import.meta.env.VITE_API_URL.replace('/api', '')
       : '/';
-    const socket = io(socketUrl, { transports: ['websocket', 'polling'], reconnection: true });
+    const socket = io(socketUrl, { transports: ['websocket', 'polling'], reconnection: true, withCredentials: true });
     socketRef.current = socket;
     socket.emit('join_business', business.id);
     socket.on('appointment:created', (appt) => {
@@ -112,6 +114,9 @@ export default function DashboardLayout() {
     });
     socket.on('appointment:cancelled', ({ id }) => {
       addNotification({ type: 'cancel', title: 'תור בוטל', message: `תור #${id} בוטל` });
+    });
+    socket.on('customer:upserted', () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
     });
     return () => socket.disconnect();
   }, [business?.id]);
@@ -139,7 +144,7 @@ export default function DashboardLayout() {
     '/dashboard/analytics': 'אנליטיקות',
     '/dashboard/customers': 'לקוחות',
     '/dashboard/settings': 'הגדרות',
-    '/dashboard/ai': 'עוזר AI',
+    '/dashboard/ai': 'טורי — הסוכן שלך',
   }[location.pathname] || 'דשבורד';
 
   // Shared sidebar content renderer
@@ -453,25 +458,43 @@ export default function DashboardLayout() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.97 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute left-0 top-full mt-2 w-80 rounded-2xl shadow-2xl border overflow-hidden z-50"
-                    style={{ background: theme.surface, borderColor: theme.border }}
+                    className="fixed sm:absolute right-2 sm:right-0 sm:left-0 top-16 sm:top-full sm:mt-2 sm:w-80 rounded-2xl shadow-2xl border overflow-hidden z-50"
+                    style={{
+                      background: theme.surface,
+                      borderColor: theme.border,
+                      left: '8px',
+                      width: 'calc(100vw - 16px)',
+                      maxWidth: 320,
+                    }}
                   >
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: theme.border }}>
                       <span className="font-bold text-sm" style={{ color: theme.titleColor }}>התראות</span>
                       {notifications.length > 0 && (
-                        <button
-                          onClick={markAllRead}
-                          className="text-xs font-medium text-[#f97316] hover:text-[#f43f5e] flex items-center gap-1"
-                        >
-                          <CheckCheck size={13} />
-                          סמן הכל כנקרא
-                        </button>
+                        <div className="flex items-center gap-3">
+                          {unread > 0 && (
+                            <button
+                              onClick={markAllRead}
+                              className="text-xs font-medium text-[#f97316] hover:text-[#f43f5e] flex items-center gap-1"
+                            >
+                              <CheckCheck size={13} />
+                              סמן כנקרא
+                            </button>
+                          )}
+                          <button
+                            onClick={clearAll}
+                            className="text-xs font-medium flex items-center gap-1"
+                            style={{ color: theme.mutedColor }}
+                          >
+                            <X size={13} />
+                            נקה
+                          </button>
+                        </div>
                       )}
                     </div>
 
                     {/* List */}
-                    <div className="overflow-y-auto" style={{ maxHeight: 360 }}>
+                    <div className="overflow-y-auto" style={{ maxHeight: 'min(360px, 60vh)' }}>
                       {notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 gap-2">
                           <Bell size={28} style={{ color: theme.mutedColor, opacity: 0.4 }} />

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp, Sparkles, Loader2, RotateCcw } from 'lucide-react';
 import api from '../../hooks/useApi';
@@ -44,6 +44,26 @@ export default function OwnerBotPage() {
   const [error, setError] = useState(null);
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
+  const containerRef = useRef(null);
+
+  // On mobile: lock container height to the visual viewport so the layout
+  // stays stable when the software keyboard opens/closes.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv || !containerRef.current) return;
+    const onResize = () => {
+      if (containerRef.current) {
+        containerRef.current.style.height = vv.height + 'px';
+      }
+    };
+    vv.addEventListener('resize', onResize);
+    vv.addEventListener('scroll', onResize);
+    onResize();
+    return () => {
+      vv.removeEventListener('resize', onResize);
+      vv.removeEventListener('scroll', onResize);
+    };
+  }, []);
 
   const isEmpty = messages.length === 0;
 
@@ -151,7 +171,7 @@ export default function OwnerBotPage() {
   );
 
   return (
-    <div className="h-full flex flex-col" dir="rtl" style={{ background: outerBg }}>
+    <div ref={containerRef} className="h-full flex flex-col overflow-hidden" dir="rtl" style={{ background: outerBg }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div
@@ -163,7 +183,7 @@ export default function OwnerBotPage() {
             <Sparkles size={15} className="text-white" />
           </div>
           <div>
-            <span className="font-bold text-sm" style={{ color: titleClr }}>עוזר AI</span>
+            <span className="font-bold text-sm" style={{ color: titleClr }}>טורי — הסוכן שלך</span>
             <span className="text-xs mr-2" style={{ color: muted }}>מבוסס על נתוני {business?.name || 'העסק'}</span>
           </div>
         </div>
@@ -180,7 +200,7 @@ export default function OwnerBotPage() {
       </div>
 
       {/* ── Body ───────────────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto relative">
+      <div className="flex-1 min-h-0 overflow-y-auto relative">
         {isEmpty ? (
           /* CENTER — empty state with input in the middle */
           <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
@@ -200,7 +220,7 @@ export default function OwnerBotPage() {
                 שלום, {business?.owner_name?.split(' ')[0] || 'בעל העסק'}
               </h2>
               <p className="text-sm" style={{ color: muted }}>
-                אני מכיר את כל הנתונים של העסק שלך. שאל אותי כל דבר.
+                אני טורי, הסוכן שלך. מכיר את כל הנתונים של העסק — שאל אותי כל דבר.
               </p>
             </motion.div>
 

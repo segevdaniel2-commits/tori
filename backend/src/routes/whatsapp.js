@@ -151,8 +151,8 @@ router.post('/webhook', async (req, res) => {
             continue;
           }
 
-          // Validate phone (digits only, 7–15 chars per E.164)
-          if (!/^\d{7,15}$/.test(phone)) continue;
+          // Validate phone: E.164 format — digits only, 7–15 chars, must not start with 0
+          if (!/^\d{7,15}$/.test(phone) || phone.startsWith('0')) continue;
           if (!text.trim() || text.length > 4000) continue;
 
           // Log inbound message (truncated to prevent log injection)
@@ -257,9 +257,8 @@ router.post('/simulate/reset', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/whatsapp/diag — public diagnostic endpoint
-// Tests Groq API + WhatsApp token without auth, so we can debug from browser
-router.get('/diag', async (req, res) => {
+// GET /api/whatsapp/diag — diagnostic endpoint (requires auth)
+router.get('/diag', authMiddleware, async (req, res) => {
   const results = {};
 
   // 1. Groq API

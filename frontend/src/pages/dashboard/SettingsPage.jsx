@@ -3,10 +3,12 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import {
   Building2, Clock, Scissors, Users, CreditCard, Puzzle, QrCode, Shield,
   Plus, Trash2, Edit3, Check, X, Loader2, Save, Copy, ExternalLink,
-  AlertCircle, ChevronDown, ShieldCheck, ShieldOff, Smartphone,
+  AlertCircle, ChevronDown, ShieldCheck, ShieldOff, Smartphone, Upload, Palette,
+  LogOut, UserX,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useStore';
 
@@ -48,6 +50,17 @@ const TABS = [
 ];
 
 const DAY_LABELS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+const BRAND_COLORS = [
+  { value: 'linear-gradient(135deg,#f97316,#f43f5e)', label: 'Tori (ברירת מחדל)' },
+  { value: 'linear-gradient(135deg,#8b5cf6,#ec4899)', label: 'ורוד-סגול' },
+  { value: 'linear-gradient(135deg,#06b6d4,#3b82f6)', label: 'כחול-טורקיז' },
+  { value: 'linear-gradient(135deg,#10b981,#06b6d4)', label: 'ירוק-טורקיז' },
+  { value: 'linear-gradient(135deg,#f59e0b,#ef4444)', label: 'זהב-אדום' },
+  { value: 'linear-gradient(135deg,#6366f1,#8b5cf6)', label: 'אינדיגו' },
+  { value: '#1e293b', label: 'כהה' },
+  { value: '#0f172a', label: 'שחור כחלחל' },
+];
 
 const ACCENT = 'from-[#f97316] via-[#f43f5e] to-[#06b6d4]';
 
@@ -117,6 +130,7 @@ function Section({ title, children }) {
 function GeneralSettings() {
   const isNight = useContext(NightCtx);
   const { business, updateBusiness } = useAuthStore();
+  const logoFileRef = useRef(null);
   const [form, setForm] = useState({
     name: business?.name || '',
     description: business?.description || '',
@@ -124,6 +138,7 @@ function GeneralSettings() {
     city: business?.city || '',
     phone: business?.phone || '',
     logo_url: business?.logo_url || '',
+    brand_color: business?.brand_color || BRAND_COLORS[0].value,
     buffer_minutes: business?.buffer_minutes ?? 15,
     cancellation_hours: business?.cancellation_hours ?? 24,
     bot_tone: business?.bot_tone || 'friendly',
@@ -132,6 +147,35 @@ function GeneralSettings() {
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+
+  function handleLogoFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    setLogoUploading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 400;
+        const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setForm(p => ({ ...p, logo_url: dataUrl }));
+        setLogoUploading(false);
+      };
+      img.onerror = () => setLogoUploading(false);
+      img.src = ev.target.result;
+    };
+    reader.onerror = () => setLogoUploading(false);
+    reader.readAsDataURL(file);
+    // Reset file input so the same file can be re-selected
+    e.target.value = '';
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -150,17 +194,68 @@ function GeneralSettings() {
     <div className="space-y-4">
       {/* Profile picture */}
       <Section title="תמונת פרופיל / לוגו">
-        <div className="flex items-center gap-4">
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl shrink-0 overflow-hidden border ${isNight ? 'border-white/10' : 'border-gray-200'}`}
-            style={{ background: form.logo_url ? 'transparent' : 'linear-gradient(135deg,#f97316,#f43f5e)' }}>
-            {form.logo_url
-              ? <img src={form.logo_url} alt="לוגו" className="w-full h-full object-cover" onError={() => setForm(p => ({ ...p, logo_url: '' }))} />
-              : (business?.name?.[0] || 'E')}
+        <div className="flex items-start gap-4">
+          {/* Avatar preview */}
+          <div
+            className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl shrink-0 overflow-hidden border ${isNight ? 'border-white/10' : 'border-gray-200'}`}
+            style={{ background: form.logo_url ? 'transparent' : (form.brand_color || BRAND_COLORS[0].value) }}
+          >
+            {logoUploading
+              ? <Loader2 size={22} className="animate-spin opacity-70" />
+              : form.logo_url
+                ? <img src={form.logo_url} alt="לוגו" className="w-full h-full object-cover" onError={() => setForm(p => ({ ...p, logo_url: '' }))} />
+                : <span>{business?.name?.[0]?.toUpperCase() || 'ע'}</span>
+            }
           </div>
-          <div className="flex-1">
-            <label className={labelCls(isNight)}>קישור לתמונה (URL)</label>
-            <input {...f('logo_url')} className={inputCls(isNight)} dir="ltr" placeholder="https://..." />
-            <p className={`text-xs mt-1 ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>הדבק קישור לתמונה מהאינטרנט (JPG, PNG)</p>
+
+          <div className="flex-1 space-y-3">
+            {/* Upload / Remove buttons */}
+            <input ref={logoFileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleLogoFile} />
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => logoFileRef.current?.click()}
+                disabled={logoUploading}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-all ${isNight ? 'border-white/10 text-gray-300 hover:border-[#f43f5e]/50 hover:text-white disabled:opacity-40' : 'border-gray-300 text-gray-600 hover:border-[#f43f5e]/50 hover:text-gray-900 disabled:opacity-40'}`}
+              >
+                {logoUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                {logoUploading ? 'מעלה...' : 'העלה תמונה'}
+              </button>
+              {form.logo_url && (
+                <button
+                  type="button"
+                  onClick={() => setForm(p => ({ ...p, logo_url: '' }))}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-all ${isNight ? 'border-white/10 text-gray-400 hover:text-red-400 hover:border-red-400/30' : 'border-gray-300 text-gray-400 hover:text-red-500 hover:border-red-200'}`}
+                >
+                  <X size={14} /> הסר תמונה
+                </button>
+              )}
+            </div>
+
+            {/* Color picker — shown only when no logo */}
+            {!form.logo_url && (
+              <div>
+                <p className={`text-xs font-semibold mb-2 flex items-center gap-1 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <Palette size={12} /> צבע רקע
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  {BRAND_COLORS.map(c => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      title={c.label}
+                      onClick={() => setForm(p => ({ ...p, brand_color: c.value }))}
+                      className="w-7 h-7 rounded-lg transition-transform hover:scale-110 shrink-0"
+                      style={{
+                        background: c.value,
+                        outline: form.brand_color === c.value ? '2px solid #f43f5e' : '2px solid transparent',
+                        outlineOffset: '2px',
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Section>
@@ -1426,6 +1521,65 @@ function SecuritySettings() {
   );
 }
 
+// ─── Account / logout section ─────────────────────────────────────────────────
+function AccountSection({ isNight }) {
+  const { business, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const [confirming, setConfirming] = useState(false);
+
+  function handleLogout() {
+    api.post('/auth/logout').catch(() => {});
+    logout();
+    navigate('/login');
+  }
+
+  return (
+    <div className={`mt-6 border rounded-2xl overflow-hidden ${isNight ? 'border-white/[0.07] bg-white/[0.03]' : 'border-red-100 bg-red-50/40'}`}>
+      <div className="px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
+        {/* User info */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f97316] to-[#f43f5e] flex items-center justify-center text-white font-black text-base shrink-0">
+            {(business?.name || '?')[0]}
+          </div>
+          <div className="min-w-0">
+            <div className={`font-bold text-sm truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{business?.name}</div>
+            <div className={`text-xs truncate ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>{business?.email}</div>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          {!confirming ? (
+            <button
+              onClick={() => setConfirming(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 hover:bg-red-50 active:scale-95 transition-all"
+            >
+              <LogOut size={15} />
+              התנתק
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 active:scale-95 transition-all"
+              >
+                <LogOut size={15} />
+                אשר התנתקות
+              </button>
+              <button
+                onClick={() => setConfirming(false)}
+                className={`px-3 py-2.5 rounded-xl text-sm border transition-all ${isNight ? 'border-white/10 text-gray-400' : 'border-gray-200 text-gray-500'}`}
+              >
+                ביטול
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const isNight = useNightMode();
@@ -1447,7 +1601,7 @@ export default function SettingsPage() {
 
   return (
     <NightCtx.Provider value={isNight}>
-      <div className="p-3 sm:p-6" dir="rtl">
+      <div className="p-3 sm:p-6 pb-28 sm:pb-8" dir="rtl">
         <h2 className={`text-xl sm:text-2xl font-black mb-4 sm:mb-6 ${isNight ? 'text-white' : 'text-gray-900'}`}>הגדרות</h2>
 
         {/* Mobile tabs */}
@@ -1499,6 +1653,9 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Account / logout — always visible at the bottom */}
+      <AccountSection isNight={isNight} />
     </NightCtx.Provider>
   );
 }

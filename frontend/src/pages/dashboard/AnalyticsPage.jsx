@@ -252,7 +252,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6" dir="rtl">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 pb-28 sm:pb-6" dir="rtl">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="text-xl sm:text-2xl font-black text-gray-900">אנליטיקות</h2>
         <div className="flex items-center gap-2">
@@ -332,6 +332,7 @@ export default function AnalyticsPage() {
             <Loader2 size={32} className="animate-spin text-tori-400" />
           </div>
         ) : (
+          <div style={{ width: '100%', height: 260 }}>
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={revenueData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
               <defs>
@@ -347,6 +348,7 @@ export default function AnalyticsPage() {
               <Area type="monotone" dataKey="revenue" name="הכנסות" stroke="#f43f5e" fill="url(#revenueGrad)" strokeWidth={2.5} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
         )}
       </div>
 
@@ -357,6 +359,7 @@ export default function AnalyticsPage() {
           {servicesData.length === 0 ? (
             <div className="text-center text-gray-400 py-8">אין נתונים עדיין</div>
           ) : (
+            <div style={{ width: '100%', height: 220 }}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={servicesData} layout="vertical" margin={{ right: 20, left: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
@@ -370,6 +373,7 @@ export default function AnalyticsPage() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            </div>
           )}
         </div>
 
@@ -379,6 +383,7 @@ export default function AnalyticsPage() {
           {hoursData.length === 0 ? (
             <div className="text-center text-gray-400 py-8">אין נתונים עדיין</div>
           ) : (
+            <div style={{ width: '100%', height: 220 }}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={hoursData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -388,6 +393,7 @@ export default function AnalyticsPage() {
                 <Bar dataKey="count" name="תורים" fill="#f43f5e" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+            </div>
           )}
         </div>
       </div>

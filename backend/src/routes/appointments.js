@@ -22,6 +22,7 @@ function getAppointmentsWithDetails(db, businessId, where, params) {
     LEFT JOIN services sv ON a.service_id = sv.id
     WHERE a.business_id = ? ${where}
     ORDER BY a.starts_at ASC
+    LIMIT 2000
   `).all(businessId, ...params);
 }
 
@@ -131,18 +132,66 @@ router.put('/:id', (req, res) => {
 
     const { staff_id, service_id, starts_at, ends_at, price, status, notes } = req.body;
 
+    // ── Datetime validation ────────────────────────────────────────────────────
+    if (starts_at !== undefined && !validDatetime(starts_at)) {
+      return res.status(400).json({ error: 'Invalid starts_at format' });
+    }
+    if (ends_at !== undefined && !validDatetime(ends_at)) {
+      return res.status(400).json({ error: 'Invalid ends_at format' });
+    }
+
+    // ── Status whitelist ───────────────────────────────────────────────────────
+    const allowedStatus = ['confirmed', 'pending', 'completed', 'cancelled'];
+    if (status !== undefined && !allowedStatus.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    // ── Price validation ───────────────────────────────────────────────────────
+    let cleanPrice = undefined;
+    if (price !== undefined && price !== null) {
+      const p = parseFloat(price);
+      if (isNaN(p) || p < 0 || p > 1_000_000) {
+        return res.status(400).json({ error: 'Invalid price' });
+      }
+      cleanPrice = p;
+    }
+
+    // ── Notes length ───────────────────────────────────────────────────────────
+    const cleanNotes = notes !== undefined ? String(notes).slice(0, 1000) : undefined;
+
+    // ── Ownership: staff_id must belong to this business ──────────────────────
+    if (staff_id !== undefined && staff_id !== null) {
+      const staffRow = db.prepare('SELECT id FROM staff WHERE id = ? AND business_id = ?').get(staff_id, req.business.id);
+      if (!staffRow) return res.status(400).json({ error: 'Staff not found' });
+    }
+
+    // ── Ownership: service_id must belong to this business ────────────────────
+    if (service_id !== undefined && service_id !== null) {
+      const svcRow = db.prepare('SELECT id FROM services WHERE id = ? AND business_id = ?').get(service_id, req.business.id);
+      if (!svcRow) return res.status(400).json({ error: 'Service not found' });
+    }
+
     db.prepare(`
       UPDATE appointments SET
-        staff_id = COALESCE(?, staff_id),
+        staff_id   = COALESCE(?, staff_id),
         service_id = COALESCE(?, service_id),
-        starts_at = COALESCE(?, starts_at),
-        ends_at = COALESCE(?, ends_at),
-        price = COALESCE(?, price),
-        status = COALESCE(?, status),
-        notes = COALESCE(?, notes),
+        starts_at  = COALESCE(?, starts_at),
+        ends_at    = COALESCE(?, ends_at),
+        price      = COALESCE(?, price),
+        status     = COALESCE(?, status),
+        notes      = COALESCE(?, notes),
         updated_at = datetime('now')
       WHERE id = ?
-    `).run(staff_id, service_id, starts_at, ends_at, price, status, notes, req.params.id);
+    `).run(
+      staff_id   ?? null,
+      service_id ?? null,
+      starts_at  ?? null,
+      ends_at    ?? null,
+      cleanPrice ?? null,
+      status     ?? null,
+      cleanNotes ?? null,
+      req.params.id
+    );
 
     const updated = db.prepare(`
       SELECT a.*, c.name as customer_name, c.whatsapp_phone as customer_phone,

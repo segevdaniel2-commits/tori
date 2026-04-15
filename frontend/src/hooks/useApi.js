@@ -10,17 +10,8 @@ const api = axios.create({
   },
 });
 
-// Request interceptor: attach auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = useAuthStore.getState().token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// Auth is handled via httpOnly cookie (withCredentials: true above).
+// No token in JS memory — nothing to attach here.
 
 // Response interceptor: handle 401
 api.interceptors.response.use(
@@ -87,6 +78,7 @@ export function useCustomersApi() {
     list: (params) => api.get('/customers', { params }),
     get: (id) => api.get(`/customers/${id}`),
     update: (id, data) => api.put(`/customers/${id}`, data),
+    quickCreate: (data) => api.post('/customers/quick', data),
   };
 }
 

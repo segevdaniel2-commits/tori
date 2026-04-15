@@ -107,7 +107,20 @@ router.put('/:id', (req, res) => {
     if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
     const { name, notes } = req.body;
-    db.prepare('UPDATE customers SET name = COALESCE(?, name), notes = COALESCE(?, notes) WHERE id = ?').run(name, notes, req.params.id);
+
+    // Validate lengths
+    if (name !== undefined && String(name).length > 100) {
+      return res.status(400).json({ error: 'Name too long (max 100 characters)' });
+    }
+    if (notes !== undefined && String(notes).length > 5000) {
+      return res.status(400).json({ error: 'Notes too long (max 5000 characters)' });
+    }
+
+    const cleanName  = name  !== undefined ? String(name).trim().slice(0, 100)   : undefined;
+    const cleanNotes = notes !== undefined ? String(notes).slice(0, 5000)         : undefined;
+
+    db.prepare('UPDATE customers SET name = COALESCE(?, name), notes = COALESCE(?, notes) WHERE id = ?')
+      .run(cleanName ?? null, cleanNotes ?? null, req.params.id);
 
     const updated = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
     res.json(updated);

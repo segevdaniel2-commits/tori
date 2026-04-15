@@ -39,14 +39,14 @@ const ownerBotLimiter = rateLimit({
   skipSuccessfulRequests: false,
 });
 
-// Admin reset limiter — brute force protection on the secret
+// Admin reset limiter — very strict: 3 attempts per hour, count everything
 const adminResetLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'יותר מדי ניסיונות, נסה שוב בעוד 15 דקות' },
-  skipSuccessfulRequests: true,
+  message: { error: 'יותר מדי ניסיונות, נסה שוב בעוד שעה' },
+  skipSuccessfulRequests: false, // count all requests, not just failures
 });
 
 module.exports = { authLimiter, apiLimiter, webhookLimiter, ownerBotLimiter, adminResetLimiter };

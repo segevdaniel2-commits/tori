@@ -42,6 +42,15 @@
     direction: rtl;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent iOS layout reflow / scale-up after form submission */
+    touch-action: manipulation;
+  }
+
+  /* Prevent iOS auto-zoom on input focus (font-size must be >= 16px on mobile) */
+  @media (max-width: 640px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
   }
 
   ::-webkit-scrollbar {

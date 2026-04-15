@@ -283,15 +283,25 @@ export default function LandingV2() {
           </div>
 
           {/* CTAs — LEFT in RTL (last in HTML) */}
-          <div className="flex items-center gap-5">
-            <Link to="/login" className="text-gray-400 hover:text-white text-sm font-medium transition-colors hidden sm:block">כניסה</Link>
+          <div className="flex items-center gap-2 sm:gap-5">
+            {/* כניסה — visible on all screen sizes */}
+            <Link to="/login">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-xl border border-gray-700 hover:border-gray-500 transition-all"
+              >
+                כניסה
+              </motion.button>
+            </Link>
             <Link to="/register">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="bg-gradient-to-r from-[#f97316] via-[#f43f5e] to-[#06b6d4] text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-[#f43f5e]/25"
+                className="bg-gradient-to-r from-[#f97316] via-[#f43f5e] to-[#06b6d4] text-white text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl shadow-lg shadow-[#f43f5e]/25"
               >
-                התחל בחינם
+                <span className="hidden sm:inline">התחל בחינם</span>
+                <span className="sm:hidden">הצטרף</span>
               </motion.button>
             </Link>
           </div>

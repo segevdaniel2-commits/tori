@@ -56,11 +56,11 @@ export const useNotificationStore = create((set) => ({
     notifications: state.notifications.filter(n => n.id !== id),
   })),
 
-  markAllRead: () => set(() => ({
-    notifications: [],
+  // Mark all as read (keeps notifications visible, removes the badge count)
+  markAllRead: () => set((state) => ({
+    notifications: state.notifications.map(n => ({ ...n, read: true })),
   })),
 
-  unreadCount: () => {
-    // This is a derived value, use it via get()
-  },
+  // Remove all notifications entirely
+  clearAll: () => set(() => ({ notifications: [] })),
 }));

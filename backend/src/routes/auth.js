@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const validator = require('validator');
@@ -309,7 +310,12 @@ router.post('/2fa/verify-login', (req, res) => {
 // ─── POST /api/auth/admin-reset ───────────────────────────────────────────────
 router.post('/admin-reset', adminResetLimiter, async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
-  if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  const expected = process.env.ADMIN_SECRET;
+  // Timing-safe comparison — prevent brute-force timing oracle
+  const valid = expected && adminSecret &&
+    adminSecret.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(adminSecret), Buffer.from(expected));
+  if (!valid) return res.status(403).json({ error: 'Forbidden' });
 
   const { email, new_password } = req.body;
   if (!email || !new_password || new_password.length < 8) {

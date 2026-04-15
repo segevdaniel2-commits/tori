@@ -310,9 +310,38 @@ const init = async () => {
     // Security: TOTP 2FA
     "ALTER TABLE businesses ADD COLUMN totp_secret TEXT",
     "ALTER TABLE businesses ADD COLUMN totp_enabled INTEGER DEFAULT 0",
+    // Subscriptions / billing
+    "ALTER TABLE businesses ADD COLUMN subscription_status TEXT DEFAULT 'trialing'",
+    // Branding
+    "ALTER TABLE businesses ADD COLUMN brand_color TEXT DEFAULT NULL",
+  ];
+
+  // ── Indexes (CREATE IF NOT EXISTS — safe to re-run) ─────────────────────────
+  // These are critical for both performance and security (IDOR ownership lookups)
+  const indexes = [
+    // appointments: primary access patterns
+    "CREATE INDEX IF NOT EXISTS idx_appointments_business_starts ON appointments(business_id, starts_at)",
+    "CREATE INDEX IF NOT EXISTS idx_appointments_business_status ON appointments(business_id, status)",
+    "CREATE INDEX IF NOT EXISTS idx_appointments_customer       ON appointments(customer_id, business_id)",
+    // conflict check query
+    "CREATE INDEX IF NOT EXISTS idx_appointments_conflict       ON appointments(business_id, starts_at, ends_at, status)",
+    // customers
+    "CREATE INDEX IF NOT EXISTS idx_customers_business          ON customers(business_id)",
+    // staff & services: ownership lookups used by IDOR guards
+    "CREATE INDEX IF NOT EXISTS idx_staff_business              ON staff(business_id)",
+    "CREATE INDEX IF NOT EXISTS idx_services_business           ON services(business_id)",
+    // blocked times: conflict detection
+    "CREATE INDEX IF NOT EXISTS idx_blocked_business_starts     ON blocked_times(business_id, starts_at)",
+    // message logs: per-business queries
+    "CREATE INDEX IF NOT EXISTS idx_message_logs_business       ON message_logs(business_id)",
+    // conversations: already UNIQUE on whatsapp_phone, covered by that index
   ];
   for (const m of migrations) {
     try { db.run(m); } catch (_) { /* column already exists */ }
+  }
+
+  for (const idx of indexes) {
+    try { db.run(idx); } catch (err) { console.warn('[DB] Index creation warning:', err.message); }
   }
 
   saveDb();
