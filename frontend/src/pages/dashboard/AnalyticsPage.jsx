@@ -355,24 +355,37 @@ export default function AnalyticsPage() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Popular services */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 text-lg mb-6">שירותים פופולריים</h3>
+          <h3 className="font-bold text-gray-900 text-lg mb-5">שירותים פופולריים</h3>
           {servicesData.length === 0 ? (
             <div className="text-center text-gray-400 py-8">אין נתונים עדיין</div>
           ) : (
-            <div style={{ width: '100%', height: 220 }}>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={servicesData} layout="vertical" margin={{ right: 20, left: 80 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} width={80} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" name="כמות" radius={[0, 6, 6, 0]}>
-                  {servicesData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="space-y-3">
+              {(() => {
+                const maxCount = Math.max(...servicesData.map(s => s.count), 1);
+                return servicesData.map((s, i) => (
+                  <div key={s.name}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                        <span className="text-sm font-semibold text-gray-800 truncate max-w-[160px]">{s.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-xs text-gray-400">{s.count} תורים</span>
+                        <span className="text-sm font-bold text-gray-700">₪{s.revenue?.toLocaleString?.() ?? s.revenue}</span>
+                      </div>
+                    </div>
+                    <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.round((s.count / maxCount) * 100)}%`,
+                          background: COLORS[i % COLORS.length],
+                        }}
+                      />
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           )}
         </div>

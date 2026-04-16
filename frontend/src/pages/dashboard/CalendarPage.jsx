@@ -269,7 +269,7 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
             )}
             {status !== 'cancelled' && (
               <button
-                onClick={() => { handleStatusChange('cancelled'); onCancel && onCancel(); }}
+                onClick={() => handleStatusChange('cancelled')}
                 disabled={updating}
                 className="flex items-center gap-1.5 bg-red-100 text-red-600 hover:bg-red-200 text-sm font-semibold px-3 py-2 rounded-xl transition-all"
               >
@@ -346,7 +346,7 @@ function CustomSelect({ label, value, onChange, options, placeholder = 'בחר..
   );
 }
 
-function AddAppointmentModal({ selectedDate, initialTime, onClose, onSuccess }) {
+function AddAppointmentModal({ selectedDate, initialTime, onClose, onSuccess, existingAppointments = [] }) {
   const { business } = useAuthStore();
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(selectedDate || today);
@@ -359,6 +359,7 @@ function AddAppointmentModal({ selectedDate, initialTime, onClose, onSuccess }) 
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [altSlots, setAltSlots] = useState([]);
   const appointmentsApi = useAppointmentsApi();
 
   const quickDates = Array.from({ length: 5 }, (_, i) => {
@@ -394,10 +395,49 @@ function AddAppointmentModal({ selectedDate, initialTime, onClose, onSuccess }) 
 
   const selectedService = services?.find(s => s.id === Number(serviceId));
 
+  // Find up to 3 free slots near a given time on a given date
+  function findNearbySlots(forDate, forTime, durationMin) {
+    const [h, m] = forTime.split(':').map(Number);
+    const base = h * 60 + m;
+    const step = business?.buffer_minutes || 30;
+    const candidates = [];
+    for (let delta = step; delta <= step * 6; delta += step) {
+      candidates.push(base - delta, base + delta);
+    }
+    const dayAppts = existingAppointments.filter(a => a.status !== 'cancelled' && a.starts_at.startsWith(forDate));
+    return candidates
+      .filter(t => t >= 0 && t < 24 * 60)
+      .sort((a, b) => Math.abs(a - base) - Math.abs(b - base))
+      .filter(t => {
+        const slotStart = `${forDate}T${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}:00`;
+        const slotEnd = new Date(new Date(slotStart).getTime() + durationMin * 60000).toISOString().slice(0, 19);
+        return !dayAppts.some(a => a.starts_at < slotEnd && a.ends_at > slotStart);
+      })
+      .slice(0, 3)
+      .map(t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!customerName && !customerId) { setError('הכנס שם לקוח'); return; }
     if (!time) { setError('בחר שעה'); return; }
+
+    // Client-side conflict check before hitting the API
+    const duration = selectedService?.duration_minutes || 30;
+    const newStart = `${date}T${time}:00`;
+    const newEnd = new Date(new Date(newStart).getTime() + duration * 60000).toISOString().slice(0, 19);
+    const conflict = existingAppointments.find(a =>
+      a.status !== 'cancelled' && a.starts_at.startsWith(date) &&
+      a.starts_at < newEnd && a.ends_at > newStart
+    );
+    if (conflict) {
+      const nearby = findNearbySlots(date, time, duration);
+      setAltSlots(nearby);
+      setError(`השעה ${time} תפוסה — ${conflict.customer_name || 'לקוח'} כבר קבע באותה שעה`);
+      return;
+    }
+
+    setAltSlots([]);
     setLoading(true);
     setError('');
     try {
@@ -467,7 +507,27 @@ function AddAppointmentModal({ selectedDate, initialTime, onClose, onSuccess }) 
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
-          {error && <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2 rounded-xl">{error}</div>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
+              <p className="text-red-600 text-sm font-medium">{error}</p>
+              {altSlots.length > 0 && (
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-red-400">שעות פנויות קרובות:</span>
+                  {altSlots.map(slot => (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => { setTime(slot); setError(''); setAltSlots([]); }}
+                      className="text-xs font-bold px-2.5 py-1 rounded-lg text-white"
+                      style={{ background: 'linear-gradient(135deg,#f97316,#f43f5e)' }}
+                    >
+                      {slot}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Date */}
           <div className="border border-gray-100 rounded-2xl p-3">
@@ -902,8 +962,15 @@ export default function CalendarPage() {
     return format(d, 'EEEE, d בMMMM', { locale: he });
   }
 
+  const [staffFilter, setStaffFilter] = useState(null); // null = all staff
+  // Reset filter when date changes
+  useEffect(() => { setStaffFilter(null); }, [selectedDate]);
+
   const activeAppts = appointments.filter(a => a.status !== 'cancelled');
-  const sortedAppts = [...activeAppts].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  const filteredAppts = staffFilter
+    ? activeAppts.filter(a => a.staff_id === staffFilter)
+    : activeAppts;
+  const sortedAppts = [...filteredAppts].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
   return (
     <div className="p-3 sm:p-6 h-full flex flex-col" dir="rtl">
@@ -987,15 +1054,50 @@ export default function CalendarPage() {
         <MobileDateStrip selectedDate={selectedDate} onSelect={setSelectedDate} />
       </div>
 
-      {/* Staff filter tabs (shared desktop + mobile) */}
-      {staffList.length > 1 && (
-        <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
-          {staffList.filter(s => s.is_active).map(s => (
-            <button key={s.id} className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-[#f97316]/40 hover:text-[#f97316] whitespace-nowrap transition-all">
-              <div className="w-3 h-3 rounded-full" style={{ background: s.color }} />
-              {s.name}
-            </button>
-          ))}
+      {/* Staff filter (desktop + mobile — only when there's more than one active staff) */}
+      {staffList.filter(s => s.is_active).length > 1 && (
+        <div className="flex gap-2 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          {/* "All" pill */}
+          <button
+            onClick={() => setStaffFilter(null)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
+              staffFilter === null
+                ? 'text-white border-transparent'
+                : isNight
+                  ? 'border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                  : 'border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316]'
+            }`}
+            style={staffFilter === null ? { background: 'linear-gradient(135deg,#f97316,#f43f5e)' } : {}}
+          >
+            הכל
+            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${staffFilter === null ? 'bg-white/20 text-white' : isNight ? 'bg-white/10 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
+              {activeAppts.length}
+            </span>
+          </button>
+
+          {/* Per-staff pills */}
+          {staffList.filter(s => s.is_active).map(s => {
+            const count = activeAppts.filter(a => a.staff_id === s.id).length;
+            const isActive = staffFilter === s.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setStaffFilter(isActive ? null : s.id)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
+                  isNight
+                    ? isActive ? 'border-transparent text-white' : 'border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                    : isActive ? 'border-transparent text-white' : 'border-gray-200 text-gray-600 hover:border-[#f97316]/40 hover:text-[#f97316]'
+                }`}
+                style={isActive ? { background: s.color || '#f97316' } : {}}
+              >
+                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: isActive ? 'rgba(255,255,255,0.6)' : (s.color || '#f97316') }} />
+                {s.name}
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : isNight ? 'bg-white/10 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -1096,16 +1198,23 @@ export default function CalendarPage() {
           <AppointmentModal
             appt={selectedAppt}
             onClose={() => setSelectedAppt(null)}
-            onUpdate={() => { refetch(); setSelectedAppt(null); }}
-            onCancel={() => { refetch(); setSelectedAppt(null); }}
+            onUpdate={() => {
+              queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] });
+              setSelectedAppt(null);
+            }}
           />
         )}
         {showAddModal && (
           <AddAppointmentModal
             selectedDate={selectedDate}
             initialTime={addModalTime}
+            existingAppointments={appointments}
             onClose={() => { setShowAddModal(false); setAddModalTime(null); }}
-            onSuccess={() => { setShowAddModal(false); setAddModalTime(null); refetch(); }}
+            onSuccess={() => {
+              setShowAddModal(false);
+              setAddModalTime(null);
+              queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] });
+            }}
           />
         )}
       </AnimatePresence>

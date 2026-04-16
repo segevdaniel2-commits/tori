@@ -170,7 +170,7 @@ export default function DashboardLayout() {
   }
 
   function handleUpgrade() {
-    navigate('/dashboard/settings');
+    navigate('/dashboard/settings?tab=billing');
   }
 
   const unread = notifications.filter(n => !n.read).length;
