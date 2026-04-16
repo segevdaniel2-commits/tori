@@ -216,9 +216,12 @@ ${upcomingText}
 
 ══ פעולות ══
 
-קביעת תור — אסוף: שם, טלפון, שירות, תאריך (YYYY-MM-DD), שעה (HH:MM).
+קביעת תור:
+- לקוח קיים (שם מוכר מרשימת הלקוחות): אסוף שם, שירות, תאריך, שעה. ללא צורך בטלפון.
+  כשמוכן: BOOK:{שם}||{שירות}|{תאריך}|{שעה}
+- לקוח חדש (שם לא מוכר): חייב לאסוף גם מספר טלפון.
+  כשמוכן: BOOK:{שם}|{טלפון}|{שירות}|{תאריך}|{שעה}
 אם חסר פרט — שאל רק על הפרט החסר.
-כשהכל מוכן: BOOK:{שם}|{טלפון}|{שירות}|{תאריך}|{שעה}
 (ללא טקסט לאחר ה-BOOK)
 
 ביטול תור — אסוף: שם לקוח + תאריך/שעה.
@@ -297,8 +300,8 @@ router.post('/chat', async (req, res) => {
     }
 
     // ── Detect and execute booking action ─────────────────────────────────────
-    // Format: BOOK:{customerName}|{phone}|{service}|{date YYYY-MM-DD}|{time HH:MM}
-    const bookMatch = reply.match(/BOOK:([^|]+)\|([^|]+)\|([^|]+)\|(\d{4}-\d{2}-\d{2})\|(\d{2}:\d{2})/);
+    // Format: BOOK:{customerName}|{phone or empty}|{service}|{date YYYY-MM-DD}|{time HH:MM}
+    const bookMatch = reply.match(/BOOK:([^|]+)\|([^|]*)\|([^|]+)\|(\d{4}-\d{2}-\d{2})\|(\d{2}:\d{2})/);
     if (bookMatch) {
       const [, customerName, phone, serviceName, date, time] = bookMatch;
       try {
@@ -308,6 +311,16 @@ router.post('/chat', async (req, res) => {
         const endsAt = new Date(new Date(startsAt).getTime() + dur * 60000).toISOString().slice(0, 19);
         const cleanPhone = phone.replace(/[\s\-]/g, '');
 
+        // Check if customer exists by name first
+        const existingByName = db.prepare(
+          `SELECT id FROM customers WHERE business_id = ? AND name = ? COLLATE NOCASE LIMIT 1`
+        ).get(req.business.id, customerName.trim());
+
+        // New customer with no phone — ask for it
+        if (!existingByName && !cleanPhone) {
+          return res.json({ reply: `מה מספר הטלפון של ${customerName.trim()}?` });
+        }
+
         // Conflict check + INSERT in a single exclusive transaction to prevent race conditions
         const bookTransaction = db.transaction(() => {
           const conflict = db.prepare(
@@ -315,9 +328,10 @@ router.post('/chat', async (req, res) => {
           ).get(req.business.id, endsAt, startsAt);
           if (conflict) return { conflict: true };
 
-          let customer = db.prepare('SELECT id FROM customers WHERE business_id = ? AND whatsapp_phone = ?').get(req.business.id, cleanPhone);
+          let customer = existingByName;
           if (!customer) {
-            const r = db.prepare('INSERT INTO customers (business_id, whatsapp_phone, name) VALUES (?, ?, ?)').run(req.business.id, cleanPhone || `owner_${Date.now()}`, customerName.trim());
+            // New customer — create with phone
+            const r = db.prepare('INSERT INTO customers (business_id, whatsapp_phone, name) VALUES (?, ?, ?)').run(req.business.id, cleanPhone, customerName.trim());
             customer = { id: r.lastInsertRowid };
           }
 

@@ -978,7 +978,7 @@ export default function CalendarPage() {
       {/* ── Desktop header ─────────────────────────────────────────────────────── */}
       <div className="hidden sm:flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <button onClick={() => goDay(1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
+          <button onClick={() => goDay(-1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
             <ChevronRight size={17} />
           </button>
 
@@ -1004,7 +1004,7 @@ export default function CalendarPage() {
             </AnimatePresence>
           </div>
 
-          <button onClick={() => goDay(-1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
+          <button onClick={() => goDay(1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
             <ChevronLeft size={17} />
           </button>
         </div>

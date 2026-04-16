@@ -54,22 +54,21 @@
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #f97316;
-    border-radius: 3px;
-    opacity: 0.4;
+    background: #d1d5db;
+    border-radius: 2px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #f43f5e;
+    background: #9ca3af;
   }
 }
 
@@ -314,10 +313,10 @@
 
 /* Scrollbar for night mode */
 [data-night="true"] ::-webkit-scrollbar-track {
-  background: #111111;
+  background: transparent;
 }
 [data-night="true"] ::-webkit-scrollbar-thumb {
-  background: rgba(124, 58, 237, 0.5);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* RTL specific fixes */
