@@ -497,7 +497,7 @@ function ServicesSettings() {
   const [editForm, setEditForm] = useState({});
   const [showAdd, setShowAdd] = useState(false);
   const [addTab, setAddTab] = useState('custom'); // 'custom' | 'preset'
-  const [newService, setNewService] = useState({ name: '', duration_minutes: 30, price: '' });
+  const [newService, setNewService] = useState({ name: '', duration_minutes: '', price: '' });
   const [saving, setSaving] = useState(false);
   const [serviceError, setServiceError] = useState(null);
 
@@ -521,9 +521,9 @@ function ServicesSettings() {
     if (!newService.name || newService.price === '') return;
     setSaving(true);
     try {
-      await businessApi.createService({ ...newService, price: Number(newService.price) });
+      await businessApi.createService({ ...newService, duration_minutes: Number(newService.duration_minutes) || 30, price: Number(newService.price) || 0 });
       queryClient.invalidateQueries(['services']);
-      setNewService({ name: '', duration_minutes: 30, price: '' });
+      setNewService({ name: '', duration_minutes: '', price: '' });
       setShowAdd(false);
     } catch (err) { showServiceErr(err); }
     finally { setSaving(false); }
@@ -611,8 +611,9 @@ function ServicesSettings() {
                         <label className={labelCls(isNight)}>משך (דק׳)</label>
                         <input type="number" min="5" step="5"
                           value={newService.duration_minutes}
-                          onChange={e => setNewService(f => ({ ...f, duration_minutes: Number(e.target.value) }))}
-                          className={inputCls(isNight)} />
+                          onChange={e => setNewService(f => ({ ...f, duration_minutes: e.target.value }))}
+                          className={inputCls(isNight)}
+                          placeholder="30" />
                       </div>
                       <div>
                         <label className={labelCls(isNight)}>מחיר (₪)</label>
@@ -620,7 +621,7 @@ function ServicesSettings() {
                           value={newService.price}
                           onChange={e => setNewService(f => ({ ...f, price: e.target.value }))}
                           className={inputCls(isNight)}
-                          placeholder="0" />
+                          placeholder="₪" />
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -824,8 +825,8 @@ function StaffSettings() {
             {/* Delete */}
             {s.role !== 'owner' && (
               <button onClick={() => handleDelete(s.id)}
-                className={`shrink-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all ${isNight ? 'text-gray-700 hover:bg-red-500/20 hover:text-red-400' : 'text-gray-300 hover:bg-red-50 hover:text-red-500'}`}>
-                <X size={13} />
+                className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${isNight ? 'bg-red-500/10 text-red-400 hover:bg-red-500/25' : 'bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600'}`}>
+                <Trash2 size={13} />
               </button>
             )}
           </div>

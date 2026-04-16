@@ -251,6 +251,22 @@ export default function AnalyticsPage() {
     URL.revokeObjectURL(url);
   }
 
+  if (hideStats) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8 text-center select-none" dir="rtl">
+        <div className="w-20 h-20 rounded-3xl bg-gray-100 flex items-center justify-center mb-5">
+          <EyeOff size={36} className="text-gray-300" />
+        </div>
+        <h2 className="text-xl font-black text-gray-300 mb-2">הנתונים מוסתרים</h2>
+        <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
+          הסתרת נתוני הכנסות ולקוחות מופעלת.
+          <br />
+          לשינוי: <span className="text-gray-500 font-semibold">הגדרות → כללי → הסתר נתוני הכנסות</span>
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 pb-28 sm:pb-6" dir="rtl">
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -266,14 +282,6 @@ export default function AnalyticsPage() {
           </button>
         </div>
       </div>
-
-      {/* KPI cards */}
-      {hideStats && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 text-gray-400 text-xs">
-          <EyeOff size={13} />
-          נתוני הכנסות ולקוחות מוסתרים — ניתן לשנות בהגדרות &gt; כללי &gt; פרטיות
-        </div>
-      )}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="הכנסות החודש"
@@ -353,41 +361,79 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Popular services */}
+        {/* Appointment status breakdown */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 text-lg mb-5">שירותים פופולריים</h3>
-          {servicesData.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">אין נתונים עדיין</div>
-          ) : (
-            <div className="space-y-3">
-              {(() => {
-                const maxCount = Math.max(...servicesData.map(s => s.count), 1);
-                return servicesData.map((s, i) => (
-                  <div key={s.name}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                        <span className="text-sm font-semibold text-gray-800 truncate max-w-[160px]">{s.name}</span>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="text-xs text-gray-400">{s.count} תורים</span>
-                        <span className="text-sm font-bold text-gray-700">₪{s.revenue?.toLocaleString?.() ?? s.revenue}</span>
-                      </div>
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.round((s.count / maxCount) * 100)}%`,
-                          background: COLORS[i % COLORS.length],
-                        }}
+          <h3 className="font-bold text-gray-900 text-lg mb-5">סטטוס תורים החודש</h3>
+          {(() => {
+            const completed  = monthlyReport?.summary?.completed  ?? 0;
+            const cancelled  = monthlyReport?.summary?.cancelled  ?? 0;
+            const total      = monthlyReport?.summary?.total       ?? 0;
+            const pending    = Math.max(0, total - completed - cancelled);
+            const pieData = [
+              { name: 'הושלמו',  value: completed, color: '#10b981' },
+              { name: 'בוטלו',   value: cancelled, color: '#f43f5e' },
+              { name: 'ממתינים', value: pending,   color: '#f97316' },
+            ].filter(d => d.value > 0);
+
+            if (total === 0) {
+              return <div className="text-center text-gray-400 py-8">אין נתונים עדיין</div>;
+            }
+
+            return (
+              <div className="flex items-center gap-6">
+                {/* Pie */}
+                <div style={{ width: 140, height: 140, flexShrink: 0 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={38}
+                        outerRadius={62}
+                        paddingAngle={3}
+                        dataKey="value"
+                        strokeWidth={0}
+                      >
+                        {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                      </Pie>
+                      <Tooltip
+                        content={({ active, payload }) =>
+                          active && payload?.[0] ? (
+                            <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-3 py-2 text-right">
+                              <span className="text-sm font-bold" style={{ color: payload[0].payload.color }}>{payload[0].name}: {payload[0].value}</span>
+                            </div>
+                          ) : null
+                        }
                       />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Legend + numbers */}
+                <div className="flex-1 space-y-3">
+                  {pieData.map(d => (
+                    <div key={d.name} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full shrink-0" style={{ background: d.color }} />
+                        <span className="text-sm text-gray-600">{d.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-gray-900">{d.value}</span>
+                        <span className="text-xs text-gray-400 w-9 text-left">
+                          {Math.round((d.value / total) * 100)}%
+                        </span>
+                      </div>
                     </div>
+                  ))}
+                  <div className="pt-2 border-t border-gray-100 flex justify-between">
+                    <span className="text-xs text-gray-400">סה״כ</span>
+                    <span className="text-sm font-black text-gray-700">{total}</span>
                   </div>
-                ));
-              })()}
-            </div>
-          )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Peak hours */}
