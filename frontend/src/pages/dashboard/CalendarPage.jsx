@@ -115,6 +115,7 @@ function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
 }
 
 function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
+  const isNight = useNightMode();
   const [status, setStatus] = useState(appt.status);
   const [notes, setNotes] = useState(appt.notes || '');
   const [editingNotes, setEditingNotes] = useState(false);
@@ -123,7 +124,15 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
   const [editingName, setEditingName] = useState(false);
   const [customerName, setCustomerName] = useState(appt.customer_name || '');
   const [savingName, setSavingName] = useState(false);
+  const [editingService, setEditingService] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState(appt.service_id || '');
+  const [savingService, setSavingService] = useState(false);
   const appointmentsApi = useAppointmentsApi();
+  const { data: servicesList = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => api.get('/businesses/services').then(r => r.data),
+    staleTime: 60000,
+  });
 
   // Parse start/end always as stored local-time strings (no UTC conversion)
   const start = appt.starts_at.slice(11, 16);
@@ -152,6 +161,18 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
       onUpdate();
     } finally {
       setSavingName(false);
+    }
+  }
+
+  async function handleSaveService() {
+    if (!selectedServiceId) return;
+    setSavingService(true);
+    try {
+      await appointmentsApi.update(appt.id, { service_id: Number(selectedServiceId) });
+      setEditingService(false);
+      onUpdate();
+    } finally {
+      setSavingService(false);
     }
   }
 
@@ -199,7 +220,8 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
         </div>
 
         <div className="p-5 space-y-4">
-          <div className="flex items-center gap-3 p-4 bg-[#fff1eb] rounded-xl">
+          <div className="flex items-center gap-3 p-4 rounded-xl"
+            style={{ background: isNight ? 'rgba(249,115,22,0.10)' : '#fff1eb', border: isNight ? '1px solid rgba(249,115,22,0.18)' : 'none' }}>
             <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0" style={{ background: 'linear-gradient(135deg,#f97316,#f43f5e)' }}>
               {(customerName || 'L')[0]}
             </div>
@@ -209,20 +231,22 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                   <input
                     value={customerName}
                     onChange={e => setCustomerName(e.target.value)}
-                    className="flex-1 text-sm font-bold border border-[#f97316]/50 rounded-lg px-2.5 py-1 focus:outline-none bg-white min-w-0"
+                    className="flex-1 text-sm font-bold border border-[#f97316]/50 rounded-lg px-2.5 py-1 focus:outline-none min-w-0"
+                    style={{ background: isNight ? 'rgba(255,255,255,0.08)' : '#fff', color: isNight ? '#fff' : '#111' }}
                     autoFocus
                     onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') { setCustomerName(appt.customer_name || ''); setEditingName(false); } }}
                   />
                   <button onClick={handleSaveName} disabled={savingName} className="p-1.5 rounded-lg bg-[#f97316] text-white hover:bg-[#f43f5e] transition-colors shrink-0">
                     {savingName ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                   </button>
-                  <button onClick={() => { setCustomerName(appt.customer_name || ''); setEditingName(false); }} className="p-1.5 rounded-lg bg-white/60 text-gray-500 hover:bg-white transition-colors shrink-0">
+                  <button onClick={() => { setCustomerName(appt.customer_name || ''); setEditingName(false); }} className="p-1.5 rounded-lg text-gray-500 transition-colors shrink-0"
+                    style={{ background: isNight ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.6)' }}>
                     <X size={11} />
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5">
-                  <div className="font-bold text-gray-900 truncate">{customerName || 'לקוח לא ידוע'}</div>
+                  <div className="font-bold truncate" style={{ color: isNight ? '#ffffff' : '#111827' }}>{customerName || 'לקוח לא ידוע'}</div>
                   <button onClick={() => setEditingName(true)} className="p-1 rounded hover:bg-[#f97316]/15 transition-colors shrink-0">
                     <Pencil size={11} className="text-[#f97316]" />
                   </button>
@@ -247,8 +271,39 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
               <div className="font-semibold text-gray-900 text-sm">{start}{end ? ` עד ${end}` : ''}</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-3">
-              <div className="text-gray-500 text-xs mb-1 flex items-center gap-1"><Scissors size={11} /> שירות</div>
-              <div className="font-semibold text-gray-900 text-sm">{appt.service_name || '-'}</div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-gray-500 text-xs flex items-center gap-1"><Scissors size={11} /> שירות</span>
+                {!editingService && (
+                  <button onClick={() => setEditingService(true)} className="p-0.5 rounded hover:bg-[#f97316]/15 transition-colors">
+                    <Pencil size={10} className="text-[#f97316]" />
+                  </button>
+                )}
+              </div>
+              {editingService ? (
+                <div className="flex items-center gap-1">
+                  <select
+                    value={selectedServiceId}
+                    onChange={e => setSelectedServiceId(e.target.value)}
+                    className="flex-1 text-xs border border-gray-200 rounded-lg px-1.5 py-1 focus:outline-none bg-white text-gray-900"
+                    style={{ minWidth: 0 }}
+                  >
+                    <option value="">בחר שירות</option>
+                    {servicesList.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                  <button onClick={handleSaveService} disabled={savingService || !selectedServiceId}
+                    className="p-1 rounded-lg bg-[#f97316] text-white shrink-0">
+                    {savingService ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
+                  </button>
+                  <button onClick={() => { setSelectedServiceId(appt.service_id || ''); setEditingService(false); }}
+                    className="p-1 rounded-lg bg-gray-200 text-gray-600 shrink-0">
+                    <X size={10} />
+                  </button>
+                </div>
+              ) : (
+                <div className="font-semibold text-gray-900 text-sm">{appt.service_name || '-'}</div>
+              )}
             </div>
             <div className="bg-gray-50 rounded-xl p-3">
               <div className="text-gray-500 text-xs mb-1 flex items-center gap-1"><User size={11} /> עובד</div>
@@ -989,7 +1044,7 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
 
   const surface  = isNight ? '#0d1117' : '#ffffff';
   const border   = isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb';
-  const subtle   = isNight ? 'rgba(255,255,255,0.04)' : '#f4f4f6';
+  const subtle   = isNight ? 'rgba(255,255,255,0.05)' : '#f3f4f6';
   const muted    = isNight ? 'rgba(255,255,255,0.38)' : '#9ca3af';
   const titleClr = isNight ? '#ffffff' : '#111827';
 
@@ -1056,7 +1111,7 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
         onKeyDown={handleKey}
         placeholder="שאל כל דבר..."
         rows={1}
-        className="flex-1 bg-transparent resize-none text-sm focus:outline-none leading-relaxed"
+        className="flex-1 bg-transparent resize-none text-sm focus:outline-none leading-relaxed border-0 outline-none"
         style={{ color: titleClr, maxHeight: 100, scrollbarWidth: 'none' }}
       />
       <button
@@ -1074,13 +1129,13 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
   );
 
   return (
-    <div className="flex flex-col h-full" style={{ background: isNight ? '#08080F' : '#f6f7f9' }}>
+    <div className="flex flex-col h-full" style={{ background: isNight ? '#0d1117' : '#ffffff' }}>
       {/* Header — centered title + abs-positioned reset button */}
       <div className="relative flex items-center justify-center px-4 py-4 border-b shrink-0"
         style={{ background: surface, borderColor: border }}>
         <div className="text-center">
-          <div className="font-black text-sm tracking-[0.15em]" style={{ color: titleClr }}>TORILI</div>
-          <div className="text-[11px] font-medium mt-0.5" style={{ color: muted }}>עוזר AI</div>
+          <div className="text-base tracking-[0.22em]" style={{ color: titleClr, fontWeight: 600, letterSpacing: '0.22em' }}>TORILI</div>
+          <div className="text-[11px] font-normal mt-0.5 tracking-wide" style={{ color: muted }}>עוזר AI</div>
         </div>
         {!isEmpty && (
           <button onClick={resetChat}
@@ -1129,7 +1184,7 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
             <div className="w-full">{inputRow}</div>
           </div>
         ) : (
-          <div className="px-4 py-4 space-y-3">
+          <div className="px-4 py-4 space-y-3" dir="rtl">
             <AnimatePresence initial={false}>
               {messages.map(msg => (
                 <motion.div
@@ -1137,11 +1192,11 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.14 }}
-                  className={`flex ${msg.role === 'user' ? 'justify-start flex-row-reverse' : 'justify-start'}`}
+                  style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}
                 >
                   {msg.role === 'user' ? (
                     <div className="max-w-[80%] px-3.5 py-2.5 text-sm leading-relaxed"
-                      style={{ background: isNight ? 'rgba(255,255,255,0.09)' : '#f0f0f3', color: isNight ? 'rgba(255,255,255,0.88)' : '#1f2937', borderRadius: '16px 4px 16px 16px' }}>
+                      style={{ background: isNight ? 'rgba(249,115,22,0.18)' : '#fff1eb', color: isNight ? 'rgba(255,255,255,0.92)' : '#1f2937', borderRadius: '16px 4px 16px 16px' }}>
                       {msg.content}
                     </div>
                   ) : (
@@ -1358,107 +1413,99 @@ export default function CalendarPage() {
         )}
       </div>
 
-      {/* ── Desktop: 2-column layout ──────────────────────────────────────────── */}
-      <div className="hidden sm:flex gap-4 flex-1 min-h-0">
+      {/* ── Desktop layout ────────────────────────────────────────────────────── */}
+      <div className="hidden sm:flex flex-col flex-1 min-h-0 gap-3">
 
-        {/* ── Bot panel column — RIGHT side (first in RTL flex) ── */}
-        <div className={`w-[320px] xl:w-[360px] shrink-0 flex flex-col rounded-t-2xl overflow-hidden border border-b-0`}
-          style={{ borderColor: isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb' }}>
-          <CalendarBotPanel
-            isNight={isNight}
-            onAppointmentChange={() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })}
-          />
-        </div>
-
-        {/* ── Calendar column — LEFT side (second in RTL flex) ── */}
-        <div className="flex flex-col flex-1 min-w-0 min-h-0">
-
-          {/* Desktop header */}
-          <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <button onClick={() => goDay(-1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
-                <ChevronRight size={17} />
-              </button>
-              <div className="relative">
-                <button onClick={() => setShowDatePicker(v => !v)}
-                  className="flex flex-col items-start px-4 py-2 rounded-xl hover:bg-gray-50 border border-gray-200 transition-all min-w-[180px]">
-                  <span className="font-bold text-gray-900 text-base leading-tight">
-                    {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, d בMMMM yyyy', { locale: he })}
-                  </span>
-                  {isTodayFlag && (
-                    <div className="mt-0.5">
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>
-                    </div>
-                  )}
-                </button>
-                <AnimatePresence>
-                  {showDatePicker && (
-                    <motion.div initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.15 }}>
-                      <DatePickerPopup value={selectedDate} onChange={setSelectedDate} onClose={() => setShowDatePicker(false)} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              <button onClick={() => goDay(1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
-                <ChevronLeft size={17} />
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              {!isTodayFlag && (
-                <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl border border-gray-200 transition-all">
-                  היום
-                </button>
-              )}
-              <button onClick={() => { setAddModalTime(null); setShowAddModal(true); }} className="btn-primary text-sm px-4 py-2">
-                <Plus size={15} />הוסף תור
-              </button>
-            </div>
-          </div>
-
-          {/* Staff filter — desktop */}
-          {staffFilterBar}
-
-          {/* Time grid */}
-          <div className={`flex flex-col flex-1 min-h-0 rounded-t-2xl overflow-hidden border border-b-0 ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
-            style={{ background: isNight ? '#0d1117' : '#ffffff' }}>
-            <div className={`flex items-center justify-between px-5 py-2.5 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
-              <span className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-800'}`}>
-                {!isBusinessOpen ? 'עסק סגור היום' : sortedAppts.length === 0 ? 'אין תורים היום' : `${sortedAppts.length} תורים`}
-              </span>
-              {sortedAppts.length > 0 && (
-                <span className="text-xs" style={{ color: isNight ? 'rgba(255,255,255,0.38)' : '#9ca3af' }}>
-                  הכנסה צפויה{' '}
-                  <span className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-800'}`}>
-                    ₪{sortedAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
-                  </span>
+        {/* Shared date navigation row */}
+        <div className="flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <button onClick={() => goDay(-1)} className={`p-2 rounded-xl border transition-all ${isNight ? 'border-white/10 text-gray-400 hover:border-white/20 hover:text-white' : 'border-gray-200 text-gray-500 hover:bg-gray-100'}`}>
+              <ChevronRight size={17} />
+            </button>
+            <div className="relative">
+              <button onClick={() => setShowDatePicker(v => !v)}
+                className={`flex flex-col items-start px-4 py-2 rounded-xl border transition-all min-w-[200px] ${isNight ? 'border-white/10 hover:border-white/20' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <span className={`font-bold text-base leading-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>
+                  {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, d בMMMM yyyy', { locale: he })}
                 </span>
-              )}
+                {isTodayFlag && (
+                  <div className="mt-0.5">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>
+                  </div>
+                )}
+              </button>
+              <AnimatePresence>
+                {showDatePicker && (
+                  <motion.div initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.15 }}>
+                    <DatePickerPopup value={selectedDate} onChange={setSelectedDate} onClose={() => setShowDatePicker(false)} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            {isLoading ? (
-              <div className="flex items-center justify-center flex-1">
-                <Loader2 size={28} className="animate-spin text-[#f43f5e]" />
-              </div>
-            ) : !isBusinessOpen ? (
-              <div className="flex flex-col items-center justify-center flex-1 text-center">
-                <Lock size={36} className={`mb-3 ${isNight ? 'text-white/10' : 'text-gray-200'}`} />
-                <p className={`font-semibold ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>העסק סגור ביום זה</p>
-              </div>
-            ) : (
-              <DesktopTimeGrid
-                appointments={sortedAppts}
-                isNight={isNight}
-                openTime={openTime}
-                closeTime={closeTime}
-                bufferMinutes={bufferMinutes}
-                isTodayFlag={isTodayFlag}
-                onApptClick={setSelectedAppt}
-                onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
-              />
-            )}
+            <button onClick={() => goDay(1)} className={`p-2 rounded-xl border transition-all ${isNight ? 'border-white/10 text-gray-400 hover:border-white/20 hover:text-white' : 'border-gray-200 text-gray-500 hover:bg-gray-100'}`}>
+              <ChevronLeft size={17} />
+            </button>
           </div>
+          <button onClick={() => { setAddModalTime(null); setShowAddModal(true); }} className="btn-primary text-sm px-4 py-2">
+            <Plus size={15} />הוסף תור
+          </button>
         </div>
 
+        {/* Two-column body: bot (right) + calendar (left) — both start at same level */}
+        <div className="flex gap-4 flex-1 min-h-0">
 
+          {/* Bot panel — RIGHT (first in RTL flex) */}
+          <div className={`w-[380px] xl:w-[420px] shrink-0 flex flex-col rounded-t-2xl overflow-hidden border border-b-0`}
+            style={{ borderColor: isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb' }}>
+            <CalendarBotPanel
+              isNight={isNight}
+              onAppointmentChange={() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })}
+            />
+          </div>
+
+          {/* Calendar grid — LEFT (second in RTL flex) */}
+          <div className="flex flex-col flex-1 min-w-0 min-h-0">
+            {staffFilterBar}
+            <div className={`flex flex-col flex-1 min-h-0 rounded-t-2xl overflow-hidden border border-b-0 ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
+              style={{ background: isNight ? '#0d1117' : '#ffffff' }}>
+              <div className={`flex items-center justify-between px-5 py-3.5 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
+                <span className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-800'}`}>
+                  {!isBusinessOpen ? 'עסק סגור היום' : sortedAppts.length === 0 ? 'אין תורים היום' : `${sortedAppts.length} תורים`}
+                </span>
+                {sortedAppts.length > 0 && (
+                  <span style={{ color: isNight ? 'rgba(255,255,255,0.35)' : '#b0b7c3', fontSize: 12 }}>
+                    הכנסה צפויה{' '}
+                    <span style={{ fontWeight: 700, fontSize: 14, color: isNight ? '#ffffff' : '#374151' }}>
+                      ₪{sortedAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
+                    </span>
+                  </span>
+                )}
+              </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center flex-1">
+                  <Loader2 size={28} className="animate-spin text-[#f43f5e]" />
+                </div>
+              ) : !isBusinessOpen ? (
+                <div className="flex flex-col items-center justify-center flex-1 text-center">
+                  <Lock size={36} className={`mb-3 ${isNight ? 'text-white/10' : 'text-gray-200'}`} />
+                  <p className={`font-semibold ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>העסק סגור ביום זה</p>
+                </div>
+              ) : (
+                <DesktopTimeGrid
+                  appointments={sortedAppts}
+                  isNight={isNight}
+                  openTime={openTime}
+                  closeTime={closeTime}
+                  bufferMinutes={bufferMinutes}
+                  isTodayFlag={isTodayFlag}
+                  onApptClick={setSelectedAppt}
+                  onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
+                />
+              )}
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* Modals */}
