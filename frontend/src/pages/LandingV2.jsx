@@ -4,6 +4,7 @@ import { motion, useInView, AnimatePresence, MotionConfig } from 'framer-motion'
 import {
   MessageCircle, Calendar, BarChart3, Users, Bell, FileText,
   Zap, Check, Star, Sparkles, Bot, ChevronLeft, X,
+  Smartphone, TrendingUp, Clock, ClipboardList, Link2, Cpu,
 } from 'lucide-react';
 import { WebGLShader } from '@/components/ui/web-gl-shader';
 
@@ -186,39 +187,6 @@ function Modal({ open, onClose, title, children }) {
   );
 }
 
-// ─── Marquee ──────────────────────────────────────────────────────────────────
-const BUSINESS_TYPES = [
-  'מספרות גברים', 'סלוני ציפורניים', 'ריסים ועיצוב גבות',
-  'מעסות', 'קוסמטיקאיות', 'אמני קעקועים',
-  'מספרות נשים', 'טיפולי פנים', 'ספא ורווחה', 'פילאטיס',
-];
-
-function InfiniteMarquee() {
-  // 2 copies → marquee keyframe goes to -50% = exactly 1 set width (seamless)
-  const items = [...BUSINESS_TYPES, ...BUSINESS_TYPES];
-  return (
-    <div className="py-3" style={{ overflow: 'hidden', position: 'relative' }}>
-      <div className="absolute inset-y-0 right-0 w-20 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(to left, rgba(8,8,15,1), transparent)' }} />
-      <div className="absolute inset-y-0 left-0 w-20 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(to right, rgba(8,8,15,1), transparent)' }} />
-      <div style={{
-        display: 'flex',
-        width: 'max-content',
-        animation: 'marquee 30s linear infinite',
-      }}>
-        {items.map((b, i) => (
-          <span key={i} className="flex items-center gap-3 text-gray-600 text-sm font-medium whitespace-nowrap"
-            style={{ padding: '0 1.5rem' }}>
-            {b}
-            <span className="w-1 h-1 rounded-full bg-gray-700 inline-block shrink-0" />
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Testimonial card ─────────────────────────────────────────────────────────
 function TestimonialCard({ t, delay }) {
   return (
@@ -243,6 +211,155 @@ function TestimonialCard({ t, delay }) {
         </div>
       </div>
     </motion.div>
+  );
+}
+
+// ─── ROI Calculator ───────────────────────────────────────────────────────────
+function ROICalculator() {
+  const [appts, setAppts] = useState(80);
+
+  const avgPrice    = 120;   // ₪ avg per appointment
+  const noShowRate  = 0.13;  // 13% no-show rate without reminders
+  const planCost    = 99;    // basic plan monthly
+  const minsPerAppt = 7;     // admin minutes saved per appointment
+
+  const savedAppts   = Math.round(appts * noShowRate);
+  const savedRevenue = savedAppts * avgPrice;
+  const timeSaved    = Math.round(appts * minsPerAppt / 60 * 10) / 10;
+  const roi          = Math.round((savedRevenue / planCost) * 10) / 10;
+
+  return (
+    <section className="py-14 md:py-24 px-4 md:px-6 border-t border-gray-800/50" style={{ background: '#08080F' }}>
+      <div className="max-w-4xl mx-auto">
+
+        <div className="text-center mb-10 md:mb-14">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3"
+          >
+            כמה טורי יחסוך לך?
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.15 }}
+            className="text-gray-400 text-base md:text-lg"
+          >
+            הזז את הסליידר וראה את החיסכון החודשי שלך
+          </motion.p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+          className="rounded-2xl border border-gray-800 p-6 md:p-10"
+          style={{ background: 'rgba(13,17,27,0.8)', backdropFilter: 'blur(12px)' }}
+        >
+
+          {/* Slider */}
+          <div className="mb-8 md:mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-gray-400 text-sm">תורים בחודש</span>
+              <span className="text-white font-black text-2xl">{appts}</span>
+            </div>
+            <div className="relative">
+              <input
+                type="range"
+                min={10} max={300} step={5}
+                value={appts}
+                onChange={e => setAppts(Number(e.target.value))}
+                className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to left, #f97316, #f43f5e ${((appts - 10) / 290) * 100}%, rgba(255,255,255,0.1) ${((appts - 10) / 290) * 100}%)`,
+                  direction: 'ltr',
+                }}
+              />
+            </div>
+            <div className="flex justify-between mt-2 text-gray-600 text-xs">
+              <span>10</span>
+              <span>150</span>
+              <span>300</span>
+            </div>
+          </div>
+
+          {/* Results grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <motion.div
+              key={savedRevenue}
+              initial={{ scale: 0.96 }} animate={{ scale: 1 }} transition={{ duration: 0.15 }}
+              className="rounded-xl p-5 text-center"
+              style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)' }}
+            >
+              <div className="w-9 h-9 rounded-xl mx-auto mb-3 flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 4px 16px rgba(249,115,22,0.35)' }}>
+                <TrendingUp size={16} className="text-white" />
+              </div>
+              <div className="text-2xl md:text-3xl font-black text-white mb-1">
+                ₪{savedRevenue.toLocaleString()}
+              </div>
+              <div className="text-gray-400 text-xs leading-snug">הכנסה נוספת<br />בחודש מביטולים שנמנעו</div>
+            </motion.div>
+
+            <motion.div
+              key={timeSaved}
+              initial={{ scale: 0.96 }} animate={{ scale: 1 }} transition={{ duration: 0.15 }}
+              className="rounded-xl p-5 text-center"
+              style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}
+            >
+              <div className="w-9 h-9 rounded-xl mx-auto mb-3 flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', boxShadow: '0 4px 16px rgba(6,182,212,0.35)' }}>
+                <Clock size={16} className="text-white" />
+              </div>
+              <div className="text-2xl md:text-3xl font-black text-white mb-1">
+                {timeSaved} שע'
+              </div>
+              <div className="text-gray-400 text-xs leading-snug">זמן שנחסך<br />מטיפול ידני בתורים</div>
+            </motion.div>
+
+            <motion.div
+              key={roi}
+              initial={{ scale: 0.96 }} animate={{ scale: 1 }} transition={{ duration: 0.15 }}
+              className="rounded-xl p-5 text-center"
+              style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}
+            >
+              <div className="w-9 h-9 rounded-xl mx-auto mb-3 flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 16px rgba(16,185,129,0.35)' }}>
+                <Zap size={16} className="text-white" />
+              </div>
+              <div className="text-2xl md:text-3xl font-black text-white mb-1">
+                ×{roi}
+              </div>
+              <div className="text-gray-400 text-xs leading-snug">ROI על ההשקעה<br />ביחס לעלות המנוי</div>
+            </motion.div>
+
+          </div>
+
+          <p className="text-center text-gray-600 text-xs mt-6">
+            * מחושב לפי מחיר תור ממוצע ₪{avgPrice} ושיעור ביטולי רגע אחרון ממוצע בענף (13%)
+          </p>
+        </motion.div>
+
+      </div>
+    </section>
+  );
+}
+
+// ─── Process step icon ────────────────────────────────────────────────────────
+function ProcessIcon({ icon: Icon, fromColor, toColor }) {
+  return (
+    <div
+      className="relative w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shrink-0 group-hover:scale-105 transition-transform duration-300"
+      style={{
+        background: `linear-gradient(145deg, ${fromColor}, ${toColor})`,
+        boxShadow: `0 8px 28px ${fromColor}55, inset 0 1px 0 rgba(255,255,255,0.18)`,
+      }}
+    >
+      {/* Inner highlight */}
+      <div className="absolute inset-0 rounded-2xl"
+        style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.18) 0%, transparent 55%)' }} />
+      {/* Bottom shadow depth */}
+      <div className="absolute inset-0 rounded-2xl"
+        style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.2) 100%)' }} />
+      <Icon size={26} className="text-white relative z-10 drop-shadow-sm" />
+    </div>
   );
 }
 
@@ -284,7 +401,6 @@ export default function LandingV2() {
 
           {/* CTAs — LEFT in RTL (last in HTML) */}
           <div className="flex items-center gap-2 sm:gap-5">
-            {/* כניסה — visible on all screen sizes */}
             <Link to="/login">
               <motion.button
                 whileHover={{ scale: 1.03 }}
@@ -331,7 +447,6 @@ export default function LandingV2() {
               >
                 <span className="relative inline-block">
                   הסוכן
-                  {/* WhatsApp logo leaning on the word */}
                   <motion.span
                     initial={{ opacity: 0, rotate: 20, y: 8 }}
                     animate={{ opacity: 1, rotate: 15, y: 0 }}
@@ -362,7 +477,7 @@ export default function LandingV2() {
 
               <motion.div
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.26 }}
-                className="flex flex-col lg:flex-row gap-3 mb-7"
+                className="flex flex-col lg:flex-row gap-3 mb-6"
               >
                 <Link to="/register" className="w-full lg:w-auto">
                   <motion.button
@@ -386,7 +501,7 @@ export default function LandingV2() {
 
               <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-                className="flex flex-wrap gap-4 items-center justify-center lg:justify-start"
+                className="flex flex-wrap gap-4 items-center justify-center lg:justify-start mb-5"
               >
                 {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך דקה'].map(t => (
                   <div key={t} className="flex items-center gap-1.5 text-gray-500 text-sm">
@@ -394,6 +509,18 @@ export default function LandingV2() {
                     {t}
                   </div>
                 ))}
+              </motion.div>
+
+              {/* Mobile app badge */}
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
+                className="flex justify-center lg:justify-start"
+              >
+                <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs text-gray-400"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                  <Smartphone size={12} className="text-[#f97316]" />
+                  אפליקציה לאייפון ואנדרואיד — בקרוב
+                </div>
               </motion.div>
             </div>
 
@@ -430,9 +557,14 @@ export default function LandingV2() {
         </div>
       </section>
 
-      {/* ─── Infinite marquee ─────────────────────────────────────────────── */}
-      <div className="border-y border-gray-800/50 bg-[#0a0a12]">
-        <InfiniteMarquee />
+      {/* ─── Animated gradient separator (replaces marquee) ───────────────── */}
+      <div className="relative h-px overflow-visible" aria-hidden="true">
+        <div
+          className="absolute inset-x-0 top-0 h-32 -translate-y-1/2 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 80% 100% at 50% 50%, rgba(244,63,94,0.07) 0%, rgba(249,115,22,0.04) 40%, transparent 70%)',
+          }}
+        />
       </div>
 
       {/* ─── Stats ────────────────────────────────────────────────────────── */}
@@ -485,9 +617,32 @@ export default function LandingV2() {
             <FeatureCard icon={Calendar}      color="tori"  delay={0.06}  title="יומן חכם בזמן אמת"    desc="ממשק ויזואלי נוח לניהול כל התורים. הוסף ידנית, חסום זמנים, ראה את כל הפעילות במקום אחד." />
             <FeatureCard icon={BarChart3}     color="coral" delay={0.12}  title="אנליטיקות ודוחות"     desc="גרפים של הכנסות, שירותים פופולריים ושעות עמוסות. דוח חודשי שיעזור לך לקבל החלטות חכמות." />
             <FeatureCard icon={Users}         color="green" delay={0.18}  title="ריבוי עובדים"          desc="כמה עובדים עם לוחות זמנים וצבעים נפרדים. מושלם לסלון שמעסיק מספר אנשים במקביל." />
-            <FeatureCard icon={Bell}          color="amber" delay={0.24}  title="תזכורות אוטומטיות"    desc="הבוט שולח ללקוח תזכורת יום לפני התור. פחות ביטולי רגע אחרון ויותר כסף בכיס." />
+            <FeatureCard icon={Bell}          color="amber" delay={0.24}  title="תזכורות וואטסאפ"      desc="הבוט שולח ללקוח תזכורת יום לפני התור. פחות ביטולי רגע אחרון ויותר כסף בכיס." />
             <FeatureCard icon={FileText}      color="pink"  delay={0.30}  title="חשבוניות ירוקות"      desc="אינטגרציה עם מערכת חשבוניות ירוקות לניהול חשבוניות ישירות מתוך היומן, בלי לצאת מהמסך." />
           </div>
+
+          {/* App coming soon strip */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
+            className="mt-8 rounded-2xl border border-gray-800 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"
+            style={{ background: 'rgba(13,17,27,0.6)' }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 4px 16px rgba(249,115,22,0.3)' }}>
+                <Smartphone size={17} className="text-white" />
+              </div>
+              <div>
+                <div className="text-white font-semibold text-sm">אפליקציה לאייפון ואנדרואיד</div>
+                <div className="text-gray-500 text-xs">נהל את העסק שלך מהסמארטפון בכל מקום — בקרוב</div>
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-[#f97316]"
+              style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)' }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#f97316] animate-pulse inline-block" />
+              בפיתוח
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -502,7 +657,7 @@ export default function LandingV2() {
           <div className="grid md:grid-cols-3 gap-4 md:gap-6">
             {[
               {
-                emoji: '⚡',
+                icon: ClipboardList,
                 step: '01',
                 title: 'נרשמים תוך 2 דקות',
                 desc: 'שם העסק, שירותים, מחירים ושעות עבודה, הכל בממשק פשוט ומהיר.',
@@ -510,7 +665,7 @@ export default function LandingV2() {
                 border: 'hover:border-rose-500/40',
               },
               {
-                emoji: '🌐',
+                icon: Link2,
                 step: '02',
                 title: 'מחברים את הוואטסאפ',
                 desc: 'שולחים ללקוחות קישור אחד, מהרגע הזה הבוט מקבל תורים במקומך.',
@@ -518,7 +673,7 @@ export default function LandingV2() {
                 border: 'hover:border-[#06b6d4]/40',
               },
               {
-                emoji: '🦾',
+                icon: Cpu,
                 step: '03',
                 title: 'הבוט עובד, אתה נח',
                 desc: 'תורים, ביטולים, תזכורות, הכל רץ לבד 24/7, גם כשאתה ישן.',
@@ -538,13 +693,8 @@ export default function LandingV2() {
                 <div className="absolute top-6 left-6 text-5xl font-black select-none pointer-events-none"
                   style={{ color: 'rgba(255,255,255,0.04)', fontFamily: 'Heebo, sans-serif' }}>{s.step}</div>
 
-                {/* Emoji icon with gradient glow */}
-                <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-3xl"
-                  style={{ background: `linear-gradient(135deg, ${s.from}22, ${s.to}22)`, border: `1px solid ${s.from}44` }}>
-                  <div className="absolute inset-0 rounded-2xl blur-md opacity-30"
-                    style={{ background: `linear-gradient(135deg, ${s.from}, ${s.to})` }} />
-                  <span className="relative z-10">{s.emoji}</span>
-                </div>
+                {/* 3D Icon */}
+                <ProcessIcon icon={s.icon} fromColor={s.from} toColor={s.to} />
 
                 <h3 className="text-white font-bold text-xl mb-3">{s.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{s.desc}</p>
@@ -554,6 +704,9 @@ export default function LandingV2() {
           </div>
         </div>
       </section>
+
+      {/* ─── ROI Calculator ───────────────────────────────────────────────── */}
+      <ROICalculator />
 
       {/* ─── Testimonials ─────────────────────────────────────────────────── */}
       <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6 border-t border-gray-800/50" style={{ background: '#0a0a12' }}>
@@ -588,11 +741,11 @@ export default function LandingV2() {
               },
               {
                 plan: 'Basic', price: 99, highlight: true, badge: 'הכי פופולרי', delay: 0.1,
-                features: ['עובד אחד', 'תורים ללא הגבלה', 'בוט AI 24 שעות', 'יומן ואנליטיקות', 'תמיכה בוואטסאפ'],
+                features: ['עובד אחד', 'תורים ללא הגבלה', 'בוט AI 24 שעות', 'יומן ואנליטיקות', 'תמיכה טכנית'],
               },
               {
-                plan: 'Business', price: 200, highlight: false, badge: null, delay: 0.2,
-                features: ['עד 4 עובדים', 'תורים ללא הגבלה', 'בוט AI 24 שעות', 'דוחות מתקדמים', 'גוגל קלנדר', 'חשבוניות ירוקות'],
+                plan: 'Business', price: 250, highlight: false, badge: null, delay: 0.2,
+                features: ['עד 4 עובדים', 'תורים ללא הגבלה', 'בוט AI 24 שעות', 'דוחות מתקדמים', 'תזכורות וואטסאפ', 'גוגל קלנדר', 'חשבוניות ירוקות'],
               },
             ].map(({ plan, price, highlight, badge, delay, features }) => (
                 <motion.div
@@ -698,8 +851,8 @@ export default function LandingV2() {
               <ToriLogo size={26} />
             </div>
             <div className="flex flex-wrap gap-4 text-gray-500 text-sm justify-center">
-              <button onClick={() => setTermsOpen(true)} className="hover:text-white transition-colors">תנאי שימוש</button>
-              <button onClick={() => setPrivacyOpen(true)} className="hover:text-white transition-colors">פרטיות</button>
+              <button onClick={() => setTermsOpen(true)} className="hover:text-white transition-colors">תקנון ותנאי שימוש</button>
+              <button onClick={() => setPrivacyOpen(true)} className="hover:text-white transition-colors">מדיניות פרטיות</button>
               <button onClick={() => setAccessOpen(true)} className="hover:text-white transition-colors">הצהרת נגישות</button>
               <a href="https://wa.me/972584532944" className="hover:text-green-400 transition-colors">תמיכה: מרדכי 058-453-2944</a>
               <a href="https://wa.me/972509603671" className="hover:text-green-400 transition-colors">עומרי 050-960-3671</a>
@@ -711,22 +864,68 @@ export default function LandingV2() {
       </footer>
 
       {/* ─── Modals ───────────────────────────────────────────────────────── */}
-      <Modal open={termsOpen} onClose={() => setTermsOpen(false)} title="תנאי שימוש">
-        <p>ברוכים הבאים לטורי. השימוש בפלטפורמה מהווה הסכמה לתנאים הבאים.</p>
-        <p><strong className="text-white">1. השירות:</strong> טורי מספקת תוכנה לניהול תורים באמצעות בוט וואטסאפ. הגישה לשירות מותנית בתשלום חודשי לאחר תקופת הניסיון.</p>
-        <p><strong className="text-white">2. אחריות:</strong> טורי אינה אחראית לנזקים עקיפים הנובעים משימוש בשירות. האחריות המקסימלית מוגבלת לדמי המנוי החודשיים.</p>
-        <p><strong className="text-white">3. ביטול:</strong> ניתן לבטל את המנוי בכל עת דרך הגדרות החשבון. לא יינתן החזר על תקופה שכבר שולמה.</p>
-        <p><strong className="text-white">4. שינויים:</strong> טורי רשאית לעדכן תנאים אלו עם הודעה מוקדמת של 14 יום.</p>
-        <p className="text-gray-600 text-xs">עודכן לאחרונה: מרץ 2026</p>
+      <Modal open={termsOpen} onClose={() => setTermsOpen(false)} title="תקנון ותנאי שימוש">
+        <p className="text-gray-300 font-semibold">עודכן לאחרונה: אפריל 2026</p>
+        <p>ברוכים הבאים לטורי. השימוש בפלטפורמה מהווה הסכמה מלאה לתנאים המפורטים להלן. אנא קראו את התנאים בעיון לפני השימוש בשירות.</p>
+
+        <p><strong className="text-white">1. הגדרות</strong><br />
+        "השירות" — פלטפורמת טורי לניהול תורים באמצעות בוט וואטסאפ מבוסס בינה מלאכותית. "המשתמש" — כל עסק או יחיד הנרשם לשירות. "הלקוח הקצה" — לקוח של המשתמש המתקשר עם הבוט.</p>
+
+        <p><strong className="text-white">2. השירות</strong><br />
+        טורי מספקת תוכנה לניהול תורים עסקיים. הגישה לשירות מותנית בהרשמה ובתשלום חודשי לאחר תקופת ניסיון חינמית של 30 יום. טורי שומרת לעצמה את הזכות לשנות, להשהות או להפסיק את השירות בכל עת עם הודעה מוקדמת של 14 יום.</p>
+
+        <p><strong className="text-white">3. תקופת ניסיון ותשלומים</strong><br />
+        המשתמש זכאי ל-30 יום חינמיים ללא מסירת פרטי תשלום. לאחר תקופת הניסיון, ייגבה תשלום חודשי בהתאם לתכנית שנבחרה. לא יינתן החזר כספי על תקופה שכבר שולמה.</p>
+
+        <p><strong className="text-white">4. ביטול</strong><br />
+        ניתן לבטל את המנוי בכל עת דרך הגדרות החשבון. הביטול ייכנס לתוקף בסוף תקופת החיוב הנוכחית.</p>
+
+        <p><strong className="text-white">5. אחריות ושיפוי</strong><br />
+        טורי מספקת את השירות "כפי שהוא" ואינה אחראית לנזקים עקיפים, תוצאתיים או מיוחדים הנובעים משימוש בשירות. האחריות המקסימלית של טורי מוגבלת לסכום ששולם בחודש הקודם.</p>
+
+        <p><strong className="text-white">6. שימוש מותר ואסור</strong><br />
+        המשתמש מתחייב שלא לעשות שימוש בשירות למטרות בלתי חוקיות, לא לנסות לפרוץ או לשבש את המערכת, ולא לשתף פרטי גישה עם גורמים לא מורשים.</p>
+
+        <p><strong className="text-white">7. קניין רוחני</strong><br />
+        כל הזכויות בשירות, לרבות קוד, עיצוב, לוגו ותכנים, שייכות לטורי. אין לשכפל, להפיץ או לעשות שימוש מסחרי בנכסים אלה ללא אישור בכתב.</p>
+
+        <p><strong className="text-white">8. שינויים בתנאים</strong><br />
+        טורי רשאית לעדכן תנאים אלו. שינויים מהותיים יפורסמו בהודעה מוקדמת של 14 יום. המשך השימוש בשירות לאחר פרסום השינויים מהווה הסכמה להם.</p>
+
+        <p><strong className="text-white">9. דין וסמכות שיפוט</strong><br />
+        תנאים אלה כפופים לדיני מדינת ישראל. סמכות השיפוט הבלעדית נתונה לבתי המשפט המוסמכים במחוז תל אביב-יפו.</p>
+
+        <p><strong className="text-white">10. יצירת קשר</strong><br />
+        לשאלות ופניות: <a href="mailto:supporttori@gmail.com" className="text-[#f43f5e]">supporttori@gmail.com</a></p>
       </Modal>
 
       <Modal open={privacyOpen} onClose={() => setPrivacyOpen(false)} title="מדיניות פרטיות">
-        <p>טורי מתחייבת להגן על פרטיות המשתמשים שלה בהתאם לחוק הגנת הפרטיות הישראלי.</p>
-        <p><strong className="text-white">מידע שנאסף:</strong> שם, כתובת אימייל, טלפון, ופרטי העסק שהוזנו בעת ההרשמה. היסטוריית שיחות הבוט לצרכי שיפור השירות.</p>
-        <p><strong className="text-white">שימוש במידע:</strong> המידע משמש אך ורק לצרכי הפעלת השירות, שיפורו ותמיכה טכנית.</p>
-        <p><strong className="text-white">שיתוף מידע:</strong> טורי אינה מוכרת מידע לצדדים שלישיים. שיתוף מוגבל לספקי תשתית הכרחיים.</p>
-        <p><strong className="text-white">זכויות:</strong> יש לך זכות לצפות, לתקן ולמחוק את המידע שלך. לפנייה: <a href="mailto:privacy@tori.co.il" className="text-[#f43f5e]">privacy@tori.co.il</a></p>
-        <p className="text-gray-600 text-xs">עודכן לאחרונה: מרץ 2026</p>
+        <p className="text-gray-300 font-semibold">עודכן לאחרונה: אפריל 2026</p>
+        <p>טורי מתחייבת להגן על פרטיות המשתמשים שלה בהתאם לחוק הגנת הפרטיות, תשמ"א-1981, תקנות הגנת הפרטיות (אבטחת מידע), תשע"ז-2017, ו-GDPR במידה הרלוונטית.</p>
+
+        <p><strong className="text-white">1. מידע שנאסף</strong><br />
+        בעת ההרשמה: שם מלא, כתובת אימייל, מספר טלפון, שם העסק, תחום פעילות. במהלך השימוש: נתוני תורים, שמות לקוחות קצה, היסטוריית שיחות בוט (לצרכי שיפור השירות בלבד), נתוני שימוש ואנליטיקות מצטברות.</p>
+
+        <p><strong className="text-white">2. שימוש במידע</strong><br />
+        המידע משמש אך ורק ל: הפעלת השירות ואספקתו, שיפור ופיתוח הפלטפורמה, תמיכה טכנית ופתרון תקלות, שליחת עדכונים חיוניים על השירות. איננו שולחים דיוור שיווקי ללא הסכמה מפורשת.</p>
+
+        <p><strong className="text-white">3. שיתוף מידע עם צדדים שלישיים</strong><br />
+        טורי אינה מוכרת, סוחרת או מעבירה מידע אישי לצדדים שלישיים לצרכים מסחריים. שיתוף מוגבל אך ורק לספקי תשתית הכרחיים (אחסון ענן, עיבוד תשלומים) המחויבים בסודיות.</p>
+
+        <p><strong className="text-white">4. אבטחת מידע</strong><br />
+        כל הנתונים מוצפנים בהעברה (TLS 1.3) ובאחסון. הגישה למידע מוגבלת לעובדים המורשים לכך בלבד. אנו מבצעים ביקורות אבטחה תקופתיות.</p>
+
+        <p><strong className="text-white">5. שמירת מידע</strong><br />
+        נתונים יישמרו כל עוד החשבון פעיל ולמשך 12 חודשים לאחר הסגירה. לאחר מכן יימחקו באופן מאובטח, למעט נתונים הנדרשים לצרכים חשבונאיים חוקיים.</p>
+
+        <p><strong className="text-white">6. זכויות המשתמש</strong><br />
+        הזכות לעיין במידע שנאסף עליך. הזכות לתיקון מידע שגוי. הזכות למחיקה ("הזכות להישכח"). הזכות לניידות מידע בפורמט קריא מכונה. לממוש זכויות אלו: <a href="mailto:privacy@tori.co.il" className="text-[#f43f5e]">privacy@tori.co.il</a></p>
+
+        <p><strong className="text-white">7. עוגיות (Cookies)</strong><br />
+        אנו משתמשים בעוגיות הכרחיות לתפקוד האתר ובעוגיות אנליטיקה אנונימיות. ניתן לנהל את הגדרות העוגיות בדפדפן.</p>
+
+        <p><strong className="text-white">8. יצירת קשר</strong><br />
+        ממונה הגנת פרטיות: <a href="mailto:privacy@tori.co.il" className="text-[#f43f5e]">privacy@tori.co.il</a></p>
       </Modal>
 
       <Modal open={accessOpen} onClose={() => setAccessOpen(false)} title="הצהרת נגישות">
@@ -735,7 +934,7 @@ export default function LandingV2() {
         <p><strong className="text-white">תכונות נגישות:</strong> ניווט מקלדת מלא, תמיכה בקוראי מסך, יחסי ניגוד עומדים בתקן, תמיכה בהגדלת טקסט.</p>
         <p><strong className="text-white">בעיות ידועות:</strong> אנו עובדים על שיפור נגישות מרכיבי הגרפים. מחויבים לסיים עד יוני 2026.</p>
         <p><strong className="text-white">דיווח על בעיות:</strong> נתקלת בבעיית נגישות? נשמח לשמוע: <a href="mailto:access@tori.co.il" className="text-[#f43f5e]">access@tori.co.il</a></p>
-        <p className="text-gray-600 text-xs">עודכן לאחרונה: מרץ 2026</p>
+        <p className="text-gray-600 text-xs">עודכן לאחרונה: אפריל 2026</p>
       </Modal>
 
     </div>

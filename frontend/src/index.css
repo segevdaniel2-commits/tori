@@ -366,3 +366,32 @@
     transform: translateX(0);
   }
 }
+
+/* ─── ROI slider thumb styling ─────────────────────────────────────── */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f97316, #f43f5e);
+  cursor: pointer;
+  border: 3px solid rgba(8, 8, 15, 0.8);
+  box-shadow: 0 2px 12px rgba(244, 63, 94, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.7);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f97316, #f43f5e);
+  cursor: pointer;
+  border: 3px solid rgba(8, 8, 15, 0.8);
+  box-shadow: 0 2px 12px rgba(244, 63, 94, 0.5);
+}
+input[type="range"]:focus {
+  outline: none;
+}
