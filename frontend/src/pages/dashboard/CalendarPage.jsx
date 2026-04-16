@@ -4,7 +4,8 @@ import { format, addDays, subDays, parseISO, isToday } from 'date-fns';
 import { he } from 'date-fns/locale';
 import {
   ChevronRight, ChevronLeft, ChevronDown, Plus, X, Clock, User, Phone,
-  Scissors, Calendar, Loader2, Check, Trash2, Lock, RefreshCw
+  Scissors, Calendar, Loader2, Check, Trash2, Lock, RefreshCw,
+  Sparkles, ArrowUp, RotateCcw, UserPlus, CalendarPlus, CalendarX2,
 } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppointmentsApi, useBusinessApi } from '../../hooks/useApi';
@@ -895,6 +896,226 @@ function MobileDateStrip({ selectedDate, onSelect }) {
   );
 }
 
+// ─── Embedded AI Bot Panel ────────────────────────────────────────────────────
+const BOT_CHAT_KEY = 'ownerbot_chat';
+const BOT_CHAT_TTL = 60 * 60 * 1000;
+function loadBotChat() {
+  try {
+    const raw = localStorage.getItem(BOT_CHAT_KEY);
+    if (!raw) return [];
+    const { messages, savedAt } = JSON.parse(raw);
+    if (Date.now() - savedAt > BOT_CHAT_TTL) { localStorage.removeItem(BOT_CHAT_KEY); return []; }
+    return messages || [];
+  } catch { return []; }
+}
+const BOT_ACTION_CARDS = [
+  { id: 'new-customer',      icon: UserPlus,    title: 'לקוח חדש',   prompt: 'אני רוצה לקבוע תור ללקוח חדש שלא ביקר אצלי' },
+  { id: 'cancel',            icon: CalendarX2,  title: 'ביטול תור',  prompt: 'אני רוצה לבטל תור קיים' },
+  { id: 'existing-customer', icon: CalendarPlus,title: 'לקוח קיים',  prompt: 'אני רוצה לקבוע תור ללקוח שכבר ביקר אצלי' },
+];
+
+function CalendarBotPanel({ isNight, onAppointmentChange }) {
+  const [messages, setMessages] = useState(() => loadBotChat());
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const bottomRef = useRef(null);
+  const textareaRef = useRef(null);
+  const isEmpty = messages.length === 0;
+
+  const surface  = isNight ? '#0d1117' : '#ffffff';
+  const outerBg  = isNight ? '#0a0a12' : '#f9fafb';
+  const border   = isNight ? 'rgba(255,255,255,0.07)' : '#e5e7eb';
+  const muted    = isNight ? 'rgba(255,255,255,0.35)' : '#9ca3af';
+  const titleClr = isNight ? '#ffffff' : '#111827';
+  const inputBg  = isNight ? 'rgba(255,255,255,0.04)' : '#ffffff';
+  const inputBdr = isNight ? 'rgba(255,255,255,0.10)' : '#d1d5db';
+
+  useEffect(() => {
+    if (messages.length > 0)
+      localStorage.setItem(BOT_CHAT_KEY, JSON.stringify({ messages, savedAt: Date.now() }));
+  }, [messages]);
+
+  useEffect(() => {
+    if (!isEmpty) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  function autoResize() {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+  }
+
+  async function send(text) {
+    const msg = (typeof text === 'string' ? text : input).trim();
+    if (!msg || loading) return;
+    setInput('');
+    setError(null);
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    const userMsg = { role: 'user', content: msg, id: Date.now() };
+    setMessages(prev => [...prev, userMsg]);
+    setLoading(true);
+    try {
+      const { data } = await api.post('/owner-bot/chat', {
+        message: msg,
+        history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+      });
+      setMessages(prev => [...prev, { role: 'assistant', content: data.reply, id: Date.now() + 1 }]);
+      if (data.reply.includes('✓')) onAppointmentChange?.();
+    } catch (err) {
+      const detail = err?.response?.data?.error || err?.message || '';
+      setError(`שגיאה.${detail ? ` (${detail})` : ''}`);
+    } finally {
+      setLoading(false);
+      setTimeout(() => textareaRef.current?.focus(), 50);
+    }
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); }
+  }
+
+  function resetChat() {
+    localStorage.removeItem(BOT_CHAT_KEY);
+    setMessages([]);
+    setInput('');
+    setError(null);
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+  }
+
+  const inputRow = (
+    <div
+      className="flex items-center gap-1.5 px-3 py-2"
+      style={{
+        background: inputBg, border: `1px solid ${inputBdr}`, borderRadius: 999,
+        boxShadow: isNight ? '0 0 0 1px rgba(255,255,255,0.04)' : '0 1px 6px rgba(0,0,0,0.06)',
+      }}
+    >
+      <textarea
+        ref={textareaRef}
+        value={input}
+        onChange={e => { setInput(e.target.value); autoResize(); }}
+        onKeyDown={handleKey}
+        placeholder="שאל כל דבר..."
+        rows={1}
+        className="flex-1 bg-transparent resize-none text-xs focus:outline-none leading-relaxed"
+        style={{ color: titleClr, maxHeight: 90, scrollbarWidth: 'none' }}
+      />
+      <button
+        onClick={() => send(input)}
+        disabled={!input.trim() || loading}
+        className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all"
+        style={{ background: input.trim() && !loading ? 'linear-gradient(135deg,#f97316,#f43f5e)' : isNight ? 'rgba(255,255,255,0.06)' : '#e5e7eb' }}
+      >
+        {loading
+          ? <Loader2 size={10} className="animate-spin" style={{ color: input.trim() ? '#fff' : muted }} />
+          : <ArrowUp size={11} style={{ color: input.trim() && !loading ? '#fff' : muted }} />
+        }
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col h-full" style={{ background: outerBg }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b shrink-0" style={{ background: surface, borderColor: border }}>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#f97316,#f43f5e)' }}>
+            <Sparkles size={11} className="text-white" />
+          </div>
+          <span className="font-bold text-xs" style={{ color: titleClr }}>טורי</span>
+          <span className="text-xs" style={{ color: muted }}>· עוזר AI</span>
+        </div>
+        {!isEmpty && (
+          <button onClick={resetChat} className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full hover:opacity-70 transition-opacity" style={{ color: muted }}>
+            <RotateCcw size={9} />
+            חדש
+          </button>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 min-h-0 overflow-y-auto relative">
+        {isEmpty ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4">
+            <p className="text-xs mb-4" style={{ color: muted }}>במה אפשר לעזור?</p>
+            <div className="grid grid-cols-3 gap-1.5 w-full mb-4">
+              {BOT_ACTION_CARDS.map((card, i) => {
+                const Icon = card.icon;
+                return (
+                  <motion.button
+                    key={card.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    onClick={() => send(card.prompt)}
+                    className="flex flex-col items-start gap-1.5 p-2.5 rounded-xl border text-right transition-all"
+                    style={{ background: inputBg, borderColor: border, cursor: 'pointer' }}
+                  >
+                    <Icon size={13} style={{ color: muted }} />
+                    <div className="text-[10px] font-bold leading-tight" style={{ color: titleClr }}>{card.title}</div>
+                  </motion.button>
+                );
+              })}
+            </div>
+            {inputRow}
+          </div>
+        ) : (
+          <div className="px-3 py-3 space-y-3">
+            <AnimatePresence initial={false}>
+              {messages.map(msg => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.13 }}
+                  className={`flex ${msg.role === 'user' ? 'justify-start flex-row-reverse' : 'justify-start'}`}
+                >
+                  {msg.role === 'user' ? (
+                    <div className="max-w-[80%] px-3 py-1.5 text-xs leading-relaxed"
+                      style={{ background: isNight ? 'rgba(255,255,255,0.08)' : '#f3f4f6', color: isNight ? 'rgba(255,255,255,0.88)' : '#1f2937', borderRadius: '14px 3px 14px 14px' }}>
+                      {msg.content}
+                    </div>
+                  ) : (
+                    <div className="max-w-[88%] text-xs leading-relaxed" style={{ color: isNight ? 'rgba(255,255,255,0.75)' : '#374151' }}>
+                      {msg.content.replace(/[■▪▸●►]/g, '•')}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            {loading && (
+              <div className="flex gap-1 items-center py-1">
+                {[0, 1, 2].map(i => (
+                  <motion.div key={i} className="w-1 h-1 rounded-full" style={{ background: muted }}
+                    animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
+                ))}
+              </div>
+            )}
+            {error && <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">{error}</div>}
+            <div ref={bottomRef} />
+          </div>
+        )}
+      </div>
+
+      {/* Input bar — during conversation */}
+      <AnimatePresence>
+        {!isEmpty && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+            className="shrink-0 border-t px-3 py-2.5"
+            style={{ background: surface, borderColor: border }}
+          >
+            {inputRow}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function CalendarPage() {
   const { business } = useAuthStore();
   const { selectedDate, setSelectedDate } = useDashboardStore();
@@ -972,225 +1193,204 @@ export default function CalendarPage() {
     : activeAppts;
   const sortedAppts = [...filteredAppts].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
+  // shared staff filter JSX used in both mobile and desktop
+  const staffFilterBar = staffList.filter(s => s.is_active).length > 1 ? (
+    <div className="flex gap-2 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+      <button
+        onClick={() => setStaffFilter(null)}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
+          staffFilter === null ? 'text-white border-transparent' : isNight ? 'border-white/10 text-gray-400 hover:text-white hover:border-white/20' : 'border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316]'
+        }`}
+        style={staffFilter === null ? { background: 'linear-gradient(135deg,#f97316,#f43f5e)' } : {}}
+      >
+        הכל
+        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${staffFilter === null ? 'bg-white/20 text-white' : isNight ? 'bg-white/10 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
+          {activeAppts.length}
+        </span>
+      </button>
+      {staffList.filter(s => s.is_active).map(s => {
+        const count = activeAppts.filter(a => a.staff_id === s.id).length;
+        const isActive = staffFilter === s.id;
+        return (
+          <button key={s.id} onClick={() => setStaffFilter(isActive ? null : s.id)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
+              isNight ? isActive ? 'border-transparent text-white' : 'border-white/10 text-gray-400 hover:text-white hover:border-white/20' : isActive ? 'border-transparent text-white' : 'border-gray-200 text-gray-600 hover:border-[#f97316]/40 hover:text-[#f97316]'
+            }`}
+            style={isActive ? { background: s.color || '#f97316' } : {}}
+          >
+            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: isActive ? 'rgba(255,255,255,0.6)' : (s.color || '#f97316') }} />
+            {s.name}
+            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : isNight ? 'bg-white/10 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
+              {count}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
+
   return (
     <div className="p-3 sm:p-6 h-full flex flex-col" dir="rtl">
 
-      {/* ── Desktop header ─────────────────────────────────────────────────────── */}
-      <div className="hidden sm:flex items-center justify-between mb-4 gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <button onClick={() => goDay(-1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
-            <ChevronRight size={17} />
-          </button>
-
-          <div className="relative">
-            <button
-              onClick={() => setShowDatePicker(v => !v)}
-              className="flex flex-col items-start px-4 py-2 rounded-xl hover:bg-gray-50 border border-gray-200 transition-all min-w-[180px]"
-            >
-              <span className="font-bold text-gray-900 text-base leading-tight">
-                {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, d בMMMM yyyy', { locale: he })}
-              </span>
-              <div className="flex items-center gap-2 mt-0.5">
-                {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
-                <span className="text-xs text-gray-400">{activeAppts.length === 0 ? 'אין תורים' : `${activeAppts.length} תורים`}</span>
-              </div>
-            </button>
-            <AnimatePresence>
-              {showDatePicker && (
-                <motion.div initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.15 }}>
-                  <DatePickerPopup value={selectedDate} onChange={setSelectedDate} onClose={() => setShowDatePicker(false)} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <button onClick={() => goDay(1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
-            <ChevronLeft size={17} />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {!isTodayFlag && (
-            <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl border border-gray-200 transition-all">
-              היום
-            </button>
-          )}
-          <button onClick={() => { setAddModalTime(null); setShowAddModal(true); }} className="btn-primary text-sm px-4 py-2">
-            <Plus size={15} />
-            הוסף תור
-          </button>
-        </div>
-      </div>
-
       {/* ── Mobile header ──────────────────────────────────────────────────────── */}
       <div className="sm:hidden mb-3">
-        {/* Month + add button row */}
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-2">
             <span className="font-black text-gray-900 text-xl">{formatHeaderDate(selectedDate)}</span>
             {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleMobileRefresh}
-              disabled={isRefreshing}
-              className="p-2 rounded-full border border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316] transition-all active:scale-90"
-              aria-label="רענן"
-            >
+            <button onClick={handleMobileRefresh} disabled={isRefreshing}
+              className="p-2 rounded-full border border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316] transition-all active:scale-90" aria-label="רענן">
               <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
             </button>
             {!isTodayFlag && (
-              <button
-                onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+              <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
                 className="text-xs font-semibold px-3 py-1.5 rounded-full border"
-                style={{ color: '#f43f5e', background: '#fff1eb', borderColor: '#f97316' + '33' }}
-              >
+                style={{ color: '#f43f5e', background: '#fff1eb', borderColor: '#f97316' + '33' }}>
                 היום
               </button>
             )}
           </div>
         </div>
-        {/* Swipeable date strip */}
         <MobileDateStrip selectedDate={selectedDate} onSelect={setSelectedDate} />
       </div>
 
-      {/* Staff filter (desktop + mobile — only when there's more than one active staff) */}
-      {staffList.filter(s => s.is_active).length > 1 && (
-        <div className="flex gap-2 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          {/* "All" pill */}
-          <button
-            onClick={() => setStaffFilter(null)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
-              staffFilter === null
-                ? 'text-white border-transparent'
-                : isNight
-                  ? 'border-white/10 text-gray-400 hover:text-white hover:border-white/20'
-                  : 'border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316]'
-            }`}
-            style={staffFilter === null ? { background: 'linear-gradient(135deg,#f97316,#f43f5e)' } : {}}
-          >
-            הכל
-            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${staffFilter === null ? 'bg-white/20 text-white' : isNight ? 'bg-white/10 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
-              {activeAppts.length}
-            </span>
-          </button>
-
-          {/* Per-staff pills */}
-          {staffList.filter(s => s.is_active).map(s => {
-            const count = activeAppts.filter(a => a.staff_id === s.id).length;
-            const isActive = staffFilter === s.id;
-            return (
-              <button
-                key={s.id}
-                onClick={() => setStaffFilter(isActive ? null : s.id)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
-                  isNight
-                    ? isActive ? 'border-transparent text-white' : 'border-white/10 text-gray-400 hover:text-white hover:border-white/20'
-                    : isActive ? 'border-transparent text-white' : 'border-gray-200 text-gray-600 hover:border-[#f97316]/40 hover:text-[#f97316]'
-                }`}
-                style={isActive ? { background: s.color || '#f97316' } : {}}
-              >
-                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: isActive ? 'rgba(255,255,255,0.6)' : (s.color || '#f97316') }} />
-                {s.name}
-                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : isNight ? 'bg-white/10 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
-                  {count}
-                </span>
+      {/* ── Mobile: staff filter + list + FAB ─────────────────────────────────── */}
+      <div className="sm:hidden flex-1 flex flex-col min-h-0">
+        {staffFilterBar}
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 size={28} className="animate-spin text-[#f97316]" />
+            </div>
+          ) : sortedAppts.length === 0 ? (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                <Calendar size={28} className="text-gray-300" />
+              </div>
+              <p className="text-gray-500 font-semibold text-base mb-1">אין תורים ביום זה</p>
+              <p className="text-gray-400 text-sm mb-5">הוסף תור ידנית או המתן לתורים מהבוט</p>
+              <button onClick={() => setShowAddModal(true)} className="btn-primary text-sm px-5 py-2.5">
+                <Plus size={15} />הוסף תור
               </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── Mobile list view ──────────────────────────────────────────────────── */}
-      <div className="sm:hidden flex-1 overflow-y-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 size={28} className="animate-spin text-[#f97316]" />
-          </div>
-        ) : sortedAppts.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-16 text-center"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-              <Calendar size={28} className="text-gray-300" />
+            </motion.div>
+          ) : (
+            <div className="space-y-2.5 pb-24">
+              <div className="text-xs text-gray-400 font-medium px-1 mb-1">{sortedAppts.length} תורים</div>
+              {sortedAppts.map(appt => <MobileApptCard key={appt.id} appt={appt} onClick={setSelectedAppt} />)}
             </div>
-            <p className="text-gray-500 font-semibold text-base mb-1">אין תורים ביום זה</p>
-            <p className="text-gray-400 text-sm mb-5">הוסף תור ידנית או המתן לתורים מהבוט</p>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="btn-primary text-sm px-5 py-2.5"
-            >
-              <Plus size={15} />
-              הוסף תור
-            </button>
-          </motion.div>
-        ) : (
-          <div className="space-y-2.5 pb-24">
-            <div className="text-xs text-gray-400 font-medium px-1 mb-1">
-              {sortedAppts.length} תורים
-            </div>
-            {sortedAppts.map((appt, i) => (
-              <MobileApptCard key={appt.id} appt={appt} onClick={setSelectedAppt} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── Desktop time grid ───────────────────────────────────────────────── */}
-      <div
-        className={`hidden sm:flex flex-col rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
-        style={{ background: isNight ? '#0d1117' : '#ffffff', maxHeight: 'calc(100vh - 220px)' }}
-      >
-        {/* Summary bar */}
-        <div className={`flex items-center justify-between px-5 py-3 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
-          <span className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>
-            {!isBusinessOpen ? 'עסק סגור היום' : activeAppts.length === 0 ? 'אין תורים' : `${activeAppts.length} תורים`}
-          </span>
-          {activeAppts.length > 0 && (
-            <span className={`text-sm ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
-              הכנסה צפויה:{' '}
-              <span className={`font-bold ${isNight ? 'text-white' : 'text-gray-900'}`}>
-                ₪{activeAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
-              </span>
-            </span>
           )}
         </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center flex-1">
-            <Loader2 size={28} className="animate-spin text-[#f43f5e]" />
-          </div>
-        ) : !isBusinessOpen ? (
-          <div className="flex flex-col items-center justify-center flex-1 text-center">
-            <Lock size={36} className={`mb-3 ${isNight ? 'text-white/10' : 'text-gray-200'}`} />
-            <p className={`font-semibold ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>העסק סגור ביום זה</p>
-          </div>
-        ) : (
-          <DesktopTimeGrid
-            appointments={sortedAppts}
-            isNight={isNight}
-            openTime={openTime}
-            closeTime={closeTime}
-            bufferMinutes={bufferMinutes}
-            isTodayFlag={isTodayFlag}
-            onApptClick={setSelectedAppt}
-            onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
-          />
+        {sortedAppts.length > 0 && (
+          <button onClick={() => setShowAddModal(true)}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 btn-primary shadow-2xl text-sm px-6 py-3.5 rounded-full z-40 flex items-center gap-2">
+            <Plus size={17} />הוסף תור
+          </button>
         )}
       </div>
 
-      {/* ── Mobile FAB ────────────────────────────────────────────────────────── */}
-      {sortedAppts.length > 0 && (
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="sm:hidden fixed bottom-6 left-1/2 -translate-x-1/2 btn-primary shadow-2xl text-sm px-6 py-3.5 rounded-full z-40 flex items-center gap-2"
-        >
-          <Plus size={17} />
-          הוסף תור
-        </button>
-      )}
+      {/* ── Desktop: 2-column layout ──────────────────────────────────────────── */}
+      <div className="hidden sm:flex gap-4 flex-1 min-h-0">
+
+        {/* ── Calendar column ── */}
+        <div className="flex flex-col flex-1 min-w-0 min-h-0">
+
+          {/* Desktop header */}
+          <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <button onClick={() => goDay(-1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
+                <ChevronRight size={17} />
+              </button>
+              <div className="relative">
+                <button onClick={() => setShowDatePicker(v => !v)}
+                  className="flex flex-col items-start px-4 py-2 rounded-xl hover:bg-gray-50 border border-gray-200 transition-all min-w-[180px]">
+                  <span className="font-bold text-gray-900 text-base leading-tight">
+                    {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, d בMMMM yyyy', { locale: he })}
+                  </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
+                    <span className="text-xs text-gray-400">{activeAppts.length === 0 ? 'אין תורים' : `${activeAppts.length} תורים`}</span>
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {showDatePicker && (
+                    <motion.div initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.15 }}>
+                      <DatePickerPopup value={selectedDate} onChange={setSelectedDate} onClose={() => setShowDatePicker(false)} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <button onClick={() => goDay(1)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 border border-gray-200 transition-all">
+                <ChevronLeft size={17} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              {!isTodayFlag && (
+                <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl border border-gray-200 transition-all">
+                  היום
+                </button>
+              )}
+              <button onClick={() => { setAddModalTime(null); setShowAddModal(true); }} className="btn-primary text-sm px-4 py-2">
+                <Plus size={15} />הוסף תור
+              </button>
+            </div>
+          </div>
+
+          {/* Staff filter — desktop */}
+          {staffFilterBar}
+
+          {/* Time grid */}
+          <div className={`flex flex-col flex-1 min-h-0 rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
+            style={{ background: isNight ? '#0d1117' : '#ffffff' }}>
+            <div className={`flex items-center justify-between px-5 py-3 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
+              <span className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>
+                {!isBusinessOpen ? 'עסק סגור היום' : activeAppts.length === 0 ? 'אין תורים' : `${activeAppts.length} תורים`}
+              </span>
+              {activeAppts.length > 0 && (
+                <span className={`text-sm ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
+                  הכנסה צפויה:{' '}
+                  <span className={`font-bold ${isNight ? 'text-white' : 'text-gray-900'}`}>
+                    ₪{activeAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
+                  </span>
+                </span>
+              )}
+            </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center flex-1">
+                <Loader2 size={28} className="animate-spin text-[#f43f5e]" />
+              </div>
+            ) : !isBusinessOpen ? (
+              <div className="flex flex-col items-center justify-center flex-1 text-center">
+                <Lock size={36} className={`mb-3 ${isNight ? 'text-white/10' : 'text-gray-200'}`} />
+                <p className={`font-semibold ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>העסק סגור ביום זה</p>
+              </div>
+            ) : (
+              <DesktopTimeGrid
+                appointments={sortedAppts}
+                isNight={isNight}
+                openTime={openTime}
+                closeTime={closeTime}
+                bufferMinutes={bufferMinutes}
+                isTodayFlag={isTodayFlag}
+                onApptClick={setSelectedAppt}
+                onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* ── Bot panel column ── */}
+        <div className={`w-[340px] xl:w-[380px] shrink-0 flex flex-col rounded-2xl overflow-hidden border`}
+          style={{ borderColor: isNight ? 'rgba(255,255,255,0.07)' : '#e5e7eb' }}>
+          <CalendarBotPanel
+            isNight={isNight}
+            onAppointmentChange={() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })}
+          />
+        </div>
+
+      </div>
 
       {/* Modals */}
       <AnimatePresence>
