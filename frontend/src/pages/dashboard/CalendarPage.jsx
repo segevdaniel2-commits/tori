@@ -798,9 +798,9 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
                     </div>
                     <div className="flex-1 mx-3 my-2 rounded-xl px-3 py-2 flex items-center gap-3 transition-all group-hover:brightness-95"
                       style={{
-                        background: isNight ? 'rgba(249,115,22,0.10)' : '#fff7ed',
-                        border: `1px solid ${isNight ? 'rgba(249,115,22,0.15)' : '#f97316'}33`,
-                        borderRight: `3px solid ${appt.staff_color || '#f97316'}`,
+                        background: isNight ? 'rgba(255,255,255,0.04)' : '#f8f8fa',
+                        border: `1px solid ${isNight ? 'rgba(255,255,255,0.08)' : '#e8e8ec'}`,
+                        borderRight: `3px solid ${appt.staff_color || '#94a3b8'}`,
                       }}>
                       <div className="flex-1 min-w-0">
                         <div className={`font-bold text-sm truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{appt.customer_name || 'לקוח'}</div>
@@ -1184,7 +1184,7 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
             <div className="w-full">{inputRow}</div>
           </div>
         ) : (
-          <div className="px-4 py-4 space-y-3" dir="rtl">
+          <div className="px-4 py-4 space-y-3" dir="ltr">
             <AnimatePresence initial={false}>
               {messages.map(msg => (
                 <motion.div
@@ -1195,12 +1195,12 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
                   style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}
                 >
                   {msg.role === 'user' ? (
-                    <div className="max-w-[80%] px-3.5 py-2.5 text-sm leading-relaxed"
-                      style={{ background: isNight ? 'rgba(249,115,22,0.18)' : '#fff1eb', color: isNight ? 'rgba(255,255,255,0.92)' : '#1f2937', borderRadius: '16px 4px 16px 16px' }}>
+                    <div className="max-w-[80%] px-3.5 py-2.5 text-sm leading-relaxed" dir="rtl"
+                      style={{ background: isNight ? 'rgba(255,255,255,0.09)' : '#f0f0f3', color: isNight ? 'rgba(255,255,255,0.92)' : '#1f2937', borderRadius: '16px 16px 4px 16px' }}>
                       {msg.content}
                     </div>
                   ) : (
-                    <div className="max-w-[88%] text-sm leading-relaxed" style={{ color: isNight ? 'rgba(255,255,255,0.78)' : '#374151' }}>
+                    <div className="max-w-[88%] text-sm leading-relaxed" dir="rtl" style={{ color: isNight ? 'rgba(255,255,255,0.78)' : '#374151' }}>
                       {msg.content.replace(/[■▪▸●►]/g, '•')}
                     </div>
                   )}
@@ -1413,99 +1413,99 @@ export default function CalendarPage() {
         )}
       </div>
 
-      {/* ── Desktop layout ────────────────────────────────────────────────────── */}
-      <div className="hidden sm:flex flex-col flex-1 min-h-0 gap-3">
+      {/* ── Desktop: 2-column layout ──────────────────────────────────────────── */}
+      <div className="hidden sm:flex gap-6 flex-1 min-h-0">
 
-        {/* Shared date navigation row */}
-        <div className="flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2">
-            <button onClick={() => goDay(-1)} className={`p-2 rounded-xl border transition-all ${isNight ? 'border-white/10 text-gray-400 hover:border-white/20 hover:text-white' : 'border-gray-200 text-gray-500 hover:bg-gray-100'}`}>
-              <ChevronRight size={17} />
-            </button>
-            <div className="relative">
-              <button onClick={() => setShowDatePicker(v => !v)}
-                className={`flex flex-col items-start px-4 py-2 rounded-xl border transition-all min-w-[200px] ${isNight ? 'border-white/10 hover:border-white/20' : 'border-gray-200 hover:bg-gray-50'}`}>
-                <span className={`font-bold text-base leading-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>
-                  {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, d בMMMM yyyy', { locale: he })}
-                </span>
-                {isTodayFlag && (
-                  <div className="mt-0.5">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>
-                  </div>
-                )}
-              </button>
-              <AnimatePresence>
-                {showDatePicker && (
-                  <motion.div initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.15 }}>
-                    <DatePickerPopup value={selectedDate} onChange={setSelectedDate} onClose={() => setShowDatePicker(false)} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            <button onClick={() => goDay(1)} className={`p-2 rounded-xl border transition-all ${isNight ? 'border-white/10 text-gray-400 hover:border-white/20 hover:text-white' : 'border-gray-200 text-gray-500 hover:bg-gray-100'}`}>
-              <ChevronLeft size={17} />
-            </button>
-          </div>
-          <button onClick={() => { setAddModalTime(null); setShowAddModal(true); }} className="btn-primary text-sm px-4 py-2">
-            <Plus size={15} />הוסף תור
-          </button>
+        {/* ── Bot panel — RIGHT (first in RTL flex) ── */}
+        <div className={`w-[370px] xl:w-[410px] shrink-0 flex flex-col rounded-t-2xl overflow-hidden border border-b-0`}
+          style={{ borderColor: isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb' }}>
+          <CalendarBotPanel
+            isNight={isNight}
+            onAppointmentChange={() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })}
+          />
         </div>
 
-        {/* Two-column body: bot (right) + calendar (left) — both start at same level */}
-        <div className="flex gap-4 flex-1 min-h-0">
+        {/* ── Calendar column — LEFT (second in RTL flex) ── */}
+        <div className="flex flex-col flex-1 min-w-0 min-h-0">
 
-          {/* Bot panel — RIGHT (first in RTL flex) */}
-          <div className={`w-[380px] xl:w-[420px] shrink-0 flex flex-col rounded-t-2xl overflow-hidden border border-b-0`}
-            style={{ borderColor: isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb' }}>
-            <CalendarBotPanel
-              isNight={isNight}
-              onAppointmentChange={() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })}
-            />
+          {/* Date navigation header — above the table */}
+          <div className="flex items-center justify-between mb-3 gap-3">
+            <div className="flex items-center gap-2">
+              <button onClick={() => goDay(-1)} className={`p-2 rounded-xl border transition-all ${isNight ? 'border-white/10 text-gray-400 hover:border-white/20 hover:text-white' : 'border-gray-200 text-gray-500 hover:bg-gray-100'}`}>
+                <ChevronRight size={17} />
+              </button>
+              <div className="relative">
+                <button onClick={() => setShowDatePicker(v => !v)}
+                  className={`flex flex-col items-start px-4 py-2 rounded-xl border transition-all min-w-[190px] ${isNight ? 'border-white/10 hover:border-white/20' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <span className={`font-bold text-base leading-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>
+                    {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, d בMMMM yyyy', { locale: he })}
+                  </span>
+                  {isTodayFlag && (
+                    <div className="mt-0.5">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>
+                    </div>
+                  )}
+                </button>
+                <AnimatePresence>
+                  {showDatePicker && (
+                    <motion.div initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.15 }}>
+                      <DatePickerPopup value={selectedDate} onChange={setSelectedDate} onClose={() => setShowDatePicker(false)} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <button onClick={() => goDay(1)} className={`p-2 rounded-xl border transition-all ${isNight ? 'border-white/10 text-gray-400 hover:border-white/20 hover:text-white' : 'border-gray-200 text-gray-500 hover:bg-gray-100'}`}>
+                <ChevronLeft size={17} />
+              </button>
+            </div>
+            <button onClick={() => { setAddModalTime(null); setShowAddModal(true); }} className="btn-primary text-sm px-4 py-2">
+              <Plus size={15} />הוסף תור
+            </button>
           </div>
 
-          {/* Calendar grid — LEFT (second in RTL flex) */}
-          <div className="flex flex-col flex-1 min-w-0 min-h-0">
-            {staffFilterBar}
-            <div className={`flex flex-col flex-1 min-h-0 rounded-t-2xl overflow-hidden border border-b-0 ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
-              style={{ background: isNight ? '#0d1117' : '#ffffff' }}>
-              <div className={`flex items-center justify-between px-5 py-3.5 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
-                <span className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-800'}`}>
-                  {!isBusinessOpen ? 'עסק סגור היום' : sortedAppts.length === 0 ? 'אין תורים היום' : `${sortedAppts.length} תורים`}
-                </span>
-                {sortedAppts.length > 0 && (
-                  <span style={{ color: isNight ? 'rgba(255,255,255,0.35)' : '#b0b7c3', fontSize: 12 }}>
-                    הכנסה צפויה{' '}
-                    <span style={{ fontWeight: 700, fontSize: 14, color: isNight ? '#ffffff' : '#374151' }}>
-                      ₪{sortedAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
-                    </span>
+          {/* Staff filter */}
+          {staffFilterBar}
+
+          {/* Time grid */}
+          <div className={`flex flex-col flex-1 min-h-0 rounded-t-2xl overflow-hidden border border-b-0 ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
+            style={{ background: isNight ? '#0d1117' : '#ffffff' }}>
+            <div className={`flex items-center justify-between px-5 py-3.5 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
+              <span className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-800'}`}>
+                {!isBusinessOpen ? 'עסק סגור היום' : sortedAppts.length === 0 ? 'אין תורים היום' : `${sortedAppts.length} תורים`}
+              </span>
+              {sortedAppts.length > 0 && (
+                <span style={{ color: isNight ? 'rgba(255,255,255,0.35)' : '#b0b7c3', fontSize: 12 }}>
+                  הכנסה צפויה{' '}
+                  <span style={{ fontWeight: 700, fontSize: 14, color: isNight ? '#ffffff' : '#374151' }}>
+                    ₪{sortedAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
                   </span>
-                )}
-              </div>
-              {isLoading ? (
-                <div className="flex items-center justify-center flex-1">
-                  <Loader2 size={28} className="animate-spin text-[#f43f5e]" />
-                </div>
-              ) : !isBusinessOpen ? (
-                <div className="flex flex-col items-center justify-center flex-1 text-center">
-                  <Lock size={36} className={`mb-3 ${isNight ? 'text-white/10' : 'text-gray-200'}`} />
-                  <p className={`font-semibold ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>העסק סגור ביום זה</p>
-                </div>
-              ) : (
-                <DesktopTimeGrid
-                  appointments={sortedAppts}
-                  isNight={isNight}
-                  openTime={openTime}
-                  closeTime={closeTime}
-                  bufferMinutes={bufferMinutes}
-                  isTodayFlag={isTodayFlag}
-                  onApptClick={setSelectedAppt}
-                  onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
-                />
+                </span>
               )}
             </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center flex-1">
+                <Loader2 size={28} className="animate-spin text-[#f43f5e]" />
+              </div>
+            ) : !isBusinessOpen ? (
+              <div className="flex flex-col items-center justify-center flex-1 text-center">
+                <Lock size={36} className={`mb-3 ${isNight ? 'text-white/10' : 'text-gray-200'}`} />
+                <p className={`font-semibold ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>העסק סגור ביום זה</p>
+              </div>
+            ) : (
+              <DesktopTimeGrid
+                appointments={sortedAppts}
+                isNight={isNight}
+                openTime={openTime}
+                closeTime={closeTime}
+                bufferMinutes={bufferMinutes}
+                isTodayFlag={isTodayFlag}
+                onApptClick={setSelectedAppt}
+                onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
+              />
+            )}
           </div>
-
         </div>
+
       </div>
 
       {/* Modals */}

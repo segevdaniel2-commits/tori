@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Users, Calendar, DollarSign, Download, Loader2, ChevronRight, ChevronLeft, EyeOff } from 'lucide-react';
@@ -11,18 +11,24 @@ import { useAuthStore } from '../../store/useStore';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 
-const COLORS = ['#f97316', '#f43f5e', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6'];
-
 const MONTH_NAMES = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
 
+function useNightMode() {
+  const [isNight, setIsNight] = useState(() => { const h = new Date().getHours(); return h >= 20 || h < 6; });
+  useEffect(() => {
+    const id = setInterval(() => { const h = new Date().getHours(); setIsNight(h >= 20 || h < 6); }, 60000);
+    return () => clearInterval(id);
+  }, []);
+  return isNight;
+}
+
 function MonthPicker({ value, onChange }) {
-  // value = "YYYY-MM"
   const [open, setOpen] = useState(false);
   const [viewYear, setViewYear] = useState(() => parseInt(value.split('-')[0]));
   const ref = useRef(null);
 
   const curYear  = parseInt(value.split('-')[0]);
-  const curMonth = parseInt(value.split('-')[1]) - 1; // 0-based
+  const curMonth = parseInt(value.split('-')[1]) - 1;
 
   useEffect(() => {
     function handleClick(e) {
@@ -63,65 +69,41 @@ function MonthPicker({ value, onChange }) {
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl bg-[#0d1117] border border-white/10 shadow-2xl shadow-black/50 p-4"
           >
-            {/* Year nav */}
             <div className="flex items-center justify-between mb-3">
-              <button
-                onClick={() => setViewYear(y => y - 1)}
-                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
-              >
+              <button onClick={() => setViewYear(y => y - 1)}
+                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all">
                 <ChevronRight size={16} />
               </button>
               <span className="text-white font-bold text-sm">{viewYear}</span>
-              <button
-                onClick={() => setViewYear(y => y + 1)}
+              <button onClick={() => setViewYear(y => y + 1)}
                 disabled={viewYear >= new Date().getFullYear()}
-                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              >
+                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed">
                 <ChevronLeft size={16} />
               </button>
             </div>
-
-            {/* Month grid */}
             <div className="grid grid-cols-3 gap-1.5">
               {MONTH_NAMES.map((name, i) => {
                 const isSelected = viewYear === curYear && i === curMonth;
                 const isFuture = viewYear > new Date().getFullYear() ||
                   (viewYear === new Date().getFullYear() && i > new Date().getMonth());
                 return (
-                  <button
-                    key={i}
-                    onClick={() => select(i)}
-                    disabled={isFuture}
+                  <button key={i} onClick={() => select(i)} disabled={isFuture}
                     className={`py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-[#f97316] via-[#f43f5e] to-[#06b6d4] text-white shadow-md shadow-[#f43f5e]/30'
-                        : isFuture
-                        ? 'text-gray-700 cursor-not-allowed'
-                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
+                      isSelected ? 'bg-gradient-to-r from-[#f97316] via-[#f43f5e] to-[#06b6d4] text-white' :
+                      isFuture ? 'text-gray-700 cursor-not-allowed' :
+                      'text-gray-300 hover:bg-white/10 hover:text-white'
+                    }`}>
                     {name}
                   </button>
                 );
               })}
             </div>
-
-            {/* Today shortcut */}
             <div className="border-t border-white/[0.06] mt-3 pt-3 flex justify-between">
-              <button
-                onClick={() => {
-                  const now = new Date();
-                  setViewYear(now.getFullYear());
-                  onChange(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
-                  setOpen(false);
-                }}
-                className="text-xs text-[#f43f5e] hover:text-[#f97316] font-semibold transition-colors"
-              >
+              <button onClick={() => { const now = new Date(); setViewYear(now.getFullYear()); onChange(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`); setOpen(false); }}
+                className="text-xs text-[#f43f5e] hover:text-[#f97316] font-semibold transition-colors">
                 החודש הנוכחי
               </button>
-              <button onClick={() => setOpen(false)} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
-                סגור
-              </button>
+              <button onClick={() => setOpen(false)} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">סגור</button>
             </div>
           </motion.div>
         )}
@@ -130,45 +112,41 @@ function MonthPicker({ value, onChange }) {
   );
 }
 
-function StatCard({ title, value, subtitle, icon: Icon, color = 'orange', loading }) {
-  const colorMap = {
-    orange: { gradient: 'from-[#f97316] to-[#f43f5e]', bg: 'bg-[#fff1eb]', text: 'text-[#f97316]', border: 'border-[#f97316]/15' },
-    coral:  { gradient: 'from-[#f43f5e] to-[#f97316]', bg: 'bg-[#fff1eb]', text: 'text-[#f43f5e]', border: 'border-[#f43f5e]/15' },
-    cyan:   { gradient: 'from-[#06b6d4] to-[#0891b2]', bg: 'bg-cyan-50',   text: 'text-cyan-600',   border: 'border-cyan-100' },
-    green:  { gradient: 'from-[#10b981] to-[#059669]', bg: 'bg-green-50',  text: 'text-green-600',  border: 'border-green-100' },
-  };
-  const c = colorMap[color] || colorMap.orange;
+function StatCard({ title, value, subtitle, icon: Icon, color = 'orange', loading, isNight }) {
+  const iconColor = { orange: '#f97316', coral: '#f43f5e', cyan: '#06b6d4', green: '#10b981' }[color] || '#f97316';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-white rounded-2xl p-4 border ${c.border} shadow-sm`}
+      className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
     >
       <div className="flex items-center justify-between mb-2">
-        <span className="text-gray-500 text-xs font-semibold uppercase tracking-wide">{title}</span>
-        <div className={`w-8 h-8 rounded-xl ${c.bg} flex items-center justify-center`}>
-          <Icon size={15} className={c.text} />
+        <span className={`text-xs font-semibold uppercase tracking-wide ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{title}</span>
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+          style={{ background: isNight ? 'rgba(255,255,255,0.07)' : `${iconColor}18` }}>
+          <Icon size={15} style={{ color: iconColor }} />
         </div>
       </div>
       {loading ? (
         <div className="h-7 w-20 bg-gray-100 rounded-lg animate-pulse" />
       ) : (
-        <div className="text-2xl font-black text-gray-900">{value}</div>
+        <div className={`text-2xl font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{value}</div>
       )}
-      {subtitle && <p className="text-gray-400 text-xs mt-0.5">{subtitle}</p>}
+      {subtitle && <p className={`text-xs mt-0.5 ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{subtitle}</p>}
     </motion.div>
   );
 }
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, isNight }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-right">
-        <p className="text-gray-600 text-xs mb-1">{label}</p>
+      <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-right"
+        style={{ background: isNight ? '#1a1a2e' : '#fff', borderColor: isNight ? 'rgba(255,255,255,0.1)' : '#f1f5f9' }}>
+        <p className="text-xs mb-1" style={{ color: isNight ? 'rgba(255,255,255,0.5)' : '#94a3b8' }}>{label}</p>
         {payload.map((entry, i) => (
-          <p key={i} className="font-bold" style={{ color: entry.color }}>
-            {entry.name}: {entry.name.includes('הכנסות') || entry.name === 'revenue' ? `₪${entry.value?.toLocaleString()}` : entry.value}
+          <p key={i} className="font-bold text-sm" style={{ color: entry.color }}>
+            {entry.name === 'revenue' || entry.name === 'הכנסות' ? `₪${entry.value?.toLocaleString()}` : entry.value}
           </p>
         ))}
       </div>
@@ -183,6 +161,7 @@ export default function AnalyticsPage() {
   const analyticsApi = useAnalyticsApi();
   const { business } = useAuthStore();
   const hideStats = !!(business?.hide_stats);
+  const isNight = useNightMode();
 
   const { data: overview, isLoading: loadingOverview } = useQuery({
     queryKey: ['analytics-overview'],
@@ -193,11 +172,6 @@ export default function AnalyticsPage() {
   const { data: dailyRevenue = [], isLoading: loadingDaily } = useQuery({
     queryKey: ['analytics-daily', days],
     queryFn: () => analyticsApi.dailyRevenue(days).then(r => r.data),
-  });
-
-  const { data: popularServices = [] } = useQuery({
-    queryKey: ['analytics-services'],
-    queryFn: () => analyticsApi.popularServices().then(r => r.data),
   });
 
   const { data: peakHours = [] } = useQuery({
@@ -213,41 +187,28 @@ export default function AnalyticsPage() {
   const revenueData = dailyRevenue.map(d => ({
     date: format(new Date(d.date + 'T00:00:00'), 'd/M'),
     revenue: d.revenue,
-    תורים: d.appointments,
   }));
 
-  const servicesData = popularServices.slice(0, 6).map(s => ({
-    name: s.name,
-    count: s.count,
-    revenue: s.revenue,
-  }));
+  const hoursData = peakHours.map(h => ({ hour: `${h.hour}:00`, count: h.count }));
 
-  const hoursData = peakHours.map(h => ({
-    hour: `${h.hour}:00`,
-    count: h.count,
-  }));
+  const axisColor = isNight ? 'rgba(255,255,255,0.25)' : '#94a3b8';
+  const gridColor = isNight ? 'rgba(255,255,255,0.04)' : 'transparent';
 
   function downloadReport() {
     if (!monthlyReport) return;
     const rows = [
       ['שם לקוח', 'שירות', 'עובד', 'תאריך', 'שעה', 'מחיר', 'סטטוס'],
       ...(monthlyReport.appointments || []).map(a => [
-        a.customer_name || '',
-        a.service_name || '',
-        a.staff_name || '',
-        a.starts_at.split('T')[0],
-        a.starts_at.split('T')[1]?.slice(0, 5) || '',
-        a.price || 0,
-        a.status,
+        a.customer_name || '', a.service_name || '', a.staff_name || '',
+        a.starts_at.split('T')[0], a.starts_at.split('T')[1]?.slice(0, 5) || '',
+        a.price || 0, a.status,
       ]),
     ];
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `tori-report-${month}.csv`;
-    a.click();
+    a.href = url; a.download = `tori-report-${month}.csv`; a.click();
     URL.revokeObjectURL(url);
   }
 
@@ -259,223 +220,184 @@ export default function AnalyticsPage() {
         </div>
         <h2 className="text-xl font-black text-gray-300 mb-2">הנתונים מוסתרים</h2>
         <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
-          הסתרת נתוני הכנסות ולקוחות מופעלת.
-          <br />
+          הסתרת נתוני הכנסות ולקוחות מופעלת.<br />
           לשינוי: <span className="text-gray-500 font-semibold">הגדרות → כללי → הסתר נתוני הכנסות</span>
         </p>
       </div>
     );
   }
 
+  // Appointment status data
+  const completed = monthlyReport?.summary?.completed ?? 0;
+  const cancelled = monthlyReport?.summary?.cancelled ?? 0;
+  const total     = monthlyReport?.summary?.total     ?? 0;
+  const pending   = Math.max(0, total - completed - cancelled);
+  const pieData = [
+    { name: 'הושלמו',  value: completed, color: '#10b981' },
+    { name: 'ממתינים', value: pending,   color: '#f97316' },
+    { name: 'בוטלו',   value: cancelled, color: '#f43f5e' },
+  ].filter(d => d.value > 0);
+
   return (
-    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 pb-28 sm:pb-6" dir="rtl">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-5 pb-28 sm:pb-6" dir="rtl">
+
+      {/* Page header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className="text-xl sm:text-2xl font-black text-gray-900">אנליטיקות</h2>
+        <h2 className={`text-xl sm:text-2xl font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>אנליטיקות</h2>
         <div className="flex items-center gap-2">
           <MonthPicker value={month} onChange={setMonth} />
-          <button
-            onClick={downloadReport}
-            className="btn-secondary text-sm py-2 px-3 sm:px-4"
-          >
+          <button onClick={downloadReport} className="btn-secondary text-sm py-2 px-3 sm:px-4">
             <Download size={15} />
             <span className="hidden sm:inline">ייצא Excel</span>
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="הכנסות החודש"
-          value={hideStats ? '••••' : overview ? `₪${overview.monthlyRevenue?.toLocaleString()}` : '-'}
-          subtitle="החודש הנוכחי"
-          icon={DollarSign}
-          color="green"
-          loading={loadingOverview}
-        />
-        <StatCard
-          title="תורים החודש"
-          value={overview?.monthlyAppointments ?? '-'}
-          subtitle={`${overview?.avgPerDay ?? 0} בממוצע ליום`}
-          icon={Calendar}
-          color="orange"
-          loading={loadingOverview}
-        />
-        <StatCard
-          title="סה״כ לקוחות"
-          value={hideStats ? '••••' : overview?.totalCustomers ?? '-'}
-          subtitle="לקוחות רשומים"
-          icon={Users}
-          color="cyan"
-          loading={loadingOverview}
-        />
-        <StatCard
-          title="סה״כ הכנסות"
-          value={hideStats ? '••••' : overview ? `₪${overview.totalRevenue?.toLocaleString()}` : '-'}
-          subtitle="מאז ההקמה"
-          icon={TrendingUp}
-          color="coral"
-          loading={loadingOverview}
-        />
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard isNight={isNight} title="סה״כ הכנסות"  value={hideStats ? '••••' : overview ? `₪${overview.totalRevenue?.toLocaleString()}` : '-'} subtitle="מאז ההקמה"                icon={TrendingUp} color="coral"  loading={loadingOverview} />
+        <StatCard isNight={isNight} title="סה״כ לקוחות"  value={hideStats ? '••••' : overview?.totalCustomers ?? '-'}                                                                      subtitle="לקוחות רשומים"           icon={Users}      color="cyan"   loading={loadingOverview} />
+        <StatCard isNight={isNight} title="תורים החודש"  value={overview?.monthlyAppointments ?? '-'}                                                                                      subtitle={`${overview?.avgPerDay ?? 0} בממוצע ליום`} icon={Calendar}   color="orange" loading={loadingOverview} />
+        <StatCard isNight={isNight} title="הכנסות החודש" value={hideStats ? '••••' : overview ? `₪${overview.monthlyRevenue?.toLocaleString()}` : '-'}                                     subtitle="החודש הנוכחי"            icon={DollarSign} color="green"  loading={loadingOverview} />
       </div>
 
-      {/* Revenue chart */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-gray-900 text-lg">הכנסות יומיות</h3>
-          <div className="flex gap-2">
+      {/* Daily revenue chart */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className={`font-bold text-base ${isNight ? 'text-white' : 'text-gray-900'}`}>הכנסות יומיות</h3>
+          <div className="flex gap-1.5">
             {[7, 30, 90].map(d => (
-              <button
-                key={d}
-                onClick={() => setDays(d)}
+              <button key={d} onClick={() => setDays(d)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  days === d ? 'bg-gradient-to-r from-[#f97316] to-[#f43f5e] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
+                  days === d ? 'bg-gradient-to-r from-[#f97316] to-[#f43f5e] text-white' :
+                  isNight ? 'bg-white/[0.06] text-gray-400 hover:bg-white/10 hover:text-white' :
+                  'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}>
                 {d} יום
               </button>
             ))}
           </div>
         </div>
         {loadingDaily ? (
-          <div className="h-64 flex items-center justify-center">
-            <Loader2 size={32} className="animate-spin text-tori-400" />
+          <div className="h-56 flex items-center justify-center">
+            <Loader2 size={28} className="animate-spin text-[#f43f5e]" />
           </div>
         ) : (
-          <div style={{ width: '100%', height: 260 }}>
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={revenueData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={revenueData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
+                  <stop offset="5%"  stopColor="#f43f5e" stopOpacity={isNight ? 0.25 : 0.18} />
                   <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `₪${v}`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="revenue" name="הכנסות" stroke="#f43f5e" fill="url(#revenueGrad)" strokeWidth={2.5} dot={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} tickFormatter={v => `₪${v}`} width={48} />
+              <Tooltip content={<CustomTooltip isNight={isNight} />} />
+              <Area type="monotone" dataKey="revenue" name="הכנסות" stroke="#f43f5e" fill="url(#revenueGrad)" strokeWidth={2} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
-          </div>
         )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Appointment status breakdown */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 text-lg mb-5">סטטוס תורים החודש</h3>
-          {(() => {
-            const completed  = monthlyReport?.summary?.completed  ?? 0;
-            const cancelled  = monthlyReport?.summary?.cancelled  ?? 0;
-            const total      = monthlyReport?.summary?.total       ?? 0;
-            const pending    = Math.max(0, total - completed - cancelled);
-            const pieData = [
-              { name: 'הושלמו',  value: completed, color: '#10b981' },
-              { name: 'בוטלו',   value: cancelled, color: '#f43f5e' },
-              { name: 'ממתינים', value: pending,   color: '#f97316' },
-            ].filter(d => d.value > 0);
+      {/* Bottom row: status + hours */}
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-5">
 
-            if (total === 0) {
-              return <div className="text-center text-gray-400 py-8">אין נתונים עדיין</div>;
-            }
+        {/* Appointment status + monthly summary */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h3 className={`font-bold text-base mb-5 ${isNight ? 'text-white' : 'text-gray-900'}`}>
+            סטטוס תורים — {MONTH_NAMES[parseInt(month.split('-')[1]) - 1]} {month.split('-')[0]}
+          </h3>
 
-            return (
+          {total === 0 ? (
+            <div className={`text-center py-10 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
+          ) : (
+            <>
               <div className="flex items-center gap-6">
                 {/* Pie */}
-                <div style={{ width: 140, height: 140, flexShrink: 0 }}>
+                <div style={{ width: 160, height: 160, flexShrink: 0 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={38}
-                        outerRadius={62}
-                        paddingAngle={3}
-                        dataKey="value"
-                        strokeWidth={0}
-                      >
+                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={46} outerRadius={72}
+                        paddingAngle={3} dataKey="value" strokeWidth={0}>
                         {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
                       </Pie>
-                      <Tooltip
-                        content={({ active, payload }) =>
-                          active && payload?.[0] ? (
-                            <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-3 py-2 text-right">
-                              <span className="text-sm font-bold" style={{ color: payload[0].payload.color }}>{payload[0].name}: {payload[0].value}</span>
-                            </div>
-                          ) : null
-                        }
-                      />
+                      <Tooltip content={({ active, payload }) =>
+                        active && payload?.[0] ? (
+                          <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-3 py-2 text-right"
+                            style={{ background: isNight ? '#1a1a2e' : '#fff' }}>
+                            <span className="text-sm font-bold" style={{ color: payload[0].payload.color }}>
+                              {payload[0].name}: {payload[0].value}
+                            </span>
+                          </div>
+                        ) : null
+                      } />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
 
-                {/* Legend + numbers */}
+                {/* Legend */}
                 <div className="flex-1 space-y-3">
                   {pieData.map(d => (
                     <div key={d.name} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full shrink-0" style={{ background: d.color }} />
-                        <span className="text-sm text-gray-600">{d.name}</span>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+                        <span className={`text-sm font-medium ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>{d.name}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-gray-900">{d.value}</span>
-                        <span className="text-xs text-gray-400 w-9 text-left">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`text-base font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{d.value}</span>
+                        <span className={`text-xs w-8 text-left ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>
                           {Math.round((d.value / total) * 100)}%
                         </span>
                       </div>
                     </div>
                   ))}
-                  <div className="pt-2 border-t border-gray-100 flex justify-between">
-                    <span className="text-xs text-gray-400">סה״כ</span>
-                    <span className="text-sm font-black text-gray-700">{total}</span>
+                  <div className={`pt-2.5 border-t flex justify-between items-center ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
+                    <span className={`text-xs font-medium ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>סה״כ תורים</span>
+                    <span className={`text-lg font-black ${isNight ? 'text-white' : 'text-gray-800'}`}>{total}</span>
                   </div>
                 </div>
               </div>
-            );
-          })()}
+
+              {/* Monthly summary strip */}
+              {monthlyReport && (
+                <div className={`mt-4 pt-4 border-t grid grid-cols-2 gap-3 ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
+                  {[
+                    { label: 'הכנסות החודש', value: `₪${monthlyReport.summary.revenue?.toLocaleString() || 0}`, color: '#f43f5e' },
+                    { label: 'לקוחות חדשים', value: monthlyReport.newCustomers ?? 0, color: '#06b6d4' },
+                  ].map((s, i) => (
+                    <div key={i} className={`rounded-xl p-3 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                      <div className={`text-xs mb-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{s.label}</div>
+                      <div className="text-lg font-black" style={{ color: s.color }}>{s.value}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Peak hours */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 text-lg mb-6">שעות עמוסות</h3>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h3 className={`font-bold text-base mb-5 ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
           {hoursData.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">אין נתונים עדיין</div>
+            <div className={`text-center py-10 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
           ) : (
-            <div style={{ width: '100%', height: 220 }}>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={hoursData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="hour" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" name="תורים" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+              <BarChart data={hoursData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                <XAxis dataKey="hour" tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />
+                <Tooltip content={<CustomTooltip isNight={isNight} />} />
+                <Bar dataKey="count" name="תורים" fill="#f43f5e"
+                  radius={[5, 5, 0, 0]}
+                  fillOpacity={0.85}
+                />
               </BarChart>
             </ResponsiveContainer>
-            </div>
           )}
         </div>
-      </div>
 
-      {/* Monthly summary */}
-      {monthlyReport && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 text-lg mb-4">סיכום חודשי: {month}</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: 'סה״כ תורים', value: monthlyReport.summary.total, color: 'text-[#f97316]' },
-              { label: 'הושלמו', value: monthlyReport.summary.completed, color: 'text-green-600' },
-              { label: 'הכנסות', value: `₪${monthlyReport.summary.revenue?.toLocaleString()}`, color: 'text-[#f43f5e]' },
-              { label: 'לקוחות חדשים', value: monthlyReport.newCustomers, color: 'text-cyan-600' },
-            ].map((s, i) => (
-              <div key={i} className="bg-gray-50 rounded-xl p-3 text-center">
-                <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
-                <div className="text-gray-400 text-xs mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
