@@ -308,7 +308,9 @@ router.post('/chat', async (req, res) => {
         const svc = ctx.services.find(s => s.name.includes(serviceName.trim()) || serviceName.trim().includes(s.name));
         const dur = svc?.duration_minutes || 30;
         const startsAt = `${date}T${time}:00`;
-        const endsAt = new Date(new Date(startsAt).getTime() + dur * 60000).toISOString().slice(0, 19);
+        const endDate = new Date(new Date(startsAt).getTime() + dur * 60000);
+        const _p = n => String(n).padStart(2, '0');
+        const endsAt = `${endDate.getFullYear()}-${_p(endDate.getMonth()+1)}-${_p(endDate.getDate())}T${_p(endDate.getHours())}:${_p(endDate.getMinutes())}:00`;
         const cleanPhone = phone.replace(/[\s\-]/g, '');
 
         // Check if customer exists by name first
@@ -363,15 +365,20 @@ router.post('/chat', async (req, res) => {
       const [, customerName, date, time] = cancelMatch;
       try {
         const startsAt = `${date}T${time}:00`;
-        // Find the appointment by customer name + date+time window (±1 min)
+        // Find by name+date, order by time proximity (in case AI gets the time slightly off)
         const appt = db.prepare(`
           SELECT a.id FROM appointments a
           LEFT JOIN customers c ON a.customer_id = c.id
           WHERE a.business_id = ? AND a.status != 'cancelled'
-            AND date(a.starts_at) = ? AND time(a.starts_at) = ?
+            AND date(a.starts_at) = ?
             AND (c.name LIKE ? OR c.name = ?)
+          ORDER BY ABS(
+            CAST(strftime('%H', a.starts_at) AS INTEGER) * 60 +
+            CAST(strftime('%M', a.starts_at) AS INTEGER) -
+            (CAST(substr(?, 1, 2) AS INTEGER) * 60 + CAST(substr(?, 4, 2) AS INTEGER))
+          ) ASC
           LIMIT 1
-        `).get(req.business.id, date, `${time}:00`, `%${customerName.trim()}%`, customerName.trim());
+        `).get(req.business.id, date, `%${customerName.trim()}%`, customerName.trim(), time, time);
 
         if (!appt) {
           return res.json({ reply: `לא מצאתי תור של ${customerName.trim()} ב-${date} בשעה ${time}.` });

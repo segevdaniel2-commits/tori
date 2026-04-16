@@ -4,7 +4,7 @@ import { format, addDays, subDays, parseISO, isToday } from 'date-fns';
 import { he } from 'date-fns/locale';
 import {
   ChevronRight, ChevronLeft, ChevronDown, Plus, X, Clock, User, Phone,
-  Scissors, Calendar, Loader2, Check, Trash2, Lock, RefreshCw,
+  Scissors, Calendar, Loader2, Check, Trash2, Lock, RefreshCw, Pencil,
   Sparkles, ArrowUp, RotateCcw, UserPlus, CalendarPlus, CalendarX2,
 } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -120,11 +120,40 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
   const [editingNotes, setEditingNotes] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [customerName, setCustomerName] = useState(appt.customer_name || '');
+  const [savingName, setSavingName] = useState(false);
   const appointmentsApi = useAppointmentsApi();
 
-  const start = appt.starts_at.split('T')[1]?.slice(0, 5) || appt.starts_at.slice(11, 16);
-  const end = appt.ends_at?.split('T')[1]?.slice(0, 5) || appt.ends_at?.slice(11, 16);
+  // Parse start/end always as stored local-time strings (no UTC conversion)
+  const start = appt.starts_at.slice(11, 16);
+  const rawEnd = appt.ends_at?.slice(11, 16);
+  // Guard against backwards ends_at (UTC storage bug from older bookings):
+  // if end < start, recompute end from service duration
+  const end = (() => {
+    if (!rawEnd) return null;
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = rawEnd.split(':').map(Number);
+    const dur = appt.service_duration;
+    if (dur && eh * 60 + em < sh * 60 + sm) {
+      const et = sh * 60 + sm + dur;
+      return `${String(Math.floor(et/60)).padStart(2,'0')}:${String(et%60).padStart(2,'0')}`;
+    }
+    return rawEnd;
+  })();
   const dateStr = appt.starts_at.split('T')[0];
+
+  async function handleSaveName() {
+    if (!customerName.trim() || !appt.customer_id) return;
+    setSavingName(true);
+    try {
+      await api.put(`/customers/${appt.customer_id}`, { name: customerName.trim() });
+      setEditingName(false);
+      onUpdate();
+    } finally {
+      setSavingName(false);
+    }
+  }
 
   async function handleStatusChange(newStatus) {
     setUpdating(true);
@@ -171,13 +200,36 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
 
         <div className="p-5 space-y-4">
           <div className="flex items-center gap-3 p-4 bg-[#fff1eb] rounded-xl">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg,#f97316,#f43f5e)' }}>
-              {(appt.customer_name || 'L')[0]}
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0" style={{ background: 'linear-gradient(135deg,#f97316,#f43f5e)' }}>
+              {(customerName || 'L')[0]}
             </div>
-            <div>
-              <div className="font-bold text-gray-900">{appt.customer_name || 'לקוח לא ידוע'}</div>
+            <div className="flex-1 min-w-0">
+              {editingName ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    value={customerName}
+                    onChange={e => setCustomerName(e.target.value)}
+                    className="flex-1 text-sm font-bold border border-[#f97316]/50 rounded-lg px-2.5 py-1 focus:outline-none bg-white min-w-0"
+                    autoFocus
+                    onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') { setCustomerName(appt.customer_name || ''); setEditingName(false); } }}
+                  />
+                  <button onClick={handleSaveName} disabled={savingName} className="p-1.5 rounded-lg bg-[#f97316] text-white hover:bg-[#f43f5e] transition-colors shrink-0">
+                    {savingName ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                  </button>
+                  <button onClick={() => { setCustomerName(appt.customer_name || ''); setEditingName(false); }} className="p-1.5 rounded-lg bg-white/60 text-gray-500 hover:bg-white transition-colors shrink-0">
+                    <X size={11} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <div className="font-bold text-gray-900 truncate">{customerName || 'לקוח לא ידוע'}</div>
+                  <button onClick={() => setEditingName(true)} className="p-1 rounded hover:bg-[#f97316]/15 transition-colors shrink-0">
+                    <Pencil size={11} className="text-[#f97316]" />
+                  </button>
+                </div>
+              )}
               {appt.customer_phone && (
-                <a href={`tel:${appt.customer_phone}`} className="text-[#f43f5e] text-sm hover:underline flex items-center gap-1">
+                <a href={`tel:${appt.customer_phone}`} className="text-[#f43f5e] text-sm hover:underline flex items-center gap-1 mt-0.5">
                   <Phone size={12} />
                   {appt.customer_phone}
                 </a>
@@ -466,7 +518,8 @@ function AddAppointmentModal({ selectedDate, initialTime, onClose, onSuccess, ex
       const duration = selectedService?.duration_minutes || 30;
       const endDate = new Date(`${date}T${time}:00`);
       endDate.setMinutes(endDate.getMinutes() + duration);
-      const endsAt = endDate.toISOString().slice(0, 19);
+      const _p = n => String(n).padStart(2, '0');
+      const endsAt = `${endDate.getFullYear()}-${_p(endDate.getMonth()+1)}-${_p(endDate.getDate())}T${_p(endDate.getHours())}:${_p(endDate.getMinutes())}:00`;
 
       await appointmentsApi.create({
         customer_id: cid,
@@ -621,27 +674,41 @@ function AddAppointmentModal({ selectedDate, initialTime, onClose, onSuccess, ex
 
 // ─── Desktop Time Grid ────────────────────────────────────────────────────────
 function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMinutes, onSlotClick, onApptClick, isTodayFlag }) {
+  const step = Math.max(bufferMinutes || 30, 5);
   const slots = [];
   const [openH, openM] = openTime.split(':').map(Number);
   const [closeH, closeM] = closeTime.split(':').map(Number);
   const openTotal = openH * 60 + openM;
   const closeTotal = closeH * 60 + closeM;
-  for (let t = openTotal; t < closeTotal; t += bufferMinutes) {
-    const h = Math.floor(t / 60);
-    const m = t % 60;
-    slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+  for (let t = openTotal; t < closeTotal; t += step) {
+    slots.push(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
   }
 
-  const apptByTime = {};
+  // Map each appointment to its nearest slot boundary (floor to step)
+  const slotAppts = {};
   appointments.forEach(a => {
-    const time = (a.starts_at.split('T')[1] || a.starts_at.slice(11)).slice(0, 5);
-    apptByTime[time] = a;
+    const tStr = (a.starts_at.split('T')[1] || a.starts_at.slice(11)).slice(0, 5);
+    const [h, m] = tStr.split(':').map(Number);
+    const slotMin = Math.floor((h * 60 + m) / step) * step;
+    const key = `${String(Math.floor(slotMin / 60)).padStart(2, '0')}:${String(slotMin % 60).padStart(2, '0')}`;
+    if (!slotAppts[key]) slotAppts[key] = [];
+    slotAppts[key].push(a);
+  });
+
+  // Pre-compute all occupied slots from every appointment
+  const occupied = new Set();
+  appointments.forEach(a => {
+    const tStr = (a.starts_at.split('T')[1] || a.starts_at.slice(11)).slice(0, 5);
+    const [sh, sm] = tStr.split(':').map(Number);
+    const duration = a.service_duration || step;
+    const slotMin = Math.floor((sh * 60 + sm) / step) * step;
+    for (let t = slotMin + step; t < slotMin + duration; t += step) {
+      occupied.add(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
+    }
   });
 
   const now = new Date();
   const nowStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-
-  const occupied = new Set();
   const statusMap = isNight ? STATUS_LABELS_NIGHT : STATUS_LABELS_DAY;
   const dividerColor = isNight ? 'rgba(255,255,255,0.04)' : '#f3f4f6';
 
@@ -650,74 +717,71 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
       {slots.map((slotTime, idx) => {
         if (occupied.has(slotTime)) return null;
 
-        const appt = apptByTime[slotTime];
+        const appts = slotAppts[slotTime] || [];
         const isNowSlot = isTodayFlag && slotTime <= nowStr && nowStr < (slots[idx + 1] || '24:00');
-        const isPast = isTodayFlag && slotTime < nowStr && !appt;
+        const isPast = isTodayFlag && slotTime < nowStr && appts.length === 0;
 
-        if (appt) {
-          const duration = appt.service_duration || bufferMinutes;
-          const [sh, sm] = slotTime.split(':').map(Number);
-          const endTotal = sh * 60 + sm + duration;
-          const endH = Math.floor(endTotal / 60);
-          const endM = endTotal % 60;
-          const endTimeStr = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
-          // Mark all covered slots as occupied
-          for (let t = sh * 60 + sm + bufferMinutes; t < endTotal; t += bufferMinutes) {
-            const h2 = Math.floor(t / 60); const m2 = t % 60;
-            occupied.add(`${String(h2).padStart(2,'0')}:${String(m2).padStart(2,'0')}`);
-          }
-          const st = statusMap[appt.status] || statusMap.confirmed;
-          const rowHeight = Math.max(64, Math.round(duration / bufferMinutes) * 56);
-
+        if (appts.length > 0) {
           return (
-            <div key={slotTime} className="flex items-stretch cursor-pointer group" style={{ minHeight: rowHeight, borderBottom: `1px solid ${dividerColor}` }} onClick={() => onApptClick(appt)}>
-              <div className="w-16 shrink-0 flex flex-col items-end justify-start pr-3 pt-3" style={{ borderLeft: `1px solid ${dividerColor}` }}>
-                <span className={`text-xs font-bold ${isNight ? 'text-white' : 'text-gray-800'}`}>{slotTime}</span>
-                <span className={`text-[10px] mt-0.5 ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{endTimeStr}</span>
-              </div>
-              <div
-                className="flex-1 mx-3 my-2 rounded-xl px-3 py-2 flex items-center gap-3 transition-all group-hover:brightness-95"
-                style={{
-                  background: isNight ? 'rgba(249,115,22,0.10)' : '#fff7ed',
-                  borderRight: `3px solid ${appt.staff_color || '#f97316'}`,
-                  border: `1px solid ${isNight ? 'rgba(249,115,22,0.15)' : '#f97316'}33`,
-                  borderRight: `3px solid ${appt.staff_color || '#f97316'}`,
-                }}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className={`font-bold text-sm truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{appt.customer_name || 'לקוח'}</div>
-                  <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {[appt.service_name, `${duration} דק׳`, appt.staff_name].filter(Boolean).join(' · ')}
+            <div key={slotTime} style={{ borderBottom: `1px solid ${dividerColor}` }}>
+              {appts.map(appt => {
+                const aStart = appt.starts_at.slice(11, 16);
+                const dur = appt.service_duration || step;
+                const [ash, asm] = aStart.split(':').map(Number);
+                const endMin = ash * 60 + asm + dur;
+                const endTimeStr = `${String(Math.floor(endMin/60)).padStart(2,'0')}:${String(endMin%60).padStart(2,'0')}`;
+                const st = statusMap[appt.status] || statusMap.confirmed;
+                const cardHeight = Math.max(64, Math.round(dur / step) * 56);
+
+                return (
+                  <div key={appt.id} className="flex items-stretch cursor-pointer group" style={{ minHeight: cardHeight }}
+                    onClick={() => onApptClick(appt)}>
+                    <div className="w-16 shrink-0 flex flex-col items-end justify-start pr-3 pt-3"
+                      style={{ borderLeft: `1px solid ${dividerColor}` }}>
+                      <span className={`text-xs font-bold ${isNight ? 'text-white' : 'text-gray-800'}`}>{aStart}</span>
+                      <span className={`text-[10px] mt-0.5 ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{endTimeStr}</span>
+                    </div>
+                    <div className="flex-1 mx-3 my-2 rounded-xl px-3 py-2 flex items-center gap-3 transition-all group-hover:brightness-95"
+                      style={{
+                        background: isNight ? 'rgba(249,115,22,0.10)' : '#fff7ed',
+                        border: `1px solid ${isNight ? 'rgba(249,115,22,0.15)' : '#f97316'}33`,
+                        borderRight: `3px solid ${appt.staff_color || '#f97316'}`,
+                      }}>
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-bold text-sm truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{appt.customer_name || 'לקוח'}</div>
+                        <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {[appt.service_name, `${dur} דק׳`, appt.staff_name].filter(Boolean).join(' · ')}
+                        </div>
+                      </div>
+                      {appt.customer_phone && (
+                        <span className={`text-xs hidden lg:block shrink-0 ${isNight ? 'text-gray-500' : 'text-gray-400'}`} dir="ltr">{appt.customer_phone}</span>
+                      )}
+                      {appt.price != null && (
+                        <span className={`font-bold text-sm shrink-0 ${isNight ? 'text-white' : 'text-gray-900'}`}>₪{appt.price}</span>
+                      )}
+                      <span className={`text-xs px-2 py-0.5 rounded-full border shrink-0 ${st.cls}`}>{st.label}</span>
+                    </div>
                   </div>
-                </div>
-                {appt.customer_phone && (
-                  <span className={`text-xs hidden lg:block shrink-0 ${isNight ? 'text-gray-500' : 'text-gray-400'}`} dir="ltr">{appt.customer_phone}</span>
-                )}
-                {appt.price != null && (
-                  <span className={`font-bold text-sm shrink-0 ${isNight ? 'text-white' : 'text-gray-900'}`}>₪{appt.price}</span>
-                )}
-                <span className={`text-xs px-2 py-0.5 rounded-full border shrink-0 ${st.cls}`}>{st.label}</span>
-              </div>
+                );
+              })}
             </div>
           );
         }
 
         // Empty slot
         return (
-          <div
-            key={slotTime}
+          <div key={slotTime}
             className={`flex items-center group ${isPast ? 'cursor-default' : 'cursor-pointer'}`}
             style={{ minHeight: 56, borderBottom: `1px solid ${dividerColor}`, opacity: isPast ? 0.45 : 1 }}
-            onClick={() => !isPast && onSlotClick(slotTime)}
-          >
-            <div className="w-16 shrink-0 flex items-center justify-end pr-3" style={{ height: '100%', borderLeft: `1px solid ${dividerColor}` }}>
+            onClick={() => !isPast && onSlotClick(slotTime)}>
+            <div className="w-16 shrink-0 flex items-center justify-end pr-3"
+              style={{ height: '100%', borderLeft: `1px solid ${dividerColor}` }}>
               <span className={`text-xs font-medium ${isNowSlot ? 'text-[#f43f5e] font-bold' : isNight ? 'text-gray-600' : 'text-gray-400'}`}>{slotTime}</span>
             </div>
             <div className={`flex-1 mx-3 rounded-xl flex items-center justify-center transition-all ${isPast ? '' : isNight ? 'group-hover:bg-white/[0.03]' : 'group-hover:bg-[#fff7ed]'}`} style={{ height: 40 }}>
               {!isPast && (
                 <span className={`text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
-                  <Plus size={11} />
-                  קבע תור
+                  <Plus size={11} />קבע תור
                 </span>
               )}
               {isNowSlot && <div className="w-full h-px mx-2" style={{ background: '#f43f5e', opacity: 0.4 }} />}
@@ -1311,7 +1375,7 @@ export default function CalendarPage() {
                   </span>
                   <div className="flex items-center gap-2 mt-0.5">
                     {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
-                    <span className="text-xs text-gray-400">{activeAppts.length === 0 ? 'אין תורים' : `${activeAppts.length} תורים`}</span>
+                    <span className="text-xs text-gray-400">{sortedAppts.length === 0 ? 'אין תורים' : `${sortedAppts.length} תורים`}</span>
                   </div>
                 </button>
                 <AnimatePresence>
@@ -1346,13 +1410,13 @@ export default function CalendarPage() {
             style={{ background: isNight ? '#0d1117' : '#ffffff' }}>
             <div className={`flex items-center justify-between px-5 py-3 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
               <span className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>
-                {!isBusinessOpen ? 'עסק סגור היום' : activeAppts.length === 0 ? 'אין תורים' : `${activeAppts.length} תורים`}
+                {!isBusinessOpen ? 'עסק סגור היום' : sortedAppts.length === 0 ? 'אין תורים' : `${sortedAppts.length} תורים`}
               </span>
-              {activeAppts.length > 0 && (
+              {sortedAppts.length > 0 && (
                 <span className={`text-sm ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
                   הכנסה צפויה:{' '}
                   <span className={`font-bold ${isNight ? 'text-white' : 'text-gray-900'}`}>
-                    ₪{activeAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
+                    ₪{sortedAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
                   </span>
                 </span>
               )}
