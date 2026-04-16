@@ -5,7 +5,7 @@ import { he } from 'date-fns/locale';
 import {
   ChevronRight, ChevronLeft, ChevronDown, Plus, X, Clock, User, Phone,
   Scissors, Calendar, Loader2, Check, Trash2, Lock, RefreshCw, Pencil,
-  Sparkles, ArrowUp, RotateCcw, UserPlus, CalendarPlus, CalendarX2,
+  ArrowUp, RotateCcw, UserPlus, CalendarPlus, CalendarX2,
 } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppointmentsApi, useBusinessApi } from '../../hooks/useApi';
@@ -973,9 +973,9 @@ function loadBotChat() {
   } catch { return []; }
 }
 const BOT_ACTION_CARDS = [
-  { id: 'new-customer',      icon: UserPlus,    title: 'לקוח חדש',   prompt: 'אני רוצה לקבוע תור ללקוח חדש שלא ביקר אצלי' },
-  { id: 'cancel',            icon: CalendarX2,  title: 'ביטול תור',  prompt: 'אני רוצה לבטל תור קיים' },
-  { id: 'existing-customer', icon: CalendarPlus,title: 'לקוח קיים',  prompt: 'אני רוצה לקבוע תור ללקוח שכבר ביקר אצלי' },
+  { id: 'new-customer',      icon: UserPlus,    title: 'לקוח חדש',   desc: 'קבע תור ללקוח חדש',    prompt: 'אני רוצה לקבוע תור ללקוח חדש שלא ביקר אצלי' },
+  { id: 'cancel',            icon: CalendarX2,  title: 'ביטול תור',  desc: 'בטל תור קיים',          prompt: 'אני רוצה לבטל תור קיים' },
+  { id: 'existing-customer', icon: CalendarPlus,title: 'לקוח קיים',  desc: 'קבע תור ללקוח חוזר',   prompt: 'אני רוצה לקבוע תור ללקוח שכבר ביקר אצלי' },
 ];
 
 function CalendarBotPanel({ isNight, onAppointmentChange }) {
@@ -988,12 +988,10 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
   const isEmpty = messages.length === 0;
 
   const surface  = isNight ? '#0d1117' : '#ffffff';
-  const outerBg  = isNight ? '#0a0a12' : '#f9fafb';
-  const border   = isNight ? 'rgba(255,255,255,0.07)' : '#e5e7eb';
-  const muted    = isNight ? 'rgba(255,255,255,0.35)' : '#9ca3af';
+  const border   = isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb';
+  const subtle   = isNight ? 'rgba(255,255,255,0.04)' : '#f4f4f6';
+  const muted    = isNight ? 'rgba(255,255,255,0.38)' : '#9ca3af';
   const titleClr = isNight ? '#ffffff' : '#111827';
-  const inputBg  = isNight ? 'rgba(255,255,255,0.04)' : '#ffffff';
-  const inputBdr = isNight ? 'rgba(255,255,255,0.10)' : '#d1d5db';
 
   useEffect(() => {
     if (messages.length > 0)
@@ -1008,7 +1006,7 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
   }
 
   async function send(text) {
@@ -1049,13 +1047,8 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
   }
 
   const inputRow = (
-    <div
-      className="flex items-center gap-1.5 px-3 py-2"
-      style={{
-        background: inputBg, border: `1px solid ${inputBdr}`, borderRadius: 999,
-        boxShadow: isNight ? '0 0 0 1px rgba(255,255,255,0.04)' : '0 1px 6px rgba(0,0,0,0.06)',
-      }}
-    >
+    <div className="flex items-end gap-2.5 px-4 py-3 rounded-2xl"
+      style={{ background: subtle, border: `1px solid ${border}` }}>
       <textarea
         ref={textareaRef}
         value={input}
@@ -1063,38 +1056,38 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
         onKeyDown={handleKey}
         placeholder="שאל כל דבר..."
         rows={1}
-        className="flex-1 bg-transparent resize-none text-xs focus:outline-none leading-relaxed"
-        style={{ color: titleClr, maxHeight: 90, scrollbarWidth: 'none' }}
+        className="flex-1 bg-transparent resize-none text-sm focus:outline-none leading-relaxed"
+        style={{ color: titleClr, maxHeight: 100, scrollbarWidth: 'none' }}
       />
       <button
         onClick={() => send(input)}
         disabled={!input.trim() || loading}
-        className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all"
-        style={{ background: input.trim() && !loading ? 'linear-gradient(135deg,#f97316,#f43f5e)' : isNight ? 'rgba(255,255,255,0.06)' : '#e5e7eb' }}
+        className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all mb-0.5"
+        style={{ background: input.trim() && !loading ? 'linear-gradient(135deg,#f97316,#f43f5e)' : isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb' }}
       >
         {loading
-          ? <Loader2 size={10} className="animate-spin" style={{ color: input.trim() ? '#fff' : muted }} />
-          : <ArrowUp size={11} style={{ color: input.trim() && !loading ? '#fff' : muted }} />
+          ? <Loader2 size={13} className="animate-spin" style={{ color: input.trim() ? '#fff' : muted }} />
+          : <ArrowUp size={14} style={{ color: input.trim() && !loading ? '#fff' : muted }} />
         }
       </button>
     </div>
   );
 
   return (
-    <div className="flex flex-col h-full" style={{ background: outerBg }}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b shrink-0" style={{ background: surface, borderColor: border }}>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#f97316,#f43f5e)' }}>
-            <Sparkles size={11} className="text-white" />
-          </div>
-          <span className="font-bold text-xs" style={{ color: titleClr }}>טורי</span>
-          <span className="text-xs" style={{ color: muted }}>· עוזר AI</span>
+    <div className="flex flex-col h-full" style={{ background: isNight ? '#08080F' : '#f6f7f9' }}>
+      {/* Header — centered title + abs-positioned reset button */}
+      <div className="relative flex items-center justify-center px-4 py-4 border-b shrink-0"
+        style={{ background: surface, borderColor: border }}>
+        <div className="text-center">
+          <div className="font-black text-sm tracking-[0.15em]" style={{ color: titleClr }}>TORILI</div>
+          <div className="text-[11px] font-medium mt-0.5" style={{ color: muted }}>עוזר AI</div>
         </div>
         {!isEmpty && (
-          <button onClick={resetChat} className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full hover:opacity-70 transition-opacity" style={{ color: muted }}>
-            <RotateCcw size={9} />
-            חדש
+          <button onClick={resetChat}
+            className="absolute left-3 flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border transition-all hover:opacity-75"
+            style={{ color: muted, borderColor: border }}>
+            <RotateCcw size={11} />
+            שיחה חדשה
           </button>
         )}
       </div>
@@ -1102,47 +1095,57 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
       {/* Body */}
       <div className="flex-1 min-h-0 overflow-y-auto relative">
         {isEmpty ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4">
-            <p className="text-xs mb-4" style={{ color: muted }}>במה אפשר לעזור?</p>
-            <div className="grid grid-cols-3 gap-1.5 w-full mb-4">
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-5 pb-6 gap-5">
+            <div className="text-center">
+              <p className="font-bold text-base mb-1.5" style={{ color: titleClr }}>במה אפשר לעזור?</p>
+              <p className="text-sm" style={{ color: muted }}>בחר פעולה או כתוב שאלה חופשית</p>
+            </div>
+            <div className="flex flex-col gap-2.5 w-full">
               {BOT_ACTION_CARDS.map((card, i) => {
                 const Icon = card.icon;
                 return (
                   <motion.button
                     key={card.id}
-                    initial={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
+                    transition={{ delay: 0.04 + i * 0.07 }}
                     onClick={() => send(card.prompt)}
-                    className="flex flex-col items-start gap-1.5 p-2.5 rounded-xl border text-right transition-all"
-                    style={{ background: inputBg, borderColor: border, cursor: 'pointer' }}
+                    className="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-right transition-all w-full"
+                    style={{ background: isNight ? 'rgba(255,255,255,0.04)' : '#ffffff', borderColor: border, cursor: 'pointer' }}
                   >
-                    <Icon size={13} style={{ color: muted }} />
-                    <div className="text-[10px] font-bold leading-tight" style={{ color: titleClr }}>{card.title}</div>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: isNight ? 'rgba(249,115,22,0.12)' : '#fff1eb' }}>
+                      <Icon size={17} style={{ color: '#f97316' }} />
+                    </div>
+                    <div className="flex-1 min-w-0 text-right">
+                      <div className="font-bold text-sm" style={{ color: titleClr }}>{card.title}</div>
+                      <div className="text-xs mt-0.5" style={{ color: muted }}>{card.desc}</div>
+                    </div>
+                    <ChevronLeft size={15} style={{ color: muted }} />
                   </motion.button>
                 );
               })}
             </div>
-            {inputRow}
+            <div className="w-full">{inputRow}</div>
           </div>
         ) : (
-          <div className="px-3 py-3 space-y-3">
+          <div className="px-4 py-4 space-y-3">
             <AnimatePresence initial={false}>
               {messages.map(msg => (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, y: 4 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.13 }}
+                  transition={{ duration: 0.14 }}
                   className={`flex ${msg.role === 'user' ? 'justify-start flex-row-reverse' : 'justify-start'}`}
                 >
                   {msg.role === 'user' ? (
-                    <div className="max-w-[80%] px-3 py-1.5 text-xs leading-relaxed"
-                      style={{ background: isNight ? 'rgba(255,255,255,0.08)' : '#f3f4f6', color: isNight ? 'rgba(255,255,255,0.88)' : '#1f2937', borderRadius: '14px 3px 14px 14px' }}>
+                    <div className="max-w-[80%] px-3.5 py-2.5 text-sm leading-relaxed"
+                      style={{ background: isNight ? 'rgba(255,255,255,0.09)' : '#f0f0f3', color: isNight ? 'rgba(255,255,255,0.88)' : '#1f2937', borderRadius: '16px 4px 16px 16px' }}>
                       {msg.content}
                     </div>
                   ) : (
-                    <div className="max-w-[88%] text-xs leading-relaxed" style={{ color: isNight ? 'rgba(255,255,255,0.75)' : '#374151' }}>
+                    <div className="max-w-[88%] text-sm leading-relaxed" style={{ color: isNight ? 'rgba(255,255,255,0.78)' : '#374151' }}>
                       {msg.content.replace(/[■▪▸●►]/g, '•')}
                     </div>
                   )}
@@ -1150,26 +1153,26 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
               ))}
             </AnimatePresence>
             {loading && (
-              <div className="flex gap-1 items-center py-1">
+              <div className="flex gap-1.5 items-center py-1 pr-1">
                 {[0, 1, 2].map(i => (
-                  <motion.div key={i} className="w-1 h-1 rounded-full" style={{ background: muted }}
-                    animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
-                    transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
+                  <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: muted }}
+                    animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.16 }} />
                 ))}
               </div>
             )}
-            {error && <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">{error}</div>}
+            {error && <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">{error}</div>}
             <div ref={bottomRef} />
           </div>
         )}
       </div>
 
-      {/* Input bar — during conversation */}
+      {/* Input bar — visible during conversation */}
       <AnimatePresence>
         {!isEmpty && (
           <motion.div
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-            className="shrink-0 border-t px-3 py-2.5"
+            className="shrink-0 border-t px-4 py-3"
             style={{ background: surface, borderColor: border }}
           >
             {inputRow}
@@ -1294,7 +1297,7 @@ export default function CalendarPage() {
   ) : null;
 
   return (
-    <div className="p-3 sm:p-6 h-full flex flex-col" dir="rtl">
+    <div className="px-3 pt-3 pb-0 sm:px-6 sm:pt-6 sm:pb-0 h-full flex flex-col" dir="rtl">
 
       {/* ── Mobile header ──────────────────────────────────────────────────────── */}
       <div className="sm:hidden mb-3">
@@ -1358,7 +1361,16 @@ export default function CalendarPage() {
       {/* ── Desktop: 2-column layout ──────────────────────────────────────────── */}
       <div className="hidden sm:flex gap-4 flex-1 min-h-0">
 
-        {/* ── Calendar column ── */}
+        {/* ── Bot panel column — RIGHT side (first in RTL flex) ── */}
+        <div className={`w-[320px] xl:w-[360px] shrink-0 flex flex-col rounded-t-2xl overflow-hidden border border-b-0`}
+          style={{ borderColor: isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb' }}>
+          <CalendarBotPanel
+            isNight={isNight}
+            onAppointmentChange={() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })}
+          />
+        </div>
+
+        {/* ── Calendar column — LEFT side (second in RTL flex) ── */}
         <div className="flex flex-col flex-1 min-w-0 min-h-0">
 
           {/* Desktop header */}
@@ -1373,10 +1385,11 @@ export default function CalendarPage() {
                   <span className="font-bold text-gray-900 text-base leading-tight">
                     {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, d בMMMM yyyy', { locale: he })}
                   </span>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
-                    <span className="text-xs text-gray-400">{sortedAppts.length === 0 ? 'אין תורים' : `${sortedAppts.length} תורים`}</span>
-                  </div>
+                  {isTodayFlag && (
+                    <div className="mt-0.5">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>
+                    </div>
+                  )}
                 </button>
                 <AnimatePresence>
                   {showDatePicker && (
@@ -1406,16 +1419,16 @@ export default function CalendarPage() {
           {staffFilterBar}
 
           {/* Time grid */}
-          <div className={`flex flex-col flex-1 min-h-0 rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
+          <div className={`flex flex-col flex-1 min-h-0 rounded-t-2xl overflow-hidden border border-b-0 ${isNight ? 'border-white/[0.07]' : 'border-gray-200'}`}
             style={{ background: isNight ? '#0d1117' : '#ffffff' }}>
-            <div className={`flex items-center justify-between px-5 py-3 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
-              <span className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>
-                {!isBusinessOpen ? 'עסק סגור היום' : sortedAppts.length === 0 ? 'אין תורים' : `${sortedAppts.length} תורים`}
+            <div className={`flex items-center justify-between px-5 py-2.5 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
+              <span className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-800'}`}>
+                {!isBusinessOpen ? 'עסק סגור היום' : sortedAppts.length === 0 ? 'אין תורים היום' : `${sortedAppts.length} תורים`}
               </span>
               {sortedAppts.length > 0 && (
-                <span className={`text-sm ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
-                  הכנסה צפויה:{' '}
-                  <span className={`font-bold ${isNight ? 'text-white' : 'text-gray-900'}`}>
+                <span className="text-xs" style={{ color: isNight ? 'rgba(255,255,255,0.38)' : '#9ca3af' }}>
+                  הכנסה צפויה{' '}
+                  <span className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-800'}`}>
                     ₪{sortedAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
                   </span>
                 </span>
@@ -1445,14 +1458,6 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        {/* ── Bot panel column ── */}
-        <div className={`w-[340px] xl:w-[380px] shrink-0 flex flex-col rounded-2xl overflow-hidden border`}
-          style={{ borderColor: isNight ? 'rgba(255,255,255,0.07)' : '#e5e7eb' }}>
-          <CalendarBotPanel
-            isNight={isNight}
-            onAppointmentChange={() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })}
-          />
-        </div>
 
       </div>
 
