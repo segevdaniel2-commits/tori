@@ -8,7 +8,7 @@ import {
   Building2, Clock, Scissors, Users, CreditCard, Puzzle, QrCode, Shield,
   Plus, Trash2, Edit3, Check, X, Loader2, Save, Copy, ExternalLink,
   AlertCircle, ChevronDown, ShieldCheck, ShieldOff, Smartphone, Upload, Palette,
-  LogOut, UserX,
+  LogOut, UserX, Briefcase,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useStore';
 
@@ -40,9 +40,7 @@ const labelCls = (n) => n
 
 const TABS = [
   { id: 'general',      label: 'כללי',        icon: Building2 },
-  { id: 'hours',        label: 'שעות',         icon: Clock },
-  { id: 'services',     label: 'שירותים',      icon: Scissors },
-  { id: 'staff',        label: 'עובדים',       icon: Users },
+  { id: 'management',   label: 'ניהול',        icon: Briefcase },
   { id: 'billing',      label: 'תשלום',        icon: CreditCard },
   { id: 'integrations', label: 'אינטגרציות',   icon: Puzzle },
   { id: 'security',     label: 'אבטחה',        icon: Shield },
@@ -1610,6 +1608,49 @@ function AccountSection({ isNight }) {
   );
 }
 
+// ─── Management (combined: hours + services + staff) ─────────────────────────
+function ManagementSettings() {
+  const isNight = useContext(NightCtx);
+
+  function SubSection({ icon: Icon, label, children }) {
+    return (
+      <div>
+        <div className={`flex items-center gap-2.5 mb-4 ${isNight ? '' : ''}`}>
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isNight ? 'bg-white/[0.07]' : 'bg-[#f43f5e]/8'}`}>
+            <Icon size={14} className="text-[#f43f5e]" />
+          </div>
+          <span className={`font-bold text-sm ${isNight ? 'text-gray-200' : 'text-gray-800'}`}>{label}</span>
+        </div>
+        {children}
+      </div>
+    );
+  }
+
+  const divider = (
+    <div className={`my-7 border-t ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`} />
+  );
+
+  return (
+    <div>
+      <SubSection icon={Clock} label="שעות פעילות">
+        <HoursSettings />
+      </SubSection>
+
+      {divider}
+
+      <SubSection icon={Scissors} label="שירותים">
+        <ServicesSettings />
+      </SubSection>
+
+      {divider}
+
+      <SubSection icon={Users} label="עובדים">
+        <StaffSettings />
+      </SubSection>
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const isNight = useNightMode();
@@ -1628,9 +1669,7 @@ export default function SettingsPage() {
 
   const tabContent = {
     general:      <GeneralSettings />,
-    hours:        <HoursSettings />,
-    services:     <ServicesSettings />,
-    staff:        <StaffSettings />,
+    management:   <ManagementSettings />,
     billing:      <BillingSettings />,
     integrations: <IntegrationsSettings />,
     security:     <SecuritySettings />,
