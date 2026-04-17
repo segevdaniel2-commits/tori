@@ -9,10 +9,8 @@ import { TrendingUp, Users, Calendar, DollarSign, Download, Loader2, ChevronRigh
 import { useAnalyticsApi } from '../../hooks/useApi';
 import { useAuthStore } from '../../store/useStore';
 import { format } from 'date-fns';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
-const MONTH_NAMES = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
+const MONTH_NAMES      = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
 const MONTH_NAMES_FULL = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 
 function useNightMode() {
@@ -24,7 +22,7 @@ function useNightMode() {
   return isNight;
 }
 
-function MonthPicker({ value, onChange }) {
+function MonthPicker({ value, onChange, isNight }) {
   const [open, setOpen] = useState(false);
   const [viewYear, setViewYear] = useState(() => parseInt(value.split('-')[0]));
   const ref = useRef(null);
@@ -55,11 +53,15 @@ function MonthPicker({ value, onChange }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => { setOpen(o => !o); setViewYear(curYear); }}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-semibold hover:bg-white/10 transition-all"
+        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+          isNight
+            ? 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+            : 'bg-white border-gray-200 text-gray-800 hover:bg-gray-50 shadow-sm'
+        }`}
       >
         <Calendar size={15} className="text-[#f43f5e]" />
         {displayLabel}
-        <ChevronLeft size={14} className={`text-gray-500 transition-transform ${open ? 'rotate-90' : '-rotate-90'}`} />
+        <ChevronLeft size={14} className={`transition-transform ${isNight ? 'text-gray-500' : 'text-gray-400'} ${open ? 'rotate-90' : '-rotate-90'}`} />
       </button>
 
       <AnimatePresence>
@@ -69,17 +71,25 @@ function MonthPicker({ value, onChange }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl bg-[#0d1117] border border-white/10 shadow-2xl shadow-black/50 p-4"
+            className={`absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl shadow-2xl p-4 border ${
+              isNight
+                ? 'bg-[#0d1117] border-white/10 shadow-black/50'
+                : 'bg-white border-gray-200 shadow-gray-200/80'
+            }`}
           >
             <div className="flex items-center justify-between mb-3">
               <button onClick={() => setViewYear(y => y - 1)}
-                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all">
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                  isNight ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900'
+                }`}>
                 <ChevronRight size={16} />
               </button>
-              <span className="text-white font-bold text-sm">{viewYear}</span>
+              <span className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>{viewYear}</span>
               <button onClick={() => setViewYear(y => y + 1)}
                 disabled={viewYear >= new Date().getFullYear()}
-                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                  isNight ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900'
+                }`}>
                 <ChevronLeft size={16} />
               </button>
             </div>
@@ -91,21 +101,32 @@ function MonthPicker({ value, onChange }) {
                 return (
                   <button key={i} onClick={() => select(i)} disabled={isFuture}
                     className={`py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isSelected ? 'bg-gradient-to-r from-[#f97316] via-[#f43f5e] to-[#06b6d4] text-white' :
-                      isFuture ? 'text-gray-700 cursor-not-allowed' :
-                      'text-gray-300 hover:bg-white/10 hover:text-white'
+                      isSelected
+                        ? 'bg-gradient-to-r from-[#f97316] via-[#f43f5e] to-[#06b6d4] text-white'
+                        : isFuture
+                          ? (isNight ? 'text-gray-700 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed')
+                          : (isNight ? 'text-gray-300 hover:bg-white/10 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900')
                     }`}>
                     {name}
                   </button>
                 );
               })}
             </div>
-            <div className="border-t border-white/[0.06] mt-3 pt-3 flex justify-between">
-              <button onClick={() => { const now = new Date(); setViewYear(now.getFullYear()); onChange(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`); setOpen(false); }}
+            <div className={`border-t mt-3 pt-3 flex justify-between ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
+              <button
+                onClick={() => {
+                  const now = new Date();
+                  setViewYear(now.getFullYear());
+                  onChange(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+                  setOpen(false);
+                }}
                 className="text-xs text-[#f43f5e] hover:text-[#f97316] font-semibold transition-colors">
                 החודש הנוכחי
               </button>
-              <button onClick={() => setOpen(false)} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">סגור</button>
+              <button onClick={() => setOpen(false)}
+                className={`text-xs font-medium transition-colors ${isNight ? 'text-gray-600 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'}`}>
+                סגור
+              </button>
             </div>
           </motion.div>
         )}
@@ -143,8 +164,11 @@ function StatCard({ title, value, subtitle, icon: Icon, color = 'orange', loadin
 const CustomTooltip = ({ active, payload, label, isNight }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-right"
-        style={{ background: isNight ? '#1a1a2e' : '#fff', borderColor: isNight ? 'rgba(255,255,255,0.1)' : '#f1f5f9' }}>
+      <div className="rounded-xl shadow-lg p-3 text-right"
+        style={{
+          background: isNight ? '#1a1a2e' : '#fff',
+          border: `1px solid ${isNight ? 'rgba(255,255,255,0.1)' : '#f1f5f9'}`,
+        }}>
         <p className="text-xs mb-1" style={{ color: isNight ? 'rgba(255,255,255,0.5)' : '#94a3b8' }}>{label}</p>
         {payload.map((entry, i) => (
           <p key={i} className="font-bold text-sm" style={{ color: entry.color }}>
@@ -195,113 +219,287 @@ export default function AnalyticsPage() {
 
   const axisColor = isNight ? 'rgba(255,255,255,0.25)' : '#94a3b8';
 
+  // ── PDF via styled print window ──────────────────────────────────────
   function downloadPDF() {
-    if (!monthlyReport) return;
-
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const [yearStr, monthStr] = month.split('-');
-    const monthLabel = `${MONTH_NAMES_FULL[parseInt(monthStr) - 1]} ${yearStr}`;
+    const s = monthlyReport?.summary || {};
+    const monthLabel = `${MONTH_NAMES_FULL[parseInt(month.split('-')[1]) - 1]} ${month.split('-')[0]}`;
     const businessName = business?.name || 'Tori';
+    const pending = Math.max(0, (s.total ?? 0) - (s.completed ?? 0) - (s.cancelled ?? 0));
+    const appointments = monthlyReport?.appointments || [];
+    const statusMap = { completed: 'הושלם', cancelled: 'בוטל', pending: 'ממתין' };
 
-    // Header background
-    doc.setFillColor(249, 115, 22);
-    doc.rect(0, 0, 210, 32, 'F');
+    const rows = appointments.map(a => {
+      const status = a.status === 'completed' ? 'הושלם' : a.status === 'cancelled' ? 'בוטל' : 'ממתין';
+      const statusColor = a.status === 'completed' ? '#10b981' : a.status === 'cancelled' ? '#f43f5e' : '#f97316';
+      return `
+        <tr>
+          <td>${a.customer_name || '—'}</td>
+          <td>${a.service_name || '—'}</td>
+          <td>${a.staff_name || '—'}</td>
+          <td dir="ltr">${a.starts_at?.split('T')[0] || '—'}</td>
+          <td dir="ltr">${a.starts_at?.split('T')[1]?.slice(0, 5) || '—'}</td>
+          <td>₪${a.price || 0}</td>
+          <td><span class="badge" style="background:${statusColor}20;color:${statusColor}">${status}</span></td>
+        </tr>`;
+    }).join('');
 
-    // Business name & report title (right-aligned for Hebrew)
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.setTextColor(255, 255, 255);
-    doc.text(businessName, 200, 13, { align: 'right' });
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Tori | ${monthLabel}`, 200, 22, { align: 'right' });
+    const noRows = appointments.length === 0
+      ? `<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:24px">אין תורים לחודש זה</td></tr>`
+      : '';
 
-    // Summary KPIs row
-    const s = monthlyReport.summary || {};
-    const kpis = [
-      { label: 'Total Appointments', value: String(s.total ?? 0) },
-      { label: 'Completed', value: String(s.completed ?? 0) },
-      { label: 'Pending', value: String(Math.max(0, (s.total ?? 0) - (s.completed ?? 0) - (s.cancelled ?? 0))) },
-      { label: 'Cancelled', value: String(s.cancelled ?? 0) },
-      { label: 'Revenue', value: `NIS ${(s.revenue ?? 0).toLocaleString()}` },
-      { label: 'New Customers', value: String(monthlyReport.newCustomers ?? 0) },
-    ];
-
-    let y = 42;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 30, 40);
-    doc.text('Monthly Summary', 10, y);
-    y += 6;
-
-    const colW = (210 - 20) / 3;
-    kpis.forEach((k, i) => {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
-      const x = 10 + col * colW;
-      const ky = y + row * 18;
-
-      doc.setFillColor(248, 249, 252);
-      doc.roundedRect(x, ky, colW - 3, 15, 2, 2, 'F');
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(120, 120, 140);
-      doc.text(k.label, x + 3, ky + 5);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(13);
-      doc.setTextColor(30, 30, 40);
-      doc.text(k.value, x + 3, ky + 12);
-    });
-
-    y += 40;
-
-    // Appointments table
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 30, 40);
-    doc.text('Appointments', 10, y);
-    y += 4;
-
-    const rows = (monthlyReport.appointments || []).map(a => [
-      a.customer_name || '-',
-      a.service_name || '-',
-      a.staff_name || '-',
-      a.starts_at?.split('T')[0] || '-',
-      a.starts_at?.split('T')[1]?.slice(0, 5) || '-',
-      `NIS ${a.price || 0}`,
-      a.status === 'completed' ? 'Completed' :
-      a.status === 'cancelled' ? 'Cancelled' : 'Pending',
-    ]);
-
-    autoTable(doc, {
-      startY: y,
-      head: [['Customer', 'Service', 'Staff', 'Date', 'Time', 'Price', 'Status']],
-      body: rows.length ? rows : [['No appointments this month', '', '', '', '', '', '']],
-      theme: 'grid',
-      headStyles: {
-        fillColor: [249, 115, 22],
-        textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        fontSize: 9,
-        halign: 'center',
-      },
-      bodyStyles: { fontSize: 8.5, halign: 'center', textColor: [40, 40, 50] },
-      alternateRowStyles: { fillColor: [248, 249, 252] },
-      columnStyles: { 0: { halign: 'left' }, 1: { halign: 'left' } },
-      margin: { left: 10, right: 10 },
-    });
-
-    // Footer
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(160, 160, 180);
-      doc.text(`Tori — Generated ${new Date().toLocaleDateString('he-IL')}   Page ${i}/${pageCount}`, 105, 290, { align: 'center' });
+    const html = `<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>דוח ${businessName} — ${monthLabel}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Heebo', sans-serif;
+      background: #f8f9fc;
+      color: #1e1e28;
+      padding: 0;
+      direction: rtl;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
 
-    doc.save(`tori-report-${month}.pdf`);
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #f97316 0%, #f43f5e 60%, #e8305a 100%);
+      padding: 32px 40px 28px;
+      color: #fff;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .brand {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+    .report-meta {
+      font-size: 13px;
+      opacity: 0.85;
+      font-weight: 600;
+    }
+    .header-subtitle {
+      font-size: 15px;
+      opacity: 0.75;
+      margin-top: 6px;
+    }
+
+    /* ── Content wrapper ── */
+    .content { padding: 28px 40px 40px; }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #374151;
+      margin-bottom: 12px;
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      border-radius: 2px;
+      background: linear-gradient(to bottom, #f97316, #f43f5e);
+    }
+
+    /* ── KPI grid ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .kpi-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      border: 1px solid #e5e7eb;
+    }
+    .kpi-label {
+      font-size: 11px;
+      color: #9ca3af;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 900;
+      color: #1e1e28;
+    }
+    .kpi-value.accent { color: #f43f5e; }
+    .kpi-value.cyan   { color: #06b6d4; }
+    .kpi-value.green  { color: #10b981; }
+    .kpi-value.orange { color: #f97316; }
+
+    /* ── Status summary bar ── */
+    .status-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .status-item {
+      flex: 1;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px 14px;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .status-count { font-size: 18px; font-weight: 900; }
+    .status-name  { font-size: 11px; color: #9ca3af; font-weight: 600; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    thead tr { background: linear-gradient(135deg, #f97316, #f43f5e); }
+    thead th {
+      padding: 10px 12px;
+      text-align: right;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.03em;
+    }
+    tbody tr { background: #fff; border-bottom: 1px solid #f3f4f6; }
+    tbody tr:nth-child(even) { background: #fafafa; }
+    tbody td { padding: 9px 12px; font-size: 12px; color: #374151; vertical-align: middle; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 11px;
+      color: #9ca3af;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── Print ── */
+    @media print {
+      body { background: #fff; }
+      @page { margin: 0; size: A4 portrait; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-top">
+      <div class="brand">Tori</div>
+      <div class="report-meta">דוח חודשי — ${monthLabel}</div>
+    </div>
+    <div class="header-subtitle">${businessName}</div>
+  </div>
+
+  <div class="content">
+
+    <!-- KPIs -->
+    <div class="section-title">סיכום חודשי</div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">סה״כ תורים</div>
+        <div class="kpi-value">${s.total ?? 0}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">הכנסות החודש</div>
+        <div class="kpi-value accent">₪${(s.revenue ?? 0).toLocaleString('he-IL')}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">לקוחות חדשים</div>
+        <div class="kpi-value cyan">${monthlyReport?.newCustomers ?? 0}</div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="section-title">סטטוס תורים</div>
+    <div class="status-bar">
+      <div class="status-item">
+        <div class="dot" style="background:#10b981"></div>
+        <div>
+          <div class="status-count" style="color:#10b981">${s.completed ?? 0}</div>
+          <div class="status-name">הושלמו</div>
+        </div>
+      </div>
+      <div class="status-item">
+        <div class="dot" style="background:#f97316"></div>
+        <div>
+          <div class="status-count" style="color:#f97316">${pending}</div>
+          <div class="status-name">ממתינים</div>
+        </div>
+      </div>
+      <div class="status-item">
+        <div class="dot" style="background:#f43f5e"></div>
+        <div>
+          <div class="status-count" style="color:#f43f5e">${s.cancelled ?? 0}</div>
+          <div class="status-name">בוטלו</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="section-title">פירוט תורים</div>
+    <table>
+      <thead>
+        <tr>
+          <th>לקוח</th>
+          <th>שירות</th>
+          <th>עובד</th>
+          <th>תאריך</th>
+          <th>שעה</th>
+          <th>מחיר</th>
+          <th>סטטוס</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        ${noRows}
+      </tbody>
+    </table>
+
+    <div class="footer">
+      <span>Tori — מערכת ניהול תורים</span>
+      <span>הופק בתאריך ${new Date().toLocaleDateString('he-IL')}</span>
+    </div>
+
+  </div>
+  <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() { window.print(); }, 600);
+    });
+  </script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    }
   }
 
   if (hideStats) {
@@ -319,7 +517,7 @@ export default function AnalyticsPage() {
     );
   }
 
-  // Appointment status pie data
+  // Pie data
   const completed = monthlyReport?.summary?.completed ?? 0;
   const cancelled = monthlyReport?.summary?.cancelled ?? 0;
   const total     = monthlyReport?.summary?.total     ?? 0;
@@ -331,14 +529,18 @@ export default function AnalyticsPage() {
   ].filter(d => d.value > 0);
 
   return (
-    <div className="p-3 sm:p-5 space-y-3 pb-24 sm:pb-4 overflow-hidden" dir="rtl">
+    <div className="p-3 sm:p-5 space-y-3 pb-24 sm:pb-5" dir="rtl">
 
-      {/* Page header */}
+      {/* Header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className={`text-xl sm:text-2xl font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>נתונים</h2>
         <div className="flex items-center gap-2">
-          <MonthPicker value={month} onChange={setMonth} />
-          <button onClick={downloadPDF} className="btn-secondary text-sm py-2 px-3 sm:px-4">
+          <MonthPicker value={month} onChange={setMonth} isNight={isNight} />
+          <button
+            onClick={downloadPDF}
+            disabled={!monthlyReport}
+            className={`btn-secondary text-sm py-2 px-3 sm:px-4 disabled:opacity-50`}
+          >
             <Download size={15} />
             <span className="hidden sm:inline">ייצא PDF</span>
           </button>
@@ -371,11 +573,11 @@ export default function AnalyticsPage() {
           </div>
         </div>
         {loadingDaily ? (
-          <div className="h-40 flex items-center justify-center">
+          <div className="h-44 flex items-center justify-center">
             <Loader2 size={24} className="animate-spin text-[#f43f5e]" />
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={168}>
+          <ResponsiveContainer width="100%" height={190}>
             <AreaChart data={revenueData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -392,7 +594,7 @@ export default function AnalyticsPage() {
         )}
       </div>
 
-      {/* Bottom row: status + hours */}
+      {/* Bottom row */}
       <div className="grid lg:grid-cols-2 gap-3">
 
         {/* Appointment status */}
@@ -406,17 +608,17 @@ export default function AnalyticsPage() {
           ) : (
             <div className="flex items-center gap-4">
               {/* Donut with total inside */}
-              <div className="relative shrink-0" style={{ width: 120, height: 120 }}>
+              <div className="relative shrink-0" style={{ width: 128, height: 128 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={38} outerRadius={56}
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={38} outerRadius={58}
                       paddingAngle={3} dataKey="value" strokeWidth={0} startAngle={90} endAngle={-270}>
                       {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
                     </Pie>
                     <Tooltip content={({ active, payload }) =>
                       active && payload?.[0] ? (
-                        <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-3 py-2 text-right"
-                          style={{ background: isNight ? '#1a1a2e' : '#fff' }}>
+                        <div className="rounded-xl shadow-lg px-3 py-2 text-right"
+                          style={{ background: isNight ? '#1a1a2e' : '#fff', border: `1px solid ${isNight ? 'rgba(255,255,255,0.1)' : '#e5e7eb'}` }}>
                           <span className="text-sm font-bold" style={{ color: payload[0].payload.color }}>
                             {payload[0].name}: {payload[0].value}
                           </span>
@@ -425,15 +627,14 @@ export default function AnalyticsPage() {
                     } />
                   </PieChart>
                 </ResponsiveContainer>
-                {/* Total label in hole */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className={`text-xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
+                  <span className={`text-2xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
                   <span className={`text-[10px] font-medium mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>תורים</span>
                 </div>
               </div>
 
               {/* Legend */}
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2.5">
                 {pieData.map(d => (
                   <div key={d.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -449,14 +650,13 @@ export default function AnalyticsPage() {
                   </div>
                 ))}
 
-                {/* Monthly revenue + new customers inline */}
                 {monthlyReport && (
-                  <div className={`pt-2 border-t flex gap-3 ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
-                    <div className={`flex-1 rounded-xl p-2 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                  <div className={`pt-2.5 border-t flex gap-3 ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
+                    <div className={`flex-1 rounded-xl p-2.5 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
                       <div className={`text-[10px] mb-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>הכנסות</div>
                       <div className="text-sm font-black text-[#f43f5e]">₪{monthlyReport.summary.revenue?.toLocaleString() || 0}</div>
                     </div>
-                    <div className={`flex-1 rounded-xl p-2 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                    <div className={`flex-1 rounded-xl p-2.5 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
                       <div className={`text-[10px] mb-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>לקוחות חדשים</div>
                       <div className="text-sm font-black text-[#06b6d4]">{monthlyReport.newCustomers ?? 0}</div>
                     </div>
@@ -473,7 +673,7 @@ export default function AnalyticsPage() {
           {hoursData.length === 0 ? (
             <div className={`text-center py-8 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
           ) : (
-            <ResponsiveContainer width="100%" height={168}>
+            <ResponsiveContainer width="100%" height={190}>
               <BarChart data={hoursData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <XAxis dataKey="hour" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={20} />
