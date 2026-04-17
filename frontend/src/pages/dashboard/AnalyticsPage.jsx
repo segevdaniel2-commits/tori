@@ -9,6 +9,8 @@ import { TrendingUp, Users, Calendar, DollarSign, Download, Loader2, ChevronRigh
 import { useAnalyticsApi } from '../../hooks/useApi';
 import { useAuthStore } from '../../store/useStore';
 import { format } from 'date-fns';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const MONTH_NAMES      = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
 const MONTH_NAMES_FULL = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
@@ -184,6 +186,7 @@ const CustomTooltip = ({ active, payload, label, isNight }) => {
 export default function AnalyticsPage() {
   const [days, setDays] = useState(30);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [pdfLoading, setPdfLoading] = useState(false);
   const analyticsApi = useAnalyticsApi();
   const { business } = useAuthStore();
   const hideStats = !!(business?.hide_stats);
@@ -219,286 +222,162 @@ export default function AnalyticsPage() {
 
   const axisColor = isNight ? 'rgba(255,255,255,0.25)' : '#94a3b8';
 
-  // ── PDF via styled print window ──────────────────────────────────────
-  function downloadPDF() {
+  // ── PDF: render HTML off-screen → html2canvas → jsPDF download ──────
+  async function downloadPDF() {
+    if (!monthlyReport || pdfLoading) return;
+    setPdfLoading(true);
+
     const s = monthlyReport?.summary || {};
     const monthLabel = `${MONTH_NAMES_FULL[parseInt(month.split('-')[1]) - 1]} ${month.split('-')[0]}`;
     const businessName = business?.name || 'Tori';
-    const pending = Math.max(0, (s.total ?? 0) - (s.completed ?? 0) - (s.cancelled ?? 0));
+    const pendingCount = Math.max(0, (s.total ?? 0) - (s.completed ?? 0) - (s.cancelled ?? 0));
     const appointments = monthlyReport?.appointments || [];
-    const statusMap = { completed: 'הושלם', cancelled: 'בוטל', pending: 'ממתין' };
 
-    const rows = appointments.map(a => {
+    const tableRows = appointments.map((a, idx) => {
       const status = a.status === 'completed' ? 'הושלם' : a.status === 'cancelled' ? 'בוטל' : 'ממתין';
       const statusColor = a.status === 'completed' ? '#10b981' : a.status === 'cancelled' ? '#f43f5e' : '#f97316';
-      return `
-        <tr>
-          <td>${a.customer_name || '—'}</td>
-          <td>${a.service_name || '—'}</td>
-          <td>${a.staff_name || '—'}</td>
-          <td dir="ltr">${a.starts_at?.split('T')[0] || '—'}</td>
-          <td dir="ltr">${a.starts_at?.split('T')[1]?.slice(0, 5) || '—'}</td>
-          <td>₪${a.price || 0}</td>
-          <td><span class="badge" style="background:${statusColor}20;color:${statusColor}">${status}</span></td>
-        </tr>`;
+      const bg = idx % 2 === 0 ? '#ffffff' : '#fafafa';
+      return `<tr style="background:${bg}">
+        <td>${a.customer_name || '—'}</td>
+        <td>${a.service_name || '—'}</td>
+        <td>${a.staff_name || '—'}</td>
+        <td style="direction:ltr;text-align:left">${a.starts_at?.split('T')[0] || '—'}</td>
+        <td style="direction:ltr;text-align:left">${a.starts_at?.split('T')[1]?.slice(0, 5) || '—'}</td>
+        <td>₪${a.price || 0}</td>
+        <td><span style="background:${statusColor}22;color:${statusColor};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">${status}</span></td>
+      </tr>`;
     }).join('');
 
     const noRows = appointments.length === 0
-      ? `<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:24px">אין תורים לחודש זה</td></tr>`
+      ? `<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:24px;font-size:13px">אין תורים לחודש זה</td></tr>`
       : '';
 
-    const html = `<!DOCTYPE html>
-<html dir="rtl" lang="he">
-<head>
-  <meta charset="UTF-8">
-  <title>דוח ${businessName} — ${monthLabel}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;900&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Heebo', sans-serif;
-      background: #f8f9fc;
-      color: #1e1e28;
-      padding: 0;
-      direction: rtl;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-
-    /* ── Header ── */
-    .header {
-      background: linear-gradient(135deg, #f97316 0%, #f43f5e 60%, #e8305a 100%);
-      padding: 32px 40px 28px;
-      color: #fff;
-    }
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-    .brand {
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: -1px;
-    }
-    .report-meta {
-      font-size: 13px;
-      opacity: 0.85;
-      font-weight: 600;
-    }
-    .header-subtitle {
-      font-size: 15px;
-      opacity: 0.75;
-      margin-top: 6px;
-    }
-
-    /* ── Content wrapper ── */
-    .content { padding: 28px 40px 40px; }
-
-    /* ── Section title ── */
-    .section-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: #374151;
-      margin-bottom: 12px;
-      margin-top: 24px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .section-title::before {
-      content: '';
-      display: inline-block;
-      width: 4px;
-      height: 16px;
-      border-radius: 2px;
-      background: linear-gradient(to bottom, #f97316, #f43f5e);
-    }
-
-    /* ── KPI grid ── */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 6px;
-    }
-    .kpi-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 14px 16px;
-      border: 1px solid #e5e7eb;
-    }
-    .kpi-label {
-      font-size: 11px;
-      color: #9ca3af;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 4px;
-    }
-    .kpi-value {
-      font-size: 22px;
-      font-weight: 900;
-      color: #1e1e28;
-    }
-    .kpi-value.accent { color: #f43f5e; }
-    .kpi-value.cyan   { color: #06b6d4; }
-    .kpi-value.green  { color: #10b981; }
-    .kpi-value.orange { color: #f97316; }
-
-    /* ── Status summary bar ── */
-    .status-bar {
-      display: flex;
-      gap: 10px;
-      margin-top: 6px;
-    }
-    .status-item {
-      flex: 1;
-      background: #fff;
-      border-radius: 10px;
-      padding: 10px 14px;
-      border: 1px solid #e5e7eb;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .status-count { font-size: 18px; font-weight: 900; }
-    .status-name  { font-size: 11px; color: #9ca3af; font-weight: 600; }
-
-    /* ── Table ── */
-    table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-    thead tr { background: linear-gradient(135deg, #f97316, #f43f5e); }
-    thead th {
-      padding: 10px 12px;
-      text-align: right;
-      font-size: 11px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.03em;
-    }
-    tbody tr { background: #fff; border-bottom: 1px solid #f3f4f6; }
-    tbody tr:nth-child(even) { background: #fafafa; }
-    tbody td { padding: 9px 12px; font-size: 12px; color: #374151; vertical-align: middle; }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    /* ── Footer ── */
-    .footer {
-      margin-top: 32px;
-      padding-top: 16px;
-      border-top: 1px solid #e5e7eb;
-      font-size: 11px;
-      color: #9ca3af;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    /* ── Print ── */
-    @media print {
-      body { background: #fff; }
-      @page { margin: 0; size: A4 portrait; }
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="header-top">
-      <div class="brand">Tori</div>
-      <div class="report-meta">דוח חודשי — ${monthLabel}</div>
-    </div>
-    <div class="header-subtitle">${businessName}</div>
-  </div>
-
-  <div class="content">
-
-    <!-- KPIs -->
-    <div class="section-title">סיכום חודשי</div>
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">סה״כ תורים</div>
-        <div class="kpi-value">${s.total ?? 0}</div>
+    // Build off-screen container — system fonts only (Segoe UI supports Hebrew on Windows)
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed; left: -9999px; top: 0;
+      width: 794px; background: #f8f9fc;
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      direction: rtl; color: #1e1e28;
+    `;
+    container.innerHTML = `
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#f97316 0%,#f43f5e 70%);padding:28px 36px 24px;color:#fff">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:26px;font-weight:900;letter-spacing:-1px">Tori</span>
+          <span style="font-size:13px;opacity:0.85;font-weight:600">דוח חודשי — ${monthLabel}</span>
+        </div>
+        <div style="font-size:14px;opacity:0.75">${businessName}</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">הכנסות החודש</div>
-        <div class="kpi-value accent">₪${(s.revenue ?? 0).toLocaleString('he-IL')}</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">לקוחות חדשים</div>
-        <div class="kpi-value cyan">${monthlyReport?.newCustomers ?? 0}</div>
-      </div>
-    </div>
 
-    <!-- Status -->
-    <div class="section-title">סטטוס תורים</div>
-    <div class="status-bar">
-      <div class="status-item">
-        <div class="dot" style="background:#10b981"></div>
-        <div>
-          <div class="status-count" style="color:#10b981">${s.completed ?? 0}</div>
-          <div class="status-name">הושלמו</div>
+      <!-- Content -->
+      <div style="padding:24px 36px 36px">
+
+        <!-- Section: סיכום -->
+        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:10px;margin-top:0;display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:4px;height:16px;border-radius:2px;background:linear-gradient(to bottom,#f97316,#f43f5e)"></span>
+          סיכום חודשי
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+          <div style="background:#fff;border-radius:10px;padding:12px 14px;border:1px solid #e5e7eb">
+            <div style="font-size:10px;color:#9ca3af;font-weight:600;text-transform:uppercase;margin-bottom:4px">סה״כ תורים</div>
+            <div style="font-size:20px;font-weight:900;color:#1e1e28">${s.total ?? 0}</div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:12px 14px;border:1px solid #e5e7eb">
+            <div style="font-size:10px;color:#9ca3af;font-weight:600;text-transform:uppercase;margin-bottom:4px">הכנסות החודש</div>
+            <div style="font-size:20px;font-weight:900;color:#f43f5e">₪${(s.revenue ?? 0).toLocaleString('he-IL')}</div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:12px 14px;border:1px solid #e5e7eb">
+            <div style="font-size:10px;color:#9ca3af;font-weight:600;text-transform:uppercase;margin-bottom:4px">לקוחות חדשים</div>
+            <div style="font-size:20px;font-weight:900;color:#06b6d4">${monthlyReport?.newCustomers ?? 0}</div>
+          </div>
+        </div>
+
+        <!-- Section: סטטוס -->
+        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:4px;height:16px;border-radius:2px;background:linear-gradient(to bottom,#f97316,#f43f5e)"></span>
+          סטטוס תורים
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:20px">
+          ${[
+            { label: 'הושלמו',  value: s.completed ?? 0, color: '#10b981' },
+            { label: 'ממתינים', value: pendingCount,      color: '#f97316' },
+            { label: 'בוטלו',   value: s.cancelled ?? 0,  color: '#f43f5e' },
+          ].map(st => `
+            <div style="flex:1;background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #e5e7eb;display:flex;align-items:center;gap:8px">
+              <div style="width:10px;height:10px;border-radius:50%;background:${st.color};flex-shrink:0"></div>
+              <div>
+                <div style="font-size:18px;font-weight:900;color:${st.color}">${st.value}</div>
+                <div style="font-size:11px;color:#9ca3af;font-weight:600">${st.label}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+
+        <!-- Section: פירוט תורים -->
+        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:4px;height:16px;border-radius:2px;background:linear-gradient(to bottom,#f97316,#f43f5e)"></span>
+          פירוט תורים
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:linear-gradient(135deg,#f97316,#f43f5e)">
+              ${['לקוח','שירות','עובד','תאריך','שעה','מחיר','סטטוס'].map(h =>
+                `<th style="padding:9px 10px;text-align:right;font-size:11px;font-weight:700;color:#fff">${h}</th>`
+              ).join('')}
+            </tr>
+          </thead>
+          <tbody style="border:1px solid #f3f4f6">
+            ${tableRows}${noRows}
+          </tbody>
+        </table>
+
+        <!-- Footer -->
+        <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;display:flex;justify-content:space-between">
+          <span>Tori — מערכת ניהול תורים</span>
+          <span>הופק בתאריך ${new Date().toLocaleDateString('he-IL')}</span>
         </div>
       </div>
-      <div class="status-item">
-        <div class="dot" style="background:#f97316"></div>
-        <div>
-          <div class="status-count" style="color:#f97316">${pending}</div>
-          <div class="status-name">ממתינים</div>
-        </div>
-      </div>
-      <div class="status-item">
-        <div class="dot" style="background:#f43f5e"></div>
-        <div>
-          <div class="status-count" style="color:#f43f5e">${s.cancelled ?? 0}</div>
-          <div class="status-name">בוטלו</div>
-        </div>
-      </div>
-    </div>
+    `;
 
-    <!-- Table -->
-    <div class="section-title">פירוט תורים</div>
-    <table>
-      <thead>
-        <tr>
-          <th>לקוח</th>
-          <th>שירות</th>
-          <th>עובד</th>
-          <th>תאריך</th>
-          <th>שעה</th>
-          <th>מחיר</th>
-          <th>סטטוס</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows}
-        ${noRows}
-      </tbody>
-    </table>
+    document.body.appendChild(container);
 
-    <div class="footer">
-      <span>Tori — מערכת ניהול תורים</span>
-      <span>הופק בתאריך ${new Date().toLocaleDateString('he-IL')}</span>
-    </div>
+    try {
+      // Small delay to ensure layout is complete
+      await new Promise(r => setTimeout(r, 80));
 
-  </div>
-  <script>
-    window.addEventListener('load', function() {
-      setTimeout(function() { window.print(); }, 600);
-    });
-  </script>
-</body>
-</html>`;
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: false,
+        allowTaint: true,
+        backgroundColor: '#f8f9fc',
+        logging: false,
+        width: 794,
+        scrollX: 0,
+        scrollY: 0,
+      });
 
-    const win = window.open('', '_blank', 'width=900,height=700');
-    if (win) {
-      win.document.write(html);
-      win.document.close();
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pdfW = 210;
+      const pdfH = 297;
+      const imgH = (canvas.height * pdfW) / canvas.width;
+
+      let posY = 0;
+      let remaining = imgH;
+      let page = 0;
+
+      while (remaining > 0) {
+        if (page > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, -posY, pdfW, imgH);
+        posY += pdfH;
+        remaining -= pdfH;
+        page++;
+      }
+
+      pdf.save(`tori-${month}.pdf`);
+    } finally {
+      document.body.removeChild(container);
+      setPdfLoading(false);
     }
   }
 
@@ -538,11 +417,13 @@ export default function AnalyticsPage() {
           <MonthPicker value={month} onChange={setMonth} isNight={isNight} />
           <button
             onClick={downloadPDF}
-            disabled={!monthlyReport}
-            className={`btn-secondary text-sm py-2 px-3 sm:px-4 disabled:opacity-50`}
+            disabled={!monthlyReport || pdfLoading}
+            className="btn-secondary text-sm py-2 px-3 sm:px-4 disabled:opacity-50"
           >
-            <Download size={15} />
-            <span className="hidden sm:inline">ייצא PDF</span>
+            {pdfLoading
+              ? <Loader2 size={15} className="animate-spin" />
+              : <Download size={15} />}
+            <span className="hidden sm:inline">{pdfLoading ? 'מייצר...' : 'ייצא PDF'}</span>
           </button>
         </div>
       </div>
