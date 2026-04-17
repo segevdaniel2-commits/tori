@@ -236,15 +236,16 @@ export default function AnalyticsPage() {
     const tableRows = appointments.map((a, idx) => {
       const status = a.status === 'completed' ? 'הושלם' : a.status === 'cancelled' ? 'בוטל' : 'ממתין';
       const statusColor = a.status === 'completed' ? '#10b981' : a.status === 'cancelled' ? '#f43f5e' : '#f97316';
-      const bg = idx % 2 === 0 ? '#ffffff' : '#fafafa';
+      const bg = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
+      const td = `padding:11px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151;vertical-align:middle`;
       return `<tr style="background:${bg}">
-        <td>${a.customer_name || '—'}</td>
-        <td>${a.service_name || '—'}</td>
-        <td>${a.staff_name || '—'}</td>
-        <td style="direction:ltr;text-align:left">${a.starts_at?.split('T')[0] || '—'}</td>
-        <td style="direction:ltr;text-align:left">${a.starts_at?.split('T')[1]?.slice(0, 5) || '—'}</td>
-        <td>₪${a.price || 0}</td>
-        <td><span style="background:${statusColor}22;color:${statusColor};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">${status}</span></td>
+        <td style="${td};font-weight:600;color:#111827">${a.customer_name || '—'}</td>
+        <td style="${td}">${a.service_name || '—'}</td>
+        <td style="${td}">${a.staff_name || '—'}</td>
+        <td style="${td};direction:ltr;text-align:left;color:#6b7280">${a.starts_at?.split('T')[0] || '—'}</td>
+        <td style="${td};direction:ltr;text-align:left;font-weight:600">${a.starts_at?.split('T')[1]?.slice(0, 5) || '—'}</td>
+        <td style="${td};font-weight:700;color:#111827">₪${a.price || 0}</td>
+        <td style="${td}"><span style="background:${statusColor}18;color:${statusColor};padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap">${status}</span></td>
       </tr>`;
     }).join('');
 
@@ -256,84 +257,93 @@ export default function AnalyticsPage() {
     const container = document.createElement('div');
     container.style.cssText = `
       position: fixed; left: -9999px; top: 0;
-      width: 794px; background: #f8f9fc;
+      width: 860px; background: #f1f3f8;
       font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
       direction: rtl; color: #1e1e28;
     `;
+
+    const sectionTitle = (label) => `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:28px">
+        <div style="width:5px;height:20px;border-radius:3px;background:#f43f5e;flex-shrink:0"></div>
+        <span style="font-size:15px;font-weight:800;color:#111827">${label}</span>
+      </div>`;
+
+    const kpiCards = [
+      { label: 'סה״כ תורים',     value: String(s.total ?? 0),                              color: '#111827' },
+      { label: 'הכנסות החודש',   value: `₪${(s.revenue ?? 0).toLocaleString('he-IL')}`,   color: '#f43f5e' },
+      { label: 'לקוחות חדשים',   value: String(monthlyReport?.newCustomers ?? 0),           color: '#06b6d4' },
+    ].map(k => `
+      <div style="flex:1;background:#fff;border-radius:12px;padding:16px 18px;border:1px solid #e5e7eb;border-top:3px solid ${k.color}">
+        <div style="font-size:11px;color:#9ca3af;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">${k.label}</div>
+        <div style="font-size:24px;font-weight:900;color:${k.color};line-height:1">${k.value}</div>
+      </div>`).join('');
+
+    const statusCards = [
+      { label: 'הושלמו',  value: s.completed ?? 0, color: '#10b981', bg: '#f0fdf4' },
+      { label: 'ממתינים', value: pendingCount,       color: '#f97316', bg: '#fff7ed' },
+      { label: 'בוטלו',   value: s.cancelled ?? 0,  color: '#f43f5e', bg: '#fff1f2' },
+    ].map(st => `
+      <div style="flex:1;background:${st.bg};border-radius:12px;padding:14px 18px;border:1px solid ${st.color}30;text-align:center">
+        <div style="font-size:28px;font-weight:900;color:${st.color};line-height:1;margin-bottom:4px">${st.value}</div>
+        <div style="font-size:12px;font-weight:600;color:${st.color}cc">${st.label}</div>
+      </div>`).join('');
+
     container.innerHTML = `
       <!-- Header -->
-      <div style="background:linear-gradient(135deg,#f97316 0%,#f43f5e 70%);padding:28px 36px 24px;color:#fff">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:26px;font-weight:900;letter-spacing:-1px">Tori</span>
-          <span style="font-size:13px;opacity:0.85;font-weight:600">דוח חודשי — ${monthLabel}</span>
+      <div style="background:linear-gradient(120deg,#f97316 0%,#f43f5e 100%);padding:32px 40px;color:#fff">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:30px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">Tori</div>
+            <div style="font-size:14px;opacity:0.8">${businessName}</div>
+          </div>
+          <div style="text-align:left">
+            <div style="font-size:13px;opacity:0.75;font-weight:500">דוח חודשי</div>
+            <div style="font-size:18px;font-weight:800;margin-top:2px">${monthLabel}</div>
+          </div>
         </div>
-        <div style="font-size:14px;opacity:0.75">${businessName}</div>
       </div>
 
       <!-- Content -->
-      <div style="padding:24px 36px 36px">
+      <div style="padding:8px 40px 40px">
 
-        <!-- Section: סיכום -->
-        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:10px;margin-top:0;display:flex;align-items:center;gap:8px">
-          <span style="display:inline-block;width:4px;height:16px;border-radius:2px;background:linear-gradient(to bottom,#f97316,#f43f5e)"></span>
-          סיכום חודשי
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-          <div style="background:#fff;border-radius:10px;padding:12px 14px;border:1px solid #e5e7eb">
-            <div style="font-size:10px;color:#9ca3af;font-weight:600;text-transform:uppercase;margin-bottom:4px">סה״כ תורים</div>
-            <div style="font-size:20px;font-weight:900;color:#1e1e28">${s.total ?? 0}</div>
-          </div>
-          <div style="background:#fff;border-radius:10px;padding:12px 14px;border:1px solid #e5e7eb">
-            <div style="font-size:10px;color:#9ca3af;font-weight:600;text-transform:uppercase;margin-bottom:4px">הכנסות החודש</div>
-            <div style="font-size:20px;font-weight:900;color:#f43f5e">₪${(s.revenue ?? 0).toLocaleString('he-IL')}</div>
-          </div>
-          <div style="background:#fff;border-radius:10px;padding:12px 14px;border:1px solid #e5e7eb">
-            <div style="font-size:10px;color:#9ca3af;font-weight:600;text-transform:uppercase;margin-bottom:4px">לקוחות חדשים</div>
-            <div style="font-size:20px;font-weight:900;color:#06b6d4">${monthlyReport?.newCustomers ?? 0}</div>
-          </div>
+        ${sectionTitle('סיכום חודשי')}
+        <div style="display:flex;gap:12px">
+          ${kpiCards}
         </div>
 
-        <!-- Section: סטטוס -->
-        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:8px">
-          <span style="display:inline-block;width:4px;height:16px;border-radius:2px;background:linear-gradient(to bottom,#f97316,#f43f5e)"></span>
-          סטטוס תורים
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:20px">
-          ${[
-            { label: 'הושלמו',  value: s.completed ?? 0, color: '#10b981' },
-            { label: 'ממתינים', value: pendingCount,      color: '#f97316' },
-            { label: 'בוטלו',   value: s.cancelled ?? 0,  color: '#f43f5e' },
-          ].map(st => `
-            <div style="flex:1;background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #e5e7eb;display:flex;align-items:center;gap:8px">
-              <div style="width:10px;height:10px;border-radius:50%;background:${st.color};flex-shrink:0"></div>
-              <div>
-                <div style="font-size:18px;font-weight:900;color:${st.color}">${st.value}</div>
-                <div style="font-size:11px;color:#9ca3af;font-weight:600">${st.label}</div>
-              </div>
-            </div>`).join('')}
+        ${sectionTitle('סטטוס תורים')}
+        <div style="display:flex;gap:12px">
+          ${statusCards}
         </div>
 
-        <!-- Section: פירוט תורים -->
-        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:8px">
-          <span style="display:inline-block;width:4px;height:16px;border-radius:2px;background:linear-gradient(to bottom,#f97316,#f43f5e)"></span>
-          פירוט תורים
+        ${sectionTitle('פירוט תורים')}
+        <div style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <colgroup>
+              <col style="width:18%">
+              <col style="width:16%">
+              <col style="width:15%">
+              <col style="width:13%">
+              <col style="width:9%">
+              <col style="width:12%">
+              <col style="width:17%">
+            </colgroup>
+            <thead>
+              <tr style="background:#f43f5e">
+                ${['לקוח','שירות','עובד','תאריך','שעה','מחיר','סטטוס'].map(h =>
+                  `<th style="padding:11px 14px;text-align:right;font-size:12px;font-weight:700;color:#fff;border-bottom:none">${h}</th>`
+                ).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}${noRows}
+            </tbody>
+          </table>
         </div>
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead>
-            <tr style="background:linear-gradient(135deg,#f97316,#f43f5e)">
-              ${['לקוח','שירות','עובד','תאריך','שעה','מחיר','סטטוס'].map(h =>
-                `<th style="padding:9px 10px;text-align:right;font-size:11px;font-weight:700;color:#fff">${h}</th>`
-              ).join('')}
-            </tr>
-          </thead>
-          <tbody style="border:1px solid #f3f4f6">
-            ${tableRows}${noRows}
-          </tbody>
-        </table>
 
         <!-- Footer -->
-        <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;display:flex;justify-content:space-between">
-          <span>Tori — מערכת ניהול תורים</span>
+        <div style="margin-top:28px;padding-top:16px;border-top:1px solid #e2e5ea;font-size:11px;color:#9ca3af;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:600;color:#d1d5db">Tori — מערכת ניהול תורים</span>
           <span>הופק בתאריך ${new Date().toLocaleDateString('he-IL')}</span>
         </div>
       </div>
@@ -349,9 +359,9 @@ export default function AnalyticsPage() {
         scale: 2,
         useCORS: false,
         allowTaint: true,
-        backgroundColor: '#f8f9fc',
+        backgroundColor: '#f1f3f8',
         logging: false,
-        width: 794,
+        width: 860,
         scrollX: 0,
         scrollY: 0,
       });
