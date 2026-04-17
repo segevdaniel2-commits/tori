@@ -12,7 +12,7 @@ import { useAuthStore, useDashboardStore, useNotificationStore } from '../../sto
 const NAV_ITEMS = [
   { path: '/dashboard/ai', label: 'טורי', icon: Sparkles },
   { path: '/dashboard', label: 'יומן', icon: Calendar, exact: true },
-  { path: '/dashboard/analytics', label: 'אנליטיקות', icon: BarChart3 },
+  { path: '/dashboard/analytics', label: 'נתונים', icon: BarChart3 },
   { path: '/dashboard/customers', label: 'לקוחות', icon: Users },
   { path: '/dashboard/settings', label: 'הגדרות', icon: Settings },
 ];
@@ -177,7 +177,7 @@ export default function DashboardLayout() {
 
   const currentPageTitle = {
     '/dashboard': 'יומן תורים',
-    '/dashboard/analytics': 'אנליטיקות',
+    '/dashboard/analytics': 'נתונים',
     '/dashboard/customers': 'לקוחות',
     '/dashboard/settings': 'הגדרות',
     '/dashboard/ai': 'טורי — הסוכן שלך',

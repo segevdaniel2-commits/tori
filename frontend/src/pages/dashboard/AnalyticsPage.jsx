@@ -9,9 +9,11 @@ import { TrendingUp, Users, Calendar, DollarSign, Download, Loader2, ChevronRigh
 import { useAnalyticsApi } from '../../hooks/useApi';
 import { useAuthStore } from '../../store/useStore';
 import { format } from 'date-fns';
-import { he } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const MONTH_NAMES = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
+const MONTH_NAMES_FULL = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 
 function useNightMode() {
   const [isNight, setIsNight] = useState(() => { const h = new Date().getHours(); return h >= 20 || h < 6; });
@@ -119,19 +121,19 @@ function StatCard({ title, value, subtitle, icon: Icon, color = 'orange', loadin
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
+      className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm"
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1.5">
         <span className={`text-xs font-semibold uppercase tracking-wide ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{title}</span>
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+        <div className="w-7 h-7 rounded-xl flex items-center justify-center"
           style={{ background: isNight ? 'rgba(255,255,255,0.07)' : `${iconColor}18` }}>
-          <Icon size={15} style={{ color: iconColor }} />
+          <Icon size={14} style={{ color: iconColor }} />
         </div>
       </div>
       {loading ? (
-        <div className="h-7 w-20 bg-gray-100 rounded-lg animate-pulse" />
+        <div className="h-6 w-20 bg-gray-100 rounded-lg animate-pulse" />
       ) : (
-        <div className={`text-2xl font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{value}</div>
+        <div className={`text-xl font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{value}</div>
       )}
       {subtitle && <p className={`text-xs mt-0.5 ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{subtitle}</p>}
     </motion.div>
@@ -192,24 +194,114 @@ export default function AnalyticsPage() {
   const hoursData = peakHours.map(h => ({ hour: `${h.hour}:00`, count: h.count }));
 
   const axisColor = isNight ? 'rgba(255,255,255,0.25)' : '#94a3b8';
-  const gridColor = isNight ? 'rgba(255,255,255,0.04)' : 'transparent';
 
-  function downloadReport() {
+  function downloadPDF() {
     if (!monthlyReport) return;
-    const rows = [
-      ['שם לקוח', 'שירות', 'עובד', 'תאריך', 'שעה', 'מחיר', 'סטטוס'],
-      ...(monthlyReport.appointments || []).map(a => [
-        a.customer_name || '', a.service_name || '', a.staff_name || '',
-        a.starts_at.split('T')[0], a.starts_at.split('T')[1]?.slice(0, 5) || '',
-        a.price || 0, a.status,
-      ]),
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const [yearStr, monthStr] = month.split('-');
+    const monthLabel = `${MONTH_NAMES_FULL[parseInt(monthStr) - 1]} ${yearStr}`;
+    const businessName = business?.name || 'Tori';
+
+    // Header background
+    doc.setFillColor(249, 115, 22);
+    doc.rect(0, 0, 210, 32, 'F');
+
+    // Business name & report title (right-aligned for Hebrew)
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.text(businessName, 200, 13, { align: 'right' });
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Tori | ${monthLabel}`, 200, 22, { align: 'right' });
+
+    // Summary KPIs row
+    const s = monthlyReport.summary || {};
+    const kpis = [
+      { label: 'Total Appointments', value: String(s.total ?? 0) },
+      { label: 'Completed', value: String(s.completed ?? 0) },
+      { label: 'Pending', value: String(Math.max(0, (s.total ?? 0) - (s.completed ?? 0) - (s.cancelled ?? 0))) },
+      { label: 'Cancelled', value: String(s.cancelled ?? 0) },
+      { label: 'Revenue', value: `NIS ${(s.revenue ?? 0).toLocaleString()}` },
+      { label: 'New Customers', value: String(monthlyReport.newCustomers ?? 0) },
     ];
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `tori-report-${month}.csv`; a.click();
-    URL.revokeObjectURL(url);
+
+    let y = 42;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(30, 30, 40);
+    doc.text('Monthly Summary', 10, y);
+    y += 6;
+
+    const colW = (210 - 20) / 3;
+    kpis.forEach((k, i) => {
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const x = 10 + col * colW;
+      const ky = y + row * 18;
+
+      doc.setFillColor(248, 249, 252);
+      doc.roundedRect(x, ky, colW - 3, 15, 2, 2, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 140);
+      doc.text(k.label, x + 3, ky + 5);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(30, 30, 40);
+      doc.text(k.value, x + 3, ky + 12);
+    });
+
+    y += 40;
+
+    // Appointments table
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(30, 30, 40);
+    doc.text('Appointments', 10, y);
+    y += 4;
+
+    const rows = (monthlyReport.appointments || []).map(a => [
+      a.customer_name || '-',
+      a.service_name || '-',
+      a.staff_name || '-',
+      a.starts_at?.split('T')[0] || '-',
+      a.starts_at?.split('T')[1]?.slice(0, 5) || '-',
+      `NIS ${a.price || 0}`,
+      a.status === 'completed' ? 'Completed' :
+      a.status === 'cancelled' ? 'Cancelled' : 'Pending',
+    ]);
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Customer', 'Service', 'Staff', 'Date', 'Time', 'Price', 'Status']],
+      body: rows.length ? rows : [['No appointments this month', '', '', '', '', '', '']],
+      theme: 'grid',
+      headStyles: {
+        fillColor: [249, 115, 22],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 9,
+        halign: 'center',
+      },
+      bodyStyles: { fontSize: 8.5, halign: 'center', textColor: [40, 40, 50] },
+      alternateRowStyles: { fillColor: [248, 249, 252] },
+      columnStyles: { 0: { halign: 'left' }, 1: { halign: 'left' } },
+      margin: { left: 10, right: 10 },
+    });
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(160, 160, 180);
+      doc.text(`Tori — Generated ${new Date().toLocaleDateString('he-IL')}   Page ${i}/${pageCount}`, 105, 290, { align: 'center' });
+    }
+
+    doc.save(`tori-report-${month}.pdf`);
   }
 
   if (hideStats) {
@@ -227,7 +319,7 @@ export default function AnalyticsPage() {
     );
   }
 
-  // Appointment status data
+  // Appointment status pie data
   const completed = monthlyReport?.summary?.completed ?? 0;
   const cancelled = monthlyReport?.summary?.cancelled ?? 0;
   const total     = monthlyReport?.summary?.total     ?? 0;
@@ -239,22 +331,22 @@ export default function AnalyticsPage() {
   ].filter(d => d.value > 0);
 
   return (
-    <div className="p-3 sm:p-6 space-y-4 sm:space-y-5 pb-28 sm:pb-6" dir="rtl">
+    <div className="p-3 sm:p-5 space-y-3 pb-24 sm:pb-4 overflow-hidden" dir="rtl">
 
       {/* Page header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className={`text-xl sm:text-2xl font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>אנליטיקות</h2>
+        <h2 className={`text-xl sm:text-2xl font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>נתונים</h2>
         <div className="flex items-center gap-2">
           <MonthPicker value={month} onChange={setMonth} />
-          <button onClick={downloadReport} className="btn-secondary text-sm py-2 px-3 sm:px-4">
+          <button onClick={downloadPDF} className="btn-secondary text-sm py-2 px-3 sm:px-4">
             <Download size={15} />
-            <span className="hidden sm:inline">ייצא Excel</span>
+            <span className="hidden sm:inline">ייצא PDF</span>
           </button>
         </div>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         <StatCard isNight={isNight} title="סה״כ הכנסות"  value={hideStats ? '••••' : overview ? `₪${overview.totalRevenue?.toLocaleString()}` : '-'} subtitle="מאז ההקמה"                icon={TrendingUp} color="coral"  loading={loadingOverview} />
         <StatCard isNight={isNight} title="סה״כ לקוחות"  value={hideStats ? '••••' : overview?.totalCustomers ?? '-'}                                                                      subtitle="לקוחות רשומים"           icon={Users}      color="cyan"   loading={loadingOverview} />
         <StatCard isNight={isNight} title="תורים החודש"  value={overview?.monthlyAppointments ?? '-'}                                                                                      subtitle={`${overview?.avgPerDay ?? 0} בממוצע ליום`} icon={Calendar}   color="orange" loading={loadingOverview} />
@@ -262,13 +354,13 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Daily revenue chart */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className={`font-bold text-base ${isNight ? 'text-white' : 'text-gray-900'}`}>הכנסות יומיות</h3>
-          <div className="flex gap-1.5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>הכנסות יומיות</h3>
+          <div className="flex gap-1">
             {[7, 30, 90].map(d => (
               <button key={d} onClick={() => setDays(d)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                   days === d ? 'bg-gradient-to-r from-[#f97316] to-[#f43f5e] text-white' :
                   isNight ? 'bg-white/[0.06] text-gray-400 hover:bg-white/10 hover:text-white' :
                   'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -279,11 +371,11 @@ export default function AnalyticsPage() {
           </div>
         </div>
         {loadingDaily ? (
-          <div className="h-56 flex items-center justify-center">
-            <Loader2 size={28} className="animate-spin text-[#f43f5e]" />
+          <div className="h-40 flex items-center justify-center">
+            <Loader2 size={24} className="animate-spin text-[#f43f5e]" />
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={168}>
             <AreaChart data={revenueData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -291,8 +383,8 @@ export default function AnalyticsPage() {
                   <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} tickFormatter={v => `₪${v}`} width={48} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} tickFormatter={v => `₪${v}`} width={44} />
               <Tooltip content={<CustomTooltip isNight={isNight} />} />
               <Area type="monotone" dataKey="revenue" name="הכנסות" stroke="#f43f5e" fill="url(#revenueGrad)" strokeWidth={2} dot={false} />
             </AreaChart>
@@ -301,97 +393,92 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Bottom row: status + hours */}
-      <div className="grid lg:grid-cols-2 gap-4 sm:gap-5">
+      <div className="grid lg:grid-cols-2 gap-3">
 
-        {/* Appointment status + monthly summary */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 className={`font-bold text-base mb-5 ${isNight ? 'text-white' : 'text-gray-900'}`}>
+        {/* Appointment status */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <h3 className={`font-bold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>
             סטטוס תורים — {MONTH_NAMES[parseInt(month.split('-')[1]) - 1]} {month.split('-')[0]}
           </h3>
 
           {total === 0 ? (
-            <div className={`text-center py-10 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
+            <div className={`text-center py-8 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
           ) : (
-            <>
-              <div className="flex items-center gap-6">
-                {/* Pie */}
-                <div style={{ width: 160, height: 160, flexShrink: 0 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={46} outerRadius={72}
-                        paddingAngle={3} dataKey="value" strokeWidth={0}>
-                        {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                      </Pie>
-                      <Tooltip content={({ active, payload }) =>
-                        active && payload?.[0] ? (
-                          <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-3 py-2 text-right"
-                            style={{ background: isNight ? '#1a1a2e' : '#fff' }}>
-                            <span className="text-sm font-bold" style={{ color: payload[0].payload.color }}>
-                              {payload[0].name}: {payload[0].value}
-                            </span>
-                          </div>
-                        ) : null
-                      } />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Legend */}
-                <div className="flex-1 space-y-3">
-                  {pieData.map(d => (
-                    <div key={d.name} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
-                        <span className={`text-sm font-medium ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>{d.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        <span className={`text-base font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{d.value}</span>
-                        <span className={`text-xs w-8 text-left ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>
-                          {Math.round((d.value / total) * 100)}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                  <div className={`pt-2.5 border-t flex justify-between items-center ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
-                    <span className={`text-xs font-medium ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>סה״כ תורים</span>
-                    <span className={`text-lg font-black ${isNight ? 'text-white' : 'text-gray-800'}`}>{total}</span>
-                  </div>
+            <div className="flex items-center gap-4">
+              {/* Donut with total inside */}
+              <div className="relative shrink-0" style={{ width: 120, height: 120 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={38} outerRadius={56}
+                      paddingAngle={3} dataKey="value" strokeWidth={0} startAngle={90} endAngle={-270}>
+                      {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                    </Pie>
+                    <Tooltip content={({ active, payload }) =>
+                      active && payload?.[0] ? (
+                        <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-3 py-2 text-right"
+                          style={{ background: isNight ? '#1a1a2e' : '#fff' }}>
+                          <span className="text-sm font-bold" style={{ color: payload[0].payload.color }}>
+                            {payload[0].name}: {payload[0].value}
+                          </span>
+                        </div>
+                      ) : null
+                    } />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Total label in hole */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className={`text-xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
+                  <span className={`text-[10px] font-medium mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>תורים</span>
                 </div>
               </div>
 
-              {/* Monthly summary strip */}
-              {monthlyReport && (
-                <div className={`mt-4 pt-4 border-t grid grid-cols-2 gap-3 ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
-                  {[
-                    { label: 'הכנסות החודש', value: `₪${monthlyReport.summary.revenue?.toLocaleString() || 0}`, color: '#f43f5e' },
-                    { label: 'לקוחות חדשים', value: monthlyReport.newCustomers ?? 0, color: '#06b6d4' },
-                  ].map((s, i) => (
-                    <div key={i} className={`rounded-xl p-3 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
-                      <div className={`text-xs mb-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{s.label}</div>
-                      <div className="text-lg font-black" style={{ color: s.color }}>{s.value}</div>
+              {/* Legend */}
+              <div className="flex-1 space-y-2">
+                {pieData.map(d => (
+                  <div key={d.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+                      <span className={`text-sm font-medium ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>{d.name}</span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-base font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{d.value}</span>
+                      <span className={`text-xs w-9 text-left tabular-nums ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {Math.round((d.value / total) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Monthly revenue + new customers inline */}
+                {monthlyReport && (
+                  <div className={`pt-2 border-t flex gap-3 ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
+                    <div className={`flex-1 rounded-xl p-2 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                      <div className={`text-[10px] mb-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>הכנסות</div>
+                      <div className="text-sm font-black text-[#f43f5e]">₪{monthlyReport.summary.revenue?.toLocaleString() || 0}</div>
+                    </div>
+                    <div className={`flex-1 rounded-xl p-2 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                      <div className={`text-[10px] mb-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>לקוחות חדשים</div>
+                      <div className="text-sm font-black text-[#06b6d4]">{monthlyReport.newCustomers ?? 0}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
         {/* Peak hours */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 className={`font-bold text-base mb-5 ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <h3 className={`font-bold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
           {hoursData.length === 0 ? (
-            <div className={`text-center py-10 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
+            <div className={`text-center py-8 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={168}>
               <BarChart data={hoursData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <XAxis dataKey="hour" tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />
+                <XAxis dataKey="hour" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={20} />
                 <Tooltip content={<CustomTooltip isNight={isNight} />} />
-                <Bar dataKey="count" name="תורים" fill="#f43f5e"
-                  radius={[5, 5, 0, 0]}
-                  fillOpacity={0.85}
-                />
+                <Bar dataKey="count" name="תורים" fill="#f43f5e" radius={[4, 4, 0, 0]} fillOpacity={0.85} />
               </BarChart>
             </ResponsiveContainer>
           )}
