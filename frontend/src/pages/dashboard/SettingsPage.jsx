@@ -1617,6 +1617,14 @@ export default function SettingsPage() {
     const tab = new URLSearchParams(window.location.search).get('tab');
     return TABS.find(t => t.id === tab) ? tab : 'general';
   });
+  const { logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    api.post('/auth/logout').catch(() => {});
+    logout();
+    navigate('/login');
+  }
 
   const tabContent = {
     general:      <GeneralSettings />,
@@ -1653,17 +1661,29 @@ export default function SettingsPage() {
         <div className="sm:flex gap-5">
           {/* Desktop sidebar */}
           <div className="hidden sm:block w-44 shrink-0">
-            <div className={`border rounded-2xl p-2 space-y-0.5 ${isNight ? 'bg-white/[0.03] border-white/[0.07]' : 'bg-white border-gray-200 shadow-sm'}`}>
-              {TABS.map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            <div className={`border rounded-2xl p-2 flex flex-col ${isNight ? 'bg-white/[0.03] border-white/[0.07]' : 'bg-white border-gray-200 shadow-sm'}`}>
+              <div className="space-y-0.5 flex-1">
+                {TABS.map(tab => (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      activeTab === tab.id
+                        ? `bg-gradient-to-r ${ACCENT} text-white shadow-sm`
+                        : isNight ? 'text-gray-400 hover:bg-white/[0.06] hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                    }`}>
+                    <tab.icon size={15} />{tab.label}
+                  </button>
+                ))}
+              </div>
+              <div className={`mt-2 pt-2 border-t ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
+                <button
+                  onClick={handleLogout}
                   className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    activeTab === tab.id
-                      ? `bg-gradient-to-r ${ACCENT} text-white shadow-sm`
-                      : isNight ? 'text-gray-400 hover:bg-white/[0.06] hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                    isNight ? 'text-red-400 hover:bg-red-500/10' : 'text-red-500 hover:bg-red-50'
                   }`}>
-                  <tab.icon size={15} />{tab.label}
+                  <LogOut size={15} />
+                  התנתק
                 </button>
-              ))}
+              </div>
             </div>
           </div>
 
@@ -1684,8 +1704,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Account / logout — always visible at the bottom */}
-      <AccountSection isNight={isNight} />
     </NightCtx.Provider>
   );
 }
