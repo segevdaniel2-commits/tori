@@ -3,14 +3,13 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, BarChart3, Users, Settings, LogOut, Menu, X,
-  Bell, Check, CheckCheck, Clock, Sparkles, Zap
+  Bell, Check, CheckCheck, Clock, Zap
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore, useDashboardStore, useNotificationStore } from '../../store/useStore';
 
 const NAV_ITEMS = [
-  { path: '/dashboard/ai', label: 'טורי', icon: Sparkles },
   { path: '/dashboard', label: 'יומן', icon: Calendar, exact: true },
   { path: '/dashboard/analytics', label: 'נתונים', icon: BarChart3 },
   { path: '/dashboard/customers', label: 'לקוחות', icon: Users },
@@ -180,7 +179,6 @@ export default function DashboardLayout() {
     '/dashboard/analytics': 'נתונים',
     '/dashboard/customers': 'לקוחות',
     '/dashboard/settings': 'הגדרות',
-    '/dashboard/ai': 'טורי — הסוכן שלך',
   }[location.pathname] || 'דשבורד';
 
   // Shared sidebar content renderer
