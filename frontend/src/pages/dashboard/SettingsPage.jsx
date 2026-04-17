@@ -422,8 +422,8 @@ function HoursSettings() {
   if (!hours) return null;
 
   const timeCls = isNight
-    ? 'border border-white/10 bg-white/5 text-white text-sm rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/50 w-24 text-center'
-    : 'border border-gray-300 bg-white text-gray-800 text-sm rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/60 w-24 shadow-sm text-center';
+    ? 'border border-white/10 bg-white/5 text-white text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/50 w-[68px] text-center'
+    : 'border border-gray-300 bg-white text-gray-800 text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/60 w-[68px] shadow-sm text-center';
 
   const dividerCls = isNight ? 'border-white/[0.07]' : 'border-gray-100';
 
@@ -433,7 +433,7 @@ function HoursSettings() {
       <div className={`border rounded-2xl overflow-hidden ${isNight ? 'border-white/[0.10]' : 'border-gray-300 shadow-sm'}`}>
         {hours.map((h, i) => (
           <div key={h.day_of_week}
-            className={`flex items-center gap-4 px-4 py-3 border-b last:border-0 transition-all ${dividerCls} ${
+            className={`flex items-center gap-2 px-3 py-2 border-b last:border-0 transition-all ${dividerCls} ${
               !h.is_open ? 'opacity-50' : ''
             } ${isNight ? 'hover:bg-white/[0.02]' : 'hover:bg-gray-50/60'}`}
           >
@@ -441,12 +441,12 @@ function HoursSettings() {
             <Toggle value={h.is_open} onChange={v => setDayField(i, 'is_open', v)} />
 
             {/* Day name */}
-            <span className={`font-semibold text-sm w-12 shrink-0 ${isNight ? 'text-white' : 'text-gray-800'}`}>
+            <span className={`font-semibold text-xs w-8 shrink-0 ${isNight ? 'text-white' : 'text-gray-800'}`}>
               {DAY_LABELS[h.day_of_week]}
             </span>
 
             {/* Time range */}
-            <div className="flex items-center gap-2 mr-auto">
+            <div className="flex items-center gap-1.5">
               {h.is_open ? (
                 <>
                   <input type="time" value={h.open_time}
@@ -701,17 +701,15 @@ function ServicesSettings() {
                 </div>
               ) : (
                 // View mode
-                <div className="flex items-center gap-3 px-4 py-3.5">
-                  {/* Index number */}
-                  <span className={`text-xs font-bold w-5 text-center shrink-0 ${mutedText}`}>{idx + 1}</span>
+                <div className="flex items-center gap-2 px-3 py-2">
                   {/* Name */}
-                  <span className={`flex-1 font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>{svc.name}</span>
+                  <span className={`flex-1 font-semibold text-xs ${isNight ? 'text-white' : 'text-gray-900'}`}>{svc.name}</span>
                   {/* Duration pill */}
                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${isNight ? 'bg-white/8 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
                     {svc.duration_minutes} דק׳
                   </span>
                   {/* Price */}
-                  <span className={`font-bold text-sm w-16 text-left shrink-0 ${isNight ? 'text-white' : 'text-gray-900'}`}>
+                  <span className={`font-bold text-xs w-12 text-left shrink-0 ${isNight ? 'text-white' : 'text-gray-900'}`}>
                     ₪{svc.price}
                   </span>
                   {/* Actions */}
@@ -791,32 +789,31 @@ function StaffSettings() {
         </div>
       )}
 
-      {/* Staff grid */}
-      <div className="grid grid-cols-2 gap-2.5">
-        {activeStaff.map(s => (
-          <div key={s.id} className={`relative flex items-center gap-3 p-3 rounded-2xl border transition-all ${isNight ? 'border-white/[0.07] bg-white/[0.03]' : 'border-gray-100 bg-gray-50/80 shadow-sm'}`}>
+      {/* Staff list */}
+      <div className={`border rounded-2xl overflow-hidden ${isNight ? 'border-white/[0.10]' : 'border-gray-300 shadow-sm'}`}>
+        {activeStaff.map((s, i) => (
+          <div key={s.id} className={`flex items-center gap-2 px-3 py-2 border-b last:border-0 transition-all ${isNight ? 'border-white/[0.07] hover:bg-white/[0.02]' : 'border-gray-100 hover:bg-gray-50/60'}`}>
             {/* Avatar */}
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white font-bold text-xs shrink-0"
               style={{ background: `linear-gradient(135deg, ${s.color}, ${s.color}bb)` }}>
               {s.name?.[0]}
             </div>
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className={`font-semibold text-sm truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{s.name}</div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
-                <span className={`text-xs ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{s.role === 'owner' ? 'בעלים' : 'עובד'}</span>
-              </div>
-            </div>
+            {/* Name */}
+            <span className={`flex-1 font-semibold text-xs truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{s.name}</span>
+            {/* Role */}
+            <span className={`text-xs shrink-0 ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{s.role === 'owner' ? 'בעלים' : 'עובד'}</span>
             {/* Delete */}
             {s.role !== 'owner' && (
               <button onClick={() => handleDelete(s.id)}
-                className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${isNight ? 'bg-red-500/10 text-red-400 hover:bg-red-500/25' : 'bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600'}`}>
-                <Trash2 size={13} />
+                className={`shrink-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all ${isNight ? 'text-gray-600 hover:bg-red-500/20 hover:text-red-400' : 'text-gray-300 hover:bg-red-50 hover:text-red-500'}`}>
+                <Trash2 size={12} />
               </button>
             )}
           </div>
         ))}
+        {activeStaff.length === 0 && (
+          <div className={`py-6 text-center text-xs ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין עובדים עדיין</div>
+        )}
       </div>
 
       {/* Add form / button */}
@@ -1834,9 +1831,9 @@ function ManagementSettings() {
   function SubSection({ icon: Icon, label, children }) {
     return (
       <div>
-        <div className={`flex items-center gap-2.5 mb-4 ${isNight ? '' : ''}`}>
-          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isNight ? 'bg-white/[0.07]' : 'bg-[#f43f5e]/8'}`}>
-            <Icon size={14} className="text-[#f43f5e]" />
+        <div className={`flex items-center gap-2 mb-2.5`}>
+          <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${isNight ? 'bg-white/[0.07]' : 'bg-[#f43f5e]/8'}`}>
+            <Icon size={13} className="text-[#f43f5e]" />
           </div>
           <span className={`font-bold text-sm ${isNight ? 'text-gray-200' : 'text-gray-800'}`}>{label}</span>
         </div>
@@ -1845,24 +1842,14 @@ function ManagementSettings() {
     );
   }
 
-  const divider = (
-    <div className={`my-7 border-t ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`} />
-  );
-
   return (
-    <div>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
       <SubSection icon={Clock} label="שעות פעילות">
         <HoursSettings />
       </SubSection>
-
-      {divider}
-
       <SubSection icon={Scissors} label="שירותים">
         <ServicesSettings />
       </SubSection>
-
-      {divider}
-
       <SubSection icon={Users} label="עובדים">
         <StaffSettings />
       </SubSection>
