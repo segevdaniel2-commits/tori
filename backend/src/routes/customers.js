@@ -130,4 +130,19 @@ router.put('/:id', (req, res) => {
   }
 });
 
+// DELETE /api/customers/all — erase all customer PII for this business
+router.delete('/all', async (req, res) => {
+  try {
+    const db = getDb();
+    // Delete appointments first (FK), then customers
+    db.prepare('DELETE FROM appointments WHERE business_id = ?').run(req.business.id);
+    db.prepare('DELETE FROM customer_associations WHERE business_id = ?').run(req.business.id);
+    db.prepare('DELETE FROM customers WHERE business_id = ?').run(req.business.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Customers] Delete all error:', err);
+    res.status(500).json({ error: 'Failed to delete customer data' });
+  }
+});
+
 module.exports = router;

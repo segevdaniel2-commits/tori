@@ -43,7 +43,7 @@ const TABS = [
   { id: 'management',   label: 'ניהול',        icon: Briefcase },
   { id: 'billing',      label: 'תשלום',        icon: CreditCard },
   { id: 'integrations', label: 'אינטגרציות',   icon: Puzzle },
-  { id: 'security',     label: 'אבטחה',        icon: Shield },
+  { id: 'security',     label: 'פרטיות ואבטחה', icon: ShieldCheck },
   { id: 'qr',           label: 'קוד QR',       icon: QrCode },
 ];
 
@@ -141,7 +141,6 @@ function GeneralSettings() {
     cancellation_hours: business?.cancellation_hours ?? 24,
     bot_tone: business?.bot_tone || 'friendly',
     terms_text: business?.terms_text || '',
-    hide_stats: !!(business?.hide_stats),
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -338,17 +337,6 @@ function GeneralSettings() {
               <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{t.desc}</div>
             </button>
           ))}
-        </div>
-      </Section>
-
-      {/* Privacy — hide revenue / customer counts */}
-      <Section title="פרטיות ונתונים">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <div className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>הסתר נתוני הכנסות ולקוחות</div>
-            <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>מספרי הכנסות וכמות לקוחות לא יוצגו בדשבורד</div>
-          </div>
-          <Toggle value={form.hide_stats} onChange={v => setForm(p => ({ ...p, hide_stats: v }))} />
         </div>
       </Section>
 
@@ -1379,11 +1367,25 @@ function QRSettings() {
   );
 }
 
+function parseUA(ua = '') {
+  if (!ua) return 'מכשיר לא ידוע';
+  if (/iPhone|iPad/.test(ua)) return 'iOS Safari';
+  if (/Android/.test(ua)) return 'Android';
+  if (/Chrome/.test(ua)) return 'Chrome';
+  if (/Firefox/.test(ua)) return 'Firefox';
+  if (/Safari/.test(ua)) return 'Safari';
+  return 'דפדפן';
+}
+
 // ─── Security / 2FA settings ──────────────────────────────────────────────────
 function SecuritySettings() {
   const isNight = useContext(NightCtx);
-  const [status, setStatus] = useState(null);   // null | true | false
-  const [step, setStep] = useState('idle');      // 'idle' | 'setup' | 'disable'
+  const { business, updateBusiness, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  // ── 2FA state
+  const [status, setStatus] = useState(null);
+  const [step, setStep] = useState('idle');
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [secret, setSecret] = useState('');
   const [code, setCode] = useState('');
@@ -1391,6 +1393,20 @@ function SecuritySettings() {
   const [disableCode, setDisableCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState(null);
+
+  // ── Change password state
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState(null);
+
+  // ── Login history state
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyData, setHistoryData] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // ── Delete all customers state
+  const [deleteStep, setDeleteStep] = useState('idle'); // 'idle' | 'confirm1' | 'confirm2' | 'done'
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     api.get('/auth/2fa/status').then(r => setStatus(r.data.enabled)).catch(() => {});
@@ -1428,6 +1444,48 @@ function SecuritySettings() {
       setNotice({ type: 'success', msg: 'אימות דו-שלבי כובה.' });
     } catch (err) { setNotice({ type: 'error', msg: err.response?.data?.error || 'שגיאה' }); }
     finally { setLoading(false); }
+  }
+
+  async function handleChangePassword() {
+    setPwError(null);
+    if (!pwForm.currentPassword || !pwForm.newPassword || !pwForm.confirmPassword) {
+      setPwError('יש למלא את כל השדות'); return;
+    }
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      setPwError('הסיסמאות החדשות אינן תואמות'); return;
+    }
+    if (pwForm.newPassword.length < 8) {
+      setPwError('הסיסמה החדשה חייבת להכיל לפחות 8 תווים'); return;
+    }
+    setPwSaving(true);
+    try {
+      await api.post('/auth/change-password', { currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
+      logout();
+      navigate('/login');
+    } catch (err) {
+      setPwError(err?.response?.data?.error || 'שגיאה — נסה שוב');
+    } finally { setPwSaving(false); }
+  }
+
+  async function loadHistory() {
+    if (historyData) { setHistoryOpen(v => !v); return; }
+    setHistoryOpen(true);
+    setHistoryLoading(true);
+    try {
+      const { data } = await api.get('/auth/login-history');
+      setHistoryData(data);
+    } catch { setHistoryData([]); }
+    finally { setHistoryLoading(false); }
+  }
+
+  async function handleDeleteAll() {
+    setDeleteLoading(true);
+    try {
+      await api.delete('/customers/all');
+      setDeleteStep('done');
+    } catch {
+      setDeleteStep('idle');
+    } finally { setDeleteLoading(false); }
   }
 
   const card = isNight
@@ -1532,6 +1590,116 @@ function SecuritySettings() {
         )}
       </div>
 
+      {/* ── Change password ───────────────────────────────────────────── */}
+      <div className={card}>
+        <div className={`font-semibold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>שינוי סיסמה</div>
+        <div className="space-y-3">
+          <div>
+            <label className={`block text-xs font-semibold mb-1.5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>סיסמה נוכחית</label>
+            <input type="password" value={pwForm.currentPassword} onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
+              className={inputCls2} dir="ltr" placeholder="••••••••" />
+          </div>
+          <div>
+            <label className={`block text-xs font-semibold mb-1.5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>סיסמה חדשה</label>
+            <input type="password" value={pwForm.newPassword} onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
+              className={inputCls2} dir="ltr" placeholder="לפחות 8 תווים" />
+          </div>
+          <div>
+            <label className={`block text-xs font-semibold mb-1.5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>אימות סיסמה חדשה</label>
+            <input type="password" value={pwForm.confirmPassword} onChange={e => setPwForm(p => ({ ...p, confirmPassword: e.target.value }))}
+              className={inputCls2} dir="ltr" placeholder="••••••••" />
+          </div>
+          {pwError && (
+            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{pwError}</p>
+          )}
+          <SaveBtn onClick={handleChangePassword} saving={pwSaving} saved={false} label="שנה סיסמה" />
+          <p className={`text-xs ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>שינוי סיסמה ינתק את כל המכשירים המחוברים</p>
+        </div>
+      </div>
+
+      {/* ── Hide stats toggle ─────────────────────────────────────────── */}
+      <Section title="פרטיות ונתונים">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>הסתר נתוני הכנסות ולקוחות</div>
+            <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>מספרי הכנסות וכמות לקוחות לא יוצגו בדשבורד</div>
+          </div>
+          <Toggle
+            value={!!(business?.hide_stats)}
+            onChange={async v => {
+              try {
+                const { data } = await api.put('/businesses/settings', { hide_stats: v });
+                updateBusiness(data);
+              } catch {}
+            }}
+          />
+        </div>
+      </Section>
+
+      {/* ── Security alerts toggle ────────────────────────────────────── */}
+      <Section title="התראות אבטחה">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>שלח אימייל בכל כניסה חדשה</div>
+            <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>קבל התראה לאימייל בכל פעם שמתבצעת כניסה לחשבון</div>
+          </div>
+          <Toggle
+            value={!!(business?.security_alerts)}
+            onChange={async v => {
+              try {
+                const { data } = await api.put('/businesses/settings', { security_alerts: v });
+                updateBusiness(data);
+              } catch {}
+            }}
+          />
+        </div>
+      </Section>
+
+      {/* ── Login history ─────────────────────────────────────────────── */}
+      <div className={card}>
+        <button
+          type="button"
+          onClick={loadHistory}
+          className="flex items-center justify-between w-full"
+        >
+          <div className="text-right">
+            <div className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>היסטוריית כניסות</div>
+            <div className={`text-xs ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>10 הכניסות האחרונות לחשבון</div>
+          </div>
+          <ChevronDown size={16} className={`shrink-0 transition-transform ${historyOpen ? 'rotate-180' : ''} ${isNight ? 'text-gray-400' : 'text-gray-500'}`} />
+        </button>
+        {historyOpen && (
+          <div className="mt-4 space-y-2">
+            {historyLoading ? (
+              <div className="flex justify-center py-4"><Loader2 size={18} className="animate-spin text-[#f43f5e]" /></div>
+            ) : historyData && historyData.length === 0 ? (
+              <p className={`text-xs text-center py-3 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>אין היסטוריית כניסות</p>
+            ) : (
+              historyData && historyData.map((ev, i) => {
+                const d = new Date(ev.created_at);
+                const dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+                const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                return (
+                  <div key={ev.id} className={`flex items-center justify-between px-3 py-2.5 rounded-xl ${isNight ? 'bg-white/[0.03]' : 'bg-gray-50'}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-xs font-semibold ${isNight ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {parseUA(ev.user_agent)}
+                        {i === 0 && <span className="mr-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#f43f5e]/15 text-[#f43f5e]">כניסה זו</span>}
+                      </div>
+                      <div className={`text-[11px] mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{ev.ip}</div>
+                    </div>
+                    <div className={`text-[11px] shrink-0 mr-3 text-left ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
+                      <div>{dateStr}</div>
+                      <div>{timeStr}</div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+
       {/* ── Session management ───────────────────────────────────────── */}
       <div className={card}>
         <div className="flex items-center justify-between">
@@ -1544,6 +1712,57 @@ function SecuritySettings() {
             נתק הכל
           </button>
         </div>
+      </div>
+
+      {/* ── Delete all customer data ──────────────────────────────────── */}
+      <div className={`border rounded-2xl p-5 ${isNight ? 'border-red-500/20 bg-red-500/5' : 'border-red-200 bg-red-50/60'}`}>
+        <div className={`font-semibold text-sm mb-1 ${isNight ? 'text-red-400' : 'text-red-600'}`}>מחיקת נתוני לקוחות</div>
+        <div className={`text-xs mb-4 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>מוחק לצמיתות את כל הלקוחות, התורים וההיסטוריה. פעולה זו אינה הפיכה.</div>
+        {deleteStep === 'idle' && (
+          <button
+            onClick={() => setDeleteStep('confirm1')}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-colors ${isNight ? 'border-red-500/30 text-red-400 hover:bg-red-500/15' : 'border-red-200 text-red-500 hover:bg-red-100'}`}
+          >
+            מחק את כל נתוני הלקוחות
+          </button>
+        )}
+        {deleteStep === 'confirm1' && (
+          <div className="space-y-3">
+            <p className={`text-xs font-semibold ${isNight ? 'text-red-400' : 'text-red-600'}`}>האם אתה בטוח? פעולה זו תמחק את כל הלקוחות והתורים לצמיתות.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setDeleteStep('confirm2')}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-500 hover:bg-red-600 transition-colors">
+                אשר מחיקה
+              </button>
+              <button onClick={() => setDeleteStep('idle')}
+                className={`px-4 py-2 rounded-xl text-xs border transition-colors ${isNight ? 'border-white/10 text-gray-400 hover:text-white' : 'border-gray-200 text-gray-500 hover:text-gray-700'}`}>
+                ביטול
+              </button>
+            </div>
+          </div>
+        )}
+        {deleteStep === 'confirm2' && (
+          <div className="space-y-3">
+            <p className={`text-xs font-semibold ${isNight ? 'text-red-400' : 'text-red-600'}`}>אישור סופי — כל הנתונים יימחקו ולא ניתן לשחזרם.</p>
+            <div className="flex gap-2">
+              <button onClick={handleDeleteAll} disabled={deleteLoading}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors">
+                {deleteLoading && <Loader2 size={12} className="animate-spin" />}
+                מחק הכל עכשיו
+              </button>
+              <button onClick={() => setDeleteStep('idle')}
+                className={`px-4 py-2 rounded-xl text-xs border transition-colors ${isNight ? 'border-white/10 text-gray-400 hover:text-white' : 'border-gray-200 text-gray-500 hover:text-gray-700'}`}>
+                ביטול
+              </button>
+            </div>
+          </div>
+        )}
+        {deleteStep === 'done' && (
+          <div className="flex items-center gap-2 text-sm text-green-500">
+            <Check size={15} />
+            כל נתוני הלקוחות נמחקו בהצלחה
+          </div>
+        )}
       </div>
     </div>
   );

@@ -257,6 +257,15 @@ const SCHEMA = `
     sent_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS login_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL,
+    ip TEXT,
+    user_agent TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+  );
 `;
 
 // ─── Async init (called once on startup) ─────────────────────────────────────
@@ -314,6 +323,8 @@ const init = async () => {
     "ALTER TABLE businesses ADD COLUMN subscription_status TEXT DEFAULT 'trialing'",
     // Branding
     "ALTER TABLE businesses ADD COLUMN brand_color TEXT DEFAULT NULL",
+    // Security alerts
+    "ALTER TABLE businesses ADD COLUMN security_alerts INTEGER DEFAULT 0",
   ];
 
   // ── Indexes (CREATE IF NOT EXISTS — safe to re-run) ─────────────────────────

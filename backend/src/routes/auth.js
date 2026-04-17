@@ -184,6 +184,18 @@ router.post('/login', async (req, res) => {
     // ── Normal login ──────────────────────────────────────────────────────────
     const token = jwt.sign({ businessId: business.id, tv: business.token_version || 0 }, process.env.JWT_SECRET, JWT_OPTS);
     setAuthCookie(res, token);
+
+    // Log login event
+    try {
+      db.prepare('INSERT INTO login_events (business_id, ip, user_agent) VALUES (?, ?, ?)').run(business.id, req.ip || req.connection?.remoteAddress || 'unknown', req.headers['user-agent'] || '');
+    } catch (_) {}
+
+    // Send security alert email if enabled
+    if (business.security_alerts) {
+      const { sendSecurityAlert } = require('../services/email');
+      sendSecurityAlert(safeBusiness(business), { ip: req.ip || 'unknown', userAgent: req.headers['user-agent'] || '' }).catch(() => {});
+    }
+
     res.json({ token, business: safeBusiness(business) });
   } catch (err) {
     console.error('[Auth] Login error:', err);
@@ -304,6 +316,18 @@ router.post('/2fa/verify-login', (req, res) => {
 
   const token = jwt.sign({ businessId: business.id, tv: business.token_version || 0 }, process.env.JWT_SECRET, JWT_OPTS);
   setAuthCookie(res, token);
+
+  // Log login event
+  try {
+    db.prepare('INSERT INTO login_events (business_id, ip, user_agent) VALUES (?, ?, ?)').run(business.id, req.ip || req.connection?.remoteAddress || 'unknown', req.headers['user-agent'] || '');
+  } catch (_) {}
+
+  // Send security alert email if enabled
+  if (business.security_alerts) {
+    const { sendSecurityAlert } = require('../services/email');
+    sendSecurityAlert(safeBusiness(business), { ip: req.ip || 'unknown', userAgent: req.headers['user-agent'] || '' }).catch(() => {});
+  }
+
   res.json({ token, business: safeBusiness(business) });
 });
 
@@ -329,6 +353,45 @@ router.post('/admin-reset', adminResetLimiter, async (req, res) => {
   // Also increment token_version to invalidate all existing sessions
   db.prepare('UPDATE businesses SET password = ?, is_active = 1, token_version = token_version + 1 WHERE email = ?').run(hashed, cleanEmail);
   res.json({ ok: true, message: `Password reset for ${cleanEmail}` });
+});
+
+// POST /api/auth/change-password
+router.post('/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) return res.status(400).json({ error: 'currentPassword and newPassword required' });
+    if (String(newPassword).length < 8) return res.status(400).json({ error: 'סיסמה חדשה חייבת להכיל לפחות 8 תווים' });
+    if (String(newPassword).length > 128) return res.status(400).json({ error: 'סיסמה ארוכה מדי' });
+
+    const db = getDb();
+    const row = db.prepare('SELECT password FROM businesses WHERE id = ?').get(req.business.id);
+    if (!row) return res.status(404).json({ error: 'Account not found' });
+
+    const valid = await bcrypt.compare(String(currentPassword), row.password);
+    if (!valid) return res.status(401).json({ error: 'הסיסמה הנוכחית שגויה' });
+
+    const hashed = await bcrypt.hash(String(newPassword), 12);
+    // Also increment token_version to invalidate all existing sessions
+    db.prepare('UPDATE businesses SET password = ?, token_version = token_version + 1 WHERE id = ?').run(hashed, req.business.id);
+
+    clearAuthCookie(res);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Auth] Change password error:', err);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+// GET /api/auth/login-history
+router.get('/login-history', authMiddleware, (req, res) => {
+  try {
+    const db = getDb();
+    const events = db.prepare('SELECT id, ip, user_agent, created_at FROM login_events WHERE business_id = ? ORDER BY created_at DESC LIMIT 10').all(req.business.id);
+    res.json(events);
+  } catch (err) {
+    console.error('[Auth] Login history error:', err);
+    res.status(500).json({ error: 'Failed to fetch login history' });
+  }
 });
 
 // ─── Default services by business type ───────────────────────────────────────

@@ -49,6 +49,8 @@ export function useAuth() {
     twoFaEnable: (code) => api.post('/auth/2fa/enable', { code }),
     twoFaDisable: (password, code) => api.post('/auth/2fa/disable', { password, code }),
     twoFaVerifyLogin: (tempToken, code) => api.post('/auth/2fa/verify-login', { tempToken, code }),
+    changePassword: (currentPassword, newPassword) => api.post('/auth/change-password', { currentPassword, newPassword }),
+    loginHistory: () => api.get('/auth/login-history'),
   };
 }
 

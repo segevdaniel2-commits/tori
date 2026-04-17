@@ -178,4 +178,52 @@ async function sendPaymentFailed(business) {
   await sendEmail(business.email, subject, html);
 }
 
-module.exports = { sendWelcome, sendTrialEnding, sendTrialExpired, sendPaymentFailed };
+async function sendSecurityAlert(business, { ip, userAgent }) {
+  const subject = `[Tori] כניסה חדשה לחשבון`;
+  const now = new Date();
+  const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const html = `
+  <!DOCTYPE html>
+  <html dir="rtl" lang="he">
+  <head><meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap');
+    body { margin: 0; padding: 0; background: #fff5f6; font-family: 'Heebo', sans-serif; direction: rtl; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .card { background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 24px rgba(244,63,94,0.10); }
+    .logo { font-size: 28px; font-weight: 800; color: #f43f5e; margin-bottom: 24px; }
+    h1 { font-size: 22px; color: #1a1a2e; margin-bottom: 12px; }
+    p { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 16px; }
+    .highlight { background: #fff5f6; border-right: 4px solid #f43f5e; padding: 16px 20px; border-radius: 8px; margin: 16px 0; }
+    .footer { text-align: center; color: #888; font-size: 13px; margin-top: 32px; }
+    .divider { border: none; border-top: 1px solid #ffe4e8; margin: 24px 0; }
+  </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="logo">Tori.</div>
+        <h1>זוהתה כניסה חדשה לחשבון ⚠️</h1>
+        <p>שלום ${business.owner_name},</p>
+        <p>זוהתה כניסה חדשה לחשבון <strong>${business.name}</strong>:</p>
+        <div class="highlight">
+          <strong>📅 תאריך:</strong> ${dateStr}<br>
+          <strong>🕐 שעה:</strong> ${timeStr}<br>
+          <strong>🌐 כתובת IP:</strong> ${ip}
+        </div>
+        <p>אם אתה זה שנכנס — אין צורך בפעולה.</p>
+        <p>אם לא אתה נכנסת, <a href="${process.env.CLIENT_URL}/dashboard/settings?tab=security" style="color:#f43f5e">שנה את הסיסמה מיידית</a> וצור קשר איתנו.</p>
+        <hr class="divider">
+        <div class="footer">
+          <p>טורי, הבוט שמנהל את העסק שלך</p>
+          <p>© ${new Date().getFullYear()} Tori. כל הזכויות שמורות.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>`;
+  await sendEmail(business.email, subject, html);
+}
+
+module.exports = { sendWelcome, sendTrialEnding, sendTrialExpired, sendPaymentFailed, sendSecurityAlert };
