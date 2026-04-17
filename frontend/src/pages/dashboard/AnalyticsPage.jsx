@@ -237,15 +237,15 @@ export default function AnalyticsPage() {
       const status = a.status === 'completed' ? 'הושלם' : a.status === 'cancelled' ? 'בוטל' : 'ממתין';
       const statusColor = a.status === 'completed' ? '#10b981' : a.status === 'cancelled' ? '#f43f5e' : '#f97316';
       const bg = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
-      const td = `padding:11px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151;vertical-align:middle`;
+      const td = `padding:14px 16px;border-bottom:1px solid #eef0f3;font-size:13px;color:#374151;vertical-align:middle;line-height:1.5`;
       return `<tr style="background:${bg}">
-        <td style="${td};font-weight:600;color:#111827">${a.customer_name || '—'}</td>
+        <td style="${td};font-weight:700;color:#111827">${a.customer_name || '—'}</td>
         <td style="${td}">${a.service_name || '—'}</td>
         <td style="${td}">${a.staff_name || '—'}</td>
-        <td style="${td};direction:ltr;text-align:left;color:#6b7280">${a.starts_at?.split('T')[0] || '—'}</td>
-        <td style="${td};direction:ltr;text-align:left;font-weight:600">${a.starts_at?.split('T')[1]?.slice(0, 5) || '—'}</td>
+        <td style="${td};direction:ltr;text-align:left;color:#6b7280;font-size:12px">${a.starts_at?.split('T')[0] || '—'}</td>
+        <td style="${td};direction:ltr;text-align:left;font-weight:600;font-size:13px">${a.starts_at?.split('T')[1]?.slice(0, 5) || '—'}</td>
         <td style="${td};font-weight:700;color:#111827">₪${a.price || 0}</td>
-        <td style="${td}"><span style="background:${statusColor}18;color:${statusColor};padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap">${status}</span></td>
+        <td style="${td}"><span style="background:${statusColor}18;color:${statusColor};padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap;display:inline-block">${status}</span></td>
       </tr>`;
     }).join('');
 
@@ -331,7 +331,7 @@ export default function AnalyticsPage() {
             <thead>
               <tr style="background:#f43f5e">
                 ${['לקוח','שירות','עובד','תאריך','שעה','מחיר','סטטוס'].map(h =>
-                  `<th style="padding:11px 14px;text-align:right;font-size:12px;font-weight:700;color:#fff;border-bottom:none">${h}</th>`
+                  `<th style="padding:14px 16px;text-align:right;font-size:12px;font-weight:700;color:#fff;border-bottom:none;letter-spacing:0.02em">${h}</th>`
                 ).join('')}
               </tr>
             </thead>
