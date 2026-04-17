@@ -1653,7 +1653,7 @@ export default function SettingsPage() {
         <div className="sm:flex gap-5">
           {/* Desktop sidebar */}
           <div className="hidden sm:block w-44 shrink-0">
-            <div className={`border rounded-2xl p-2 space-y-0.5 ${isNight ? 'bg-white/[0.03] border-white/[0.07]' : 'bg-gray-50 border-gray-300 shadow-sm'}`}>
+            <div className={`border rounded-2xl p-2 space-y-0.5 ${isNight ? 'bg-white/[0.03] border-white/[0.07]' : 'bg-white border-gray-200 shadow-sm'}`}>
               {TABS.map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${

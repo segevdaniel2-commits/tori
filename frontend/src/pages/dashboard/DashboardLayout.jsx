@@ -115,11 +115,11 @@ export default function DashboardLayout() {
         activeText: '#f97316',
       }
     : {
-        outerBg: '#f9fafb',
+        outerBg: '#f0f2f5',
         surface: '#ffffff',
-        border: '#e5e7eb',
-        sidebarBg: 'rgba(255,255,255,0.97)',
-        sidebarBorder: 'rgba(249,115,22,0.15)',
+        border: '#e2e5ea',
+        sidebarBg: '#ffffff',
+        sidebarBorder: '#e2e5ea',
         titleColor: '#111827',
         mutedColor: '#6b7280',
         hoverBg: '#fff7ed',
