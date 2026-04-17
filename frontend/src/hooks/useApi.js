@@ -10,8 +10,16 @@ const api = axios.create({
   },
 });
 
-// Auth is handled via httpOnly cookie (withCredentials: true above).
-// No token in JS memory — nothing to attach here.
+// Request interceptor: attach Bearer token if stored (fallback for Safari/iOS
+// which blocks cross-origin httpOnly cookies — the cookie still works on desktop).
+api.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().token;
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
 
 // Response interceptor: handle 401
 api.interceptors.response.use(

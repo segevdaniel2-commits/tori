@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
   Check, Eye, EyeOff, Loader2, Zap, X,
   Calendar, ExternalLink, ChevronRight,
@@ -622,6 +622,7 @@ function SuccessScreen({ onDone, businessType }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function OnboardingFlow() {
+  const [isMobile] = useState(() => window.innerWidth < 768);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -724,12 +725,15 @@ export default function OnboardingFlow() {
   const STEP_LABELS = ['סוג עסק', 'פרטי עסק', 'שירותים', 'הגדרות', 'חשבון'];
 
   return (
+    <MotionConfig reducedMotion={isMobile ? 'always' : 'never'}>
     <div className="min-h-screen bg-[#08080F] flex flex-col items-center justify-center px-4 py-6 md:py-10" dir="rtl">
-      {/* Ambient orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 right-1/3 w-80 h-80 bg-violet-600/8 rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-green-500/5 rounded-full blur-[90px]" />
-      </div>
+      {/* Ambient orbs — hidden on mobile for performance */}
+      {!isMobile && (
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 right-1/3 w-80 h-80 bg-violet-600/8 rounded-full blur-[100px]" />
+          <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-green-500/5 rounded-full blur-[90px]" />
+        </div>
+      )}
 
       <div className="relative z-10 w-full max-w-lg">
         {/* Logo + progress */}
@@ -739,8 +743,8 @@ export default function OnboardingFlow() {
           <p className="text-gray-600 text-xs mt-2">{STEP_LABELS[step - 1]}</p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white/[0.03] border border-white/[0.07] rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-sm">
+        {/* Card — no backdrop-blur on mobile (very slow) */}
+        <div className="border border-white/[0.07] rounded-3xl p-5 md:p-8 shadow-xl" style={{ background: '#0d1117' }}>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/25 text-red-400 text-sm px-4 py-3 rounded-xl mb-5">
@@ -837,38 +841,50 @@ export default function OnboardingFlow() {
                   {presets.map(svc => {
                     const sel = selectedServices.find(s => s.name === svc.name);
                     return (
-                      <div key={svc.name} className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all ${
+                      <div key={svc.name} className={`rounded-xl border px-3 py-2.5 transition-all ${
                         sel ? 'border-violet-500/30 bg-violet-600/5' : 'border-white/[0.06] bg-white/[0.02] opacity-50'
                       }`}>
-                        {/* Checkbox */}
-                        <button
-                          onClick={() => toggleService(svc)}
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0 ${
-                            sel ? 'bg-violet-600 border-violet-600' : 'border-gray-600 hover:border-violet-500'
-                          }`}
-                        >
-                          {sel && <Check size={11} className="text-white" />}
-                        </button>
-
-                        {/* Name */}
-                        <span className={`text-sm font-medium flex-1 ${sel ? 'text-white' : 'text-gray-500'}`}>{svc.name}</span>
-
-                        {/* Duration stepper */}
+                        {/* Top row: checkbox + name + steppers (desktop) */}
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => toggleService(svc)}
+                            className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all shrink-0 ${
+                              sel ? 'bg-violet-600 border-violet-600' : 'border-gray-600 hover:border-violet-500'
+                            }`}
+                          >
+                            {sel && <Check size={11} className="text-white" />}
+                          </button>
+                          <span className={`text-sm font-medium flex-1 min-w-0 truncate ${sel ? 'text-white' : 'text-gray-500'}`}>{svc.name}</span>
+                          {/* Steppers inline on md+ */}
+                          {sel && (
+                            <div className="hidden md:flex items-center gap-2 shrink-0">
+                              <Stepper
+                                label={`${sel.duration_minutes} דק׳`}
+                                onDecrement={() => updateService(svc.name, 'duration_minutes', -5)}
+                                onIncrement={() => updateService(svc.name, 'duration_minutes', +5)}
+                              />
+                              <Stepper
+                                label={`₪${sel.price}`}
+                                onDecrement={() => updateService(svc.name, 'price', -10)}
+                                onIncrement={() => updateService(svc.name, 'price', +10)}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        {/* Steppers on second row for mobile */}
                         {sel && (
-                          <Stepper
-                            label={`${sel.duration_minutes} דק׳`}
-                            onDecrement={() => updateService(svc.name, 'duration_minutes', -5)}
-                            onIncrement={() => updateService(svc.name, 'duration_minutes', +5)}
-                          />
-                        )}
-
-                        {/* Price stepper */}
-                        {sel && (
-                          <Stepper
-                            label={`₪${sel.price}`}
-                            onDecrement={() => updateService(svc.name, 'price', -10)}
-                            onIncrement={() => updateService(svc.name, 'price', +10)}
-                          />
+                          <div className="flex md:hidden items-center gap-3 mt-2 pr-9">
+                            <Stepper
+                              label={`${sel.duration_minutes} דק׳`}
+                              onDecrement={() => updateService(svc.name, 'duration_minutes', -5)}
+                              onIncrement={() => updateService(svc.name, 'duration_minutes', +5)}
+                            />
+                            <Stepper
+                              label={`₪${sel.price}`}
+                              onDecrement={() => updateService(svc.name, 'price', -10)}
+                              onIncrement={() => updateService(svc.name, 'price', +10)}
+                            />
+                          </div>
                         )}
                       </div>
                     );
@@ -921,11 +937,14 @@ export default function OnboardingFlow() {
                     {(() => {
                       const h = hours[0];
                       return (
-                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${h.is_open ? 'border-white/10 bg-white/5' : 'border-white/5 opacity-50'}`}>
-                          <Toggle value={h.is_open} onChange={v => [0,1,2,3,4].forEach(i => setDayOpen(i, v))} />
-                          <span className="text-white text-sm font-medium shrink-0">א׳–ה׳</span>
-                          {h.is_open ? (
-                            <div className="flex items-center gap-2 mr-auto">
+                        <div className={`p-3 rounded-xl border ${h.is_open ? 'border-white/10 bg-white/5' : 'border-white/5 opacity-50'}`}>
+                          <div className="flex items-center gap-3">
+                            <Toggle value={h.is_open} onChange={v => [0,1,2,3,4].forEach(i => setDayOpen(i, v))} />
+                            <span className="text-white text-sm font-medium">א׳–ה׳</span>
+                            {!h.is_open && <span className="text-gray-600 text-sm mr-auto">סגור</span>}
+                          </div>
+                          {h.is_open && (
+                            <div className="flex items-center gap-2 mt-2 pr-13">
                               <Stepper
                                 label={h.open_time}
                                 onDecrement={() => stepWeekdayTime('open_time', -30)}
@@ -938,7 +957,7 @@ export default function OnboardingFlow() {
                                 onIncrement={() => stepWeekdayTime('close_time', +30)}
                               />
                             </div>
-                          ) : <span className="text-gray-600 text-sm mr-auto">סגור</span>}
+                          )}
                         </div>
                       );
                     })()}
@@ -947,11 +966,14 @@ export default function OnboardingFlow() {
                     {(() => {
                       const h = hours[5];
                       return (
-                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${h.is_open ? 'border-white/10 bg-white/5' : 'border-white/5 opacity-50'}`}>
-                          <Toggle value={h.is_open} onChange={v => setDayOpen(5, v)} />
-                          <span className="text-white text-sm font-medium shrink-0">שישי</span>
-                          {h.is_open ? (
-                            <div className="flex items-center gap-2 mr-auto">
+                        <div className={`p-3 rounded-xl border ${h.is_open ? 'border-white/10 bg-white/5' : 'border-white/5 opacity-50'}`}>
+                          <div className="flex items-center gap-3">
+                            <Toggle value={h.is_open} onChange={v => setDayOpen(5, v)} />
+                            <span className="text-white text-sm font-medium">שישי</span>
+                            {!h.is_open && <span className="text-gray-600 text-sm mr-auto">סגור</span>}
+                          </div>
+                          {h.is_open && (
+                            <div className="flex items-center gap-2 mt-2 pr-13">
                               <Stepper
                                 label={h.open_time}
                                 onDecrement={() => stepDayTime(5, 'open_time', -30)}
@@ -964,7 +986,7 @@ export default function OnboardingFlow() {
                                 onIncrement={() => stepDayTime(5, 'close_time', +30)}
                               />
                             </div>
-                          ) : <span className="text-gray-600 text-sm mr-auto">סגור</span>}
+                          )}
                         </div>
                       );
                     })()}
@@ -1016,7 +1038,8 @@ export default function OnboardingFlow() {
                         onChange={e => setPassword(e.target.value)}
                         className={`${inputCls} pl-11`} placeholder="••••••••" dir="ltr" />
                       <button type="button" onClick={() => setShowPass(!showPass)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+                        className="absolute left-0 top-0 h-full w-12 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+                        tabIndex={-1}>
                         {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
                       </button>
                     </div>
@@ -1032,7 +1055,8 @@ export default function OnboardingFlow() {
                         }`}
                         placeholder="••••••••" dir="ltr" />
                       <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+                        className="absolute left-0 top-0 h-full w-12 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+                        tabIndex={-1}>
                         {showConfirmPass ? <EyeOff size={17} /> : <Eye size={17} />}
                       </button>
                     </div>
@@ -1096,5 +1120,6 @@ export default function OnboardingFlow() {
 
       <LegalModal type={legalModal} onClose={() => setLegalModal(null)} />
     </div>
+    </MotionConfig>
   );
 }

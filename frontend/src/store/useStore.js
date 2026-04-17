@@ -7,24 +7,31 @@ import { persist } from 'zustand/middleware';
 export const useAuthStore = create(
   persist(
     (set) => ({
+      token: null,
       business: null,
       isAuthenticated: false,
 
       setAuth: (tokenOrBusiness, maybeBusiness) => {
-        const business = maybeBusiness || tokenOrBusiness;
-        set({ business, isAuthenticated: true });
+        if (maybeBusiness) {
+          // called as setAuth(token, business)
+          set({ token: tokenOrBusiness, business: maybeBusiness, isAuthenticated: true });
+        } else {
+          // called as setAuth(business) — cookie-only mode (legacy)
+          set({ token: null, business: tokenOrBusiness, isAuthenticated: true });
+        }
       },
 
       updateBusiness: (business) => set({ business }),
 
       logout: () => set({
+        token: null,
         business: null,
         isAuthenticated: false,
       }),
     }),
     {
       name: 'tori-auth',
-      partialize: (state) => ({ business: state.business, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({ token: state.token, business: state.business, isAuthenticated: state.isAuthenticated }),
     }
   )
 );
