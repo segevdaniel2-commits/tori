@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Users, Phone, Calendar, Star, X, Loader2, ChevronRight, UserPlus } from 'lucide-react';
+import { Search, Users, Phone, Calendar, Star, X, Loader2, ChevronRight, UserPlus, ArrowDownAZ } from 'lucide-react';
 import { useCustomersApi } from '../../hooks/useApi';
 import { format, parseISO } from 'date-fns';
 import { he } from 'date-fns/locale';
@@ -145,7 +145,7 @@ function QuickAddSheet({ onClose, onSuccess }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 z-50 flex items-end"
+      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center sm:justify-center sm:p-4"
       onClick={onClose}
     >
       <motion.div
@@ -153,7 +153,7 @@ function QuickAddSheet({ onClose, onSuccess }) {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="w-full bg-white rounded-t-3xl p-6 pb-10 shadow-2xl"
+        className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-2xl p-6 pb-10 sm:pb-6 shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
@@ -220,6 +220,7 @@ export default function CustomersPage() {
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [sortAZ, setSortAZ] = useState(false);
   const customersApi = useCustomersApi();
   const queryClient = useQueryClient();
 
@@ -228,7 +229,10 @@ export default function CustomersPage() {
     queryFn: () => customersApi.list({ search, page, limit: 25 }).then(r => r.data),
   });
 
-  const customers = data?.customers || [];
+  const rawCustomers = data?.customers || [];
+  const customers = sortAZ
+    ? [...rawCustomers].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'he'))
+    : rawCustomers;
   const total = data?.total || 0;
 
   function formatLastVisit(dateStr) {
@@ -258,15 +262,24 @@ export default function CustomersPage() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-4 sm:mb-6">
-        <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
-          className="w-full pr-12 py-3 px-4 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-tori-500 focus:ring-1 focus:ring-tori-500 transition-all shadow-sm"
-          placeholder="חפש לפי שם או טלפון..."
-        />
+      {/* Search + Sort */}
+      <div className="flex items-center gap-2 mb-4 sm:mb-6">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            className="w-full pr-12 py-3 px-4 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-tori-500 focus:ring-1 focus:ring-tori-500 transition-all shadow-sm"
+            placeholder="חפש לפי שם או טלפון..."
+          />
+        </div>
+        <button
+          onClick={() => setSortAZ(v => !v)}
+          title="מיון א-ת"
+          className={`p-3 rounded-xl border transition-all ${sortAZ ? 'bg-[#f97316] border-[#f97316] text-white' : 'bg-white border-gray-200 text-gray-400 hover:border-[#f97316] hover:text-[#f97316]'}`}
+        >
+          <ArrowDownAZ size={18} />
+        </button>
       </div>
 
       {/* Mobile: card list */}

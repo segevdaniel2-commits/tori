@@ -5,7 +5,7 @@ import { he } from 'date-fns/locale';
 import {
   ChevronRight, ChevronLeft, ChevronDown, Plus, X, Clock, User, Phone,
   Scissors, Calendar, Loader2, Check, Trash2, Lock, RefreshCw, Pencil,
-  ArrowUp, RotateCcw, UserPlus, CalendarPlus, CalendarX2,
+  ArrowUp, RotateCcw, UserPlus, CalendarPlus, CalendarX2, Sparkles, Send,
 } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppointmentsApi, useBusinessApi } from '../../hooks/useApi';
@@ -454,14 +454,14 @@ function CustomSelect({ label, value, onChange, options, placeholder = 'בחר..
   );
 }
 
-function AddAppointmentModal({ selectedDate, initialTime, onClose, onSuccess, existingAppointments = [] }) {
+function AddAppointmentModal({ selectedDate, initialTime, initialStaffId, onClose, onSuccess, existingAppointments = [] }) {
   const { business } = useAuthStore();
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(selectedDate || today);
   const [customerId, setCustomerId] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [staffId, setStaffId] = useState('');
+  const [staffId, setStaffId] = useState(initialStaffId ? String(initialStaffId) : '');
   const [serviceId, setServiceId] = useState('');
   const [time, setTime] = useState(initialTime || '10:00');
   const [notes, setNotes] = useState('');
@@ -490,8 +490,10 @@ function AddAppointmentModal({ selectedDate, initialTime, onClose, onSuccess, ex
   // Auto-select defaults once data arrives
   useEffect(() => {
     if (staff && staff.length > 0 && !staffId) {
-      const owner = staff.find(s => s.role === 'owner') || staff[0];
-      if (owner) setStaffId(String(owner.id));
+      const preferred = initialStaffId ? staff.find(s => s.id === Number(initialStaffId)) : null;
+      const fallback = staff.find(s => s.role === 'owner') || staff[0];
+      const target = preferred || fallback;
+      if (target) setStaffId(String(target.id));
     }
   }, [staff]);
 
@@ -934,11 +936,141 @@ function DatePickerPopup({ value, onChange, onClose }) {
   );
 }
 
+// ─── Mobile AI Chat bottom sheet ─────────────────────────────────────────────
+function MobileAiChat({ isNight, onClose, onAppointmentChange }) {
+  const [messages, setMessages] = useState([
+    { role: 'assistant', text: 'שלום! אני טורילי, העוזר החכם שלך. אני יכול לעזור לך לקבוע תורים, לשנות זמנים, לבטל ולענות על שאלות על לוח הזמנים שלך.' }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  async function sendMessage() {
+    const text = input.trim();
+    if (!text || loading) return;
+    const history = messages.map(m => ({ role: m.role, content: m.text }));
+    setMessages(prev => [...prev, { role: 'user', text }]);
+    setInput('');
+    setLoading(true);
+    try {
+      const res = await api.post('/owner-bot/chat', { message: text, history });
+      const reply = res.data?.reply || res.data?.message || 'לא הצלחתי להבין, נסה שוב.';
+      setMessages(prev => [...prev, { role: 'assistant', text: reply }]);
+      if (res.data?.appointmentChanged) onAppointmentChange?.();
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', text: 'שגיאה בחיבור לשרת. נסה שוב.' }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const bg = isNight ? '#12121A' : '#ffffff';
+  const border = isNight ? 'rgba(255,255,255,0.08)' : '#f3f4f6';
+  const textMain = isNight ? '#ffffff' : '#111827';
+  const textSub = isNight ? '#6b7280' : '#9ca3af';
+  const inputBg = isNight ? 'rgba(255,255,255,0.06)' : '#f9fafb';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end"
+      style={{ background: 'rgba(0,0,0,0.6)' }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+        className="w-full rounded-t-3xl flex flex-col"
+        style={{ background: bg, maxHeight: '80vh', borderTop: `1px solid ${border}` }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${border}` }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+              <Sparkles size={16} className="text-white" />
+            </div>
+            <div>
+              <div className="font-bold text-sm" style={{ color: textMain }}>טורילי</div>
+              <div className="text-xs" style={{ color: textSub }}>עוזר יומן חכם</div>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl" style={{ background: isNight ? 'rgba(255,255,255,0.06)' : '#f3f4f6' }}>
+            <X size={16} style={{ color: textSub }} />
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
+              <div
+                className="max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed"
+                style={m.role === 'user'
+                  ? { background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', borderBottomLeftRadius: 4 }
+                  : { background: isNight ? 'rgba(255,255,255,0.07)' : '#f3f4f6', color: textMain, borderBottomRightRadius: 4 }
+                }
+              >
+                {m.text}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div className="flex justify-end">
+              <div className="px-4 py-2.5 rounded-2xl" style={{ background: isNight ? 'rgba(255,255,255,0.07)' : '#f3f4f6' }}>
+                <Loader2 size={14} className="animate-spin" style={{ color: textSub }} />
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Input */}
+        <div className="px-4 py-3 flex items-center gap-2.5" style={{ borderTop: `1px solid ${border}` }}>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+            placeholder="שאל אותי כל דבר על היומן..."
+            className="flex-1 text-sm px-4 py-2.5 rounded-xl outline-none"
+            style={{ background: inputBg, color: textMain, border: `1px solid ${border}` }}
+            dir="rtl"
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || loading}
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-opacity"
+            style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', opacity: (!input.trim() || loading) ? 0.4 : 1 }}
+          >
+            <Send size={15} className="text-white" style={{ transform: 'scaleX(-1)' }} />
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+const NIGHT_STATUS_COLORS = {
+  confirmed: { bg: 'bg-[#f97316]/10', text: 'text-[#fb923c]', border: 'border-[#f97316]/25', dot: 'bg-[#f97316]' },
+  completed:  { bg: 'bg-emerald-500/10', text: 'text-emerald-300', border: 'border-emerald-500/25', dot: 'bg-emerald-400' },
+  cancelled:  { bg: 'bg-red-500/10',    text: 'text-red-400',    border: 'border-red-500/25',    dot: 'bg-red-400' },
+  pending:    { bg: 'bg-amber-500/10',   text: 'text-amber-300',  border: 'border-amber-500/25',  dot: 'bg-amber-400' },
+};
+
 // ─── Mobile appointment card ──────────────────────────────────────────────────
-function MobileApptCard({ appt, onClick }) {
+function MobileApptCard({ appt, onClick, isNight }) {
   const start = appt.starts_at.split('T')[1]?.slice(0, 5) || appt.starts_at.slice(11, 16);
   const end = appt.ends_at?.split('T')[1]?.slice(0, 5) || appt.ends_at?.slice(11, 16);
-  const colors = STATUS_COLORS[appt.status] || STATUS_COLORS.confirmed;
+  const palette = isNight ? NIGHT_STATUS_COLORS : STATUS_COLORS;
+  const colors = palette[appt.status] || palette.confirmed;
   const staffColor = appt.staff_color || '#f97316';
 
   return (
@@ -947,10 +1079,10 @@ function MobileApptCard({ appt, onClick }) {
       animate={{ opacity: 1, y: 0 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => onClick(appt)}
-      className={`w-full text-right flex items-stretch gap-0 rounded-2xl border overflow-hidden shadow-sm active:shadow-none transition-shadow ${colors.bg} ${colors.border}`}
+      className={`w-full text-right flex items-stretch gap-0 rounded-2xl border overflow-hidden active:opacity-80 transition-all ${colors.bg} ${colors.border}`}
     >
-      {/* Left accent bar (RTL → rendered on left) */}
-      <div className="w-1 shrink-0 rounded-r-full" style={{ background: staffColor }} />
+      {/* Staff color accent bar */}
+      <div className="w-1.5 shrink-0" style={{ background: staffColor }} />
 
       <div className="flex-1 px-4 py-3 flex items-center gap-3">
         {/* Time column */}
@@ -960,7 +1092,7 @@ function MobileApptCard({ appt, onClick }) {
         </div>
 
         {/* Divider */}
-        <div className="w-px h-10 bg-black/10 shrink-0" />
+        <div className={`w-px h-10 shrink-0 ${isNight ? 'bg-white/10' : 'bg-black/10'}`} />
 
         {/* Details */}
         <div className="flex-1 min-w-0">
@@ -982,15 +1114,26 @@ function MobileApptCard({ appt, onClick }) {
 // ─── 7-day date strip for mobile ─────────────────────────────────────────────
 function MobileDateStrip({ selectedDate, onSelect }) {
   const today = new Date().toISOString().split('T')[0];
-  const days = Array.from({ length: 7 }, (_, i) => {
+  const stripRef = useRef(null);
+  const days = Array.from({ length: 21 }, (_, i) => {
     const d = new Date(today + 'T00:00:00');
-    d.setDate(d.getDate() + i - 1); // -1 so today is 2nd item
+    d.setDate(d.getDate() + i - 7); // 7 past days + today + 13 future
     return d.toISOString().split('T')[0];
   });
+
+  // Scroll selected date into view
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    const idx = days.indexOf(selectedDate);
+    if (idx === -1) return;
+    const btn = strip.children[idx];
+    if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [selectedDate]);
   const DAY_SHORT = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
   return (
-    <div className="flex gap-1 overflow-x-auto pb-1 px-1" style={{ scrollbarWidth: 'none' }}>
+    <div ref={stripRef} className="flex gap-1 overflow-x-auto pb-1 px-1" style={{ scrollbarWidth: 'none' }}>
       {days.map(d => {
         const dayObj = new Date(d + 'T00:00:00');
         const isSelected = d === selectedDate;
@@ -1241,11 +1384,13 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
 export default function CalendarPage() {
   const { business } = useAuthStore();
   const { selectedDate, setSelectedDate } = useDashboardStore();
+  const { addNotification } = useNotificationStore();
   const isNight = useNightMode();
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [addModalTime, setAddModalTime] = useState(null);
+  const [showAiChat, setShowAiChat] = useState(false);
   const queryClient = useQueryClient();
   const appointmentsApi = useAppointmentsApi();
 
@@ -1357,13 +1502,21 @@ export default function CalendarPage() {
       {/* ── Mobile header ──────────────────────────────────────────────────────── */}
       <div className="sm:hidden mb-3">
         <div className="flex items-center justify-between mb-2 px-1">
-          <div className="flex items-center gap-2">
-            <span className="font-black text-gray-900 text-xl">{formatHeaderDate(selectedDate)}</span>
-            {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
+          <div className="flex items-center gap-1">
+            <button onClick={() => goDay(-1)} className={`p-1.5 rounded-xl transition-all active:scale-90 ${isNight ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}>
+              <ChevronRight size={20} />
+            </button>
+            <div className="flex items-center gap-1.5">
+              <span className={`font-black text-lg leading-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>{formatHeaderDate(selectedDate)}</span>
+              {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
+            </div>
+            <button onClick={() => goDay(1)} className={`p-1.5 rounded-xl transition-all active:scale-90 ${isNight ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}>
+              <ChevronLeft size={20} />
+            </button>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={handleMobileRefresh} disabled={isRefreshing}
-              className="p-2 rounded-full border border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316] transition-all active:scale-90" aria-label="רענן">
+              className={`p-2 rounded-full border transition-all active:scale-90 ${isNight ? 'border-white/10 text-gray-500 hover:text-white' : 'border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316]'}`} aria-label="רענן">
               <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
             </button>
             {!isTodayFlag && (
@@ -1401,16 +1554,20 @@ export default function CalendarPage() {
           ) : (
             <div className="space-y-2.5 pb-24">
               <div className="text-xs text-gray-400 font-medium px-1 mb-1">{sortedAppts.length} תורים</div>
-              {sortedAppts.map(appt => <MobileApptCard key={appt.id} appt={appt} onClick={setSelectedAppt} />)}
+              {sortedAppts.map(appt => <MobileApptCard key={appt.id} appt={appt} onClick={setSelectedAppt} isNight={isNight} />)}
             </div>
           )}
         </div>
-        {sortedAppts.length > 0 && (
-          <button onClick={() => setShowAddModal(true)}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 btn-primary shadow-2xl text-sm px-6 py-3.5 rounded-full z-40 flex items-center gap-2">
-            <Plus size={17} />הוסף תור
-          </button>
-        )}
+        <button onClick={() => setShowAddModal(true)}
+          className="fixed bottom-[84px] right-4 w-14 h-14 rounded-full z-40 flex items-center justify-center shadow-xl active:scale-95 transition-transform"
+          style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 8px 24px rgba(244,63,94,0.4)' }}>
+          <Plus size={22} className="text-white" />
+        </button>
+        <button onClick={() => setShowAiChat(true)}
+          className="fixed bottom-[84px] left-4 w-14 h-14 rounded-full z-40 flex items-center justify-center shadow-xl active:scale-95 transition-transform"
+          style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 8px 24px rgba(99,102,241,0.4)' }}>
+          <Sparkles size={20} className="text-white" />
+        </button>
       </div>
 
       {/* ── Desktop: 2-column layout ──────────────────────────────────────────── */}
@@ -1524,14 +1681,20 @@ export default function CalendarPage() {
           <AddAppointmentModal
             selectedDate={selectedDate}
             initialTime={addModalTime}
+            initialStaffId={staffFilter}
             existingAppointments={appointments}
             onClose={() => { setShowAddModal(false); setAddModalTime(null); }}
             onSuccess={() => {
               setShowAddModal(false);
               setAddModalTime(null);
               queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] });
+              addNotification({ title: 'תור נוסף', message: 'תור חדש נקבע בהצלחה', type: 'appointment', read: false });
             }}
           />
+        )}
+        {showAiChat && (
+          <MobileAiChat isNight={isNight} onClose={() => setShowAiChat(false)}
+            onAppointmentChange={() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })} />
         )}
       </AnimatePresence>
     </div>

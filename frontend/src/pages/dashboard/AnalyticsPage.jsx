@@ -443,8 +443,8 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         <StatCard isNight={isNight} title="סה״כ הכנסות"  value={hideStats ? '••••' : overview ? `₪${overview.totalRevenue?.toLocaleString()}` : '-'} subtitle="מאז ההקמה"                icon={TrendingUp} color="coral"  loading={loadingOverview} />
         <StatCard isNight={isNight} title="סה״כ לקוחות"  value={hideStats ? '••••' : overview?.totalCustomers ?? '-'}                                                                      subtitle="לקוחות רשומים"           icon={Users}      color="cyan"   loading={loadingOverview} />
-        <StatCard isNight={isNight} title="תורים החודש"  value={overview?.monthlyAppointments ?? '-'}                                                                                      subtitle={`${overview?.avgPerDay ?? 0} בממוצע ליום`} icon={Calendar}   color="orange" loading={loadingOverview} />
-        <StatCard isNight={isNight} title="הכנסות החודש" value={hideStats ? '••••' : overview ? `₪${overview.monthlyRevenue?.toLocaleString()}` : '-'}                                     subtitle="החודש הנוכחי"            icon={DollarSign} color="green"  loading={loadingOverview} />
+        <StatCard isNight={isNight} title="תורים החודש"  value={monthlyReport?.summary?.total ?? overview?.monthlyAppointments ?? '-'}                                                      subtitle={MONTH_NAMES[parseInt(month.split('-')[1]) - 1] + ' ' + month.split('-')[0]} icon={Calendar}   color="orange" loading={!monthlyReport && loadingOverview} />
+        <StatCard isNight={isNight} title="הכנסות החודש" value={hideStats ? '••••' : monthlyReport?.summary ? `₪${(monthlyReport.summary.revenue ?? 0).toLocaleString()}` : overview ? `₪${overview.monthlyRevenue?.toLocaleString()}` : '-'} subtitle={MONTH_NAMES[parseInt(month.split('-')[1]) - 1] + ' ' + month.split('-')[0]} icon={DollarSign} color="green"  loading={!monthlyReport && loadingOverview} />
       </div>
 
       {/* Daily revenue chart */}

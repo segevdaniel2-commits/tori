@@ -8,7 +8,7 @@ import {
   Building2, Clock, Scissors, Users, CreditCard, Puzzle, QrCode, Shield,
   Plus, Trash2, Edit3, Check, X, Loader2, Save, Copy, ExternalLink,
   AlertCircle, ChevronDown, ShieldCheck, ShieldOff, Smartphone, Upload, Palette,
-  LogOut, UserX, Briefcase,
+  LogOut, UserX, Briefcase, Eye, EyeOff,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useStore';
 
@@ -1395,6 +1395,9 @@ function SecuritySettings() {
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwError, setPwError] = useState(null);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // ── Login history state
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -1593,18 +1596,33 @@ function SecuritySettings() {
         <div className="space-y-3">
           <div>
             <label className={`block text-xs font-semibold mb-1.5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>סיסמה נוכחית</label>
-            <input type="password" value={pwForm.currentPassword} onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
-              className={inputCls2} dir="ltr" placeholder="••••••••" />
+            <div className="relative">
+              <input type={showCurrent ? 'text' : 'password'} value={pwForm.currentPassword} onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
+                className={inputCls2} dir="ltr" placeholder="••••••••" style={{ paddingLeft: '2.5rem' }} />
+              <button type="button" onClick={() => setShowCurrent(v => !v)} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className={`block text-xs font-semibold mb-1.5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>סיסמה חדשה</label>
-            <input type="password" value={pwForm.newPassword} onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
-              className={inputCls2} dir="ltr" placeholder="לפחות 8 תווים" />
+            <div className="relative">
+              <input type={showNew ? 'text' : 'password'} value={pwForm.newPassword} onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
+                className={inputCls2} dir="ltr" placeholder="לפחות 8 תווים" style={{ paddingLeft: '2.5rem' }} />
+              <button type="button" onClick={() => setShowNew(v => !v)} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className={`block text-xs font-semibold mb-1.5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>אימות סיסמה חדשה</label>
-            <input type="password" value={pwForm.confirmPassword} onChange={e => setPwForm(p => ({ ...p, confirmPassword: e.target.value }))}
-              className={inputCls2} dir="ltr" placeholder="••••••••" />
+            <div className="relative">
+              <input type={showConfirm ? 'text' : 'password'} value={pwForm.confirmPassword} onChange={e => setPwForm(p => ({ ...p, confirmPassword: e.target.value }))}
+                className={inputCls2} dir="ltr" placeholder="••••••••" style={{ paddingLeft: '2.5rem' }} />
+              <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
           </div>
           {pwError && (
             <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{pwError}</p>
