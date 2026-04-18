@@ -381,7 +381,7 @@ export default function DashboardLayout() {
               <TrialStrip business={business} onUpgrade={() => { handleUpgrade(); toggleSidebar(); }} />
             </div>
 
-            <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+            <nav className="flex-1 min-h-0 p-3 space-y-0.5 overflow-y-auto">
               {NAV_ITEMS.map(item => (
                 <NavLink
                   key={item.path}

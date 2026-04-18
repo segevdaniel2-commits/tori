@@ -706,7 +706,27 @@ function AddAppointmentModal({ selectedDate, initialTime, initialStaffId, onClos
             </div>
             <div>
               <label className="form-label">שעה *</label>
-              <input type="time" value={time} onChange={e => setTime(e.target.value)} className="form-input" />
+              <div className="flex items-center gap-2">
+                <select
+                  value={time.split(':')[0] || '10'}
+                  onChange={e => setTime(`${e.target.value}:${time.split(':')[1] || '00'}`)}
+                  className="form-input flex-1 text-center"
+                >
+                  {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
+                <span className="text-gray-400 font-bold text-lg shrink-0">:</span>
+                <select
+                  value={time.split(':')[1] || '00'}
+                  onChange={e => setTime(`${time.split(':')[0] || '10'}:${e.target.value}`)}
+                  className="form-input flex-1 text-center"
+                >
+                  {['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
