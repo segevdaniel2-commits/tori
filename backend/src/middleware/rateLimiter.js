@@ -39,6 +39,16 @@ const ownerBotLimiter = rateLimit({
   skipSuccessfulRequests: false,
 });
 
+// 2FA verify limiter — 5 attempts per 10 minutes, never skip
+const twoFaLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'יותר מדי ניסיונות אימות, נסה שוב בעוד 10 דקות' },
+  skipSuccessfulRequests: false,
+});
+
 // Admin reset limiter — very strict: 3 attempts per hour, count everything
 const adminResetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -49,4 +59,4 @@ const adminResetLimiter = rateLimit({
   skipSuccessfulRequests: false, // count all requests, not just failures
 });
 
-module.exports = { authLimiter, apiLimiter, webhookLimiter, ownerBotLimiter, adminResetLimiter };
+module.exports = { authLimiter, apiLimiter, webhookLimiter, ownerBotLimiter, adminResetLimiter, twoFaLimiter };

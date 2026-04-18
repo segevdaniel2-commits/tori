@@ -229,7 +229,8 @@ export default function AnalyticsPage() {
 
     const s = monthlyReport?.summary || {};
     const monthLabel = `${MONTH_NAMES_FULL[parseInt(month.split('-')[1]) - 1]} ${month.split('-')[0]}`;
-    const businessName = business?.name || 'Tori';
+    const esc = str => String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const businessName = esc(business?.name || 'Tori');
     const pendingCount = Math.max(0, (s.total ?? 0) - (s.completed ?? 0) - (s.cancelled ?? 0));
     const appointments = monthlyReport?.appointments || [];
 
@@ -239,9 +240,9 @@ export default function AnalyticsPage() {
       const bg = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
       const td = `padding:14px 16px;border-bottom:1px solid #eef0f3;font-size:13px;color:#374151;vertical-align:middle;line-height:1.5`;
       return `<tr style="background:${bg}">
-        <td style="${td};font-weight:700;color:#111827">${a.customer_name || '—'}</td>
-        <td style="${td}">${a.service_name || '—'}</td>
-        <td style="${td}">${a.staff_name || '—'}</td>
+        <td style="${td};font-weight:700;color:#111827">${esc(a.customer_name) || '—'}</td>
+        <td style="${td}">${esc(a.service_name) || '—'}</td>
+        <td style="${td}">${esc(a.staff_name) || '—'}</td>
         <td style="${td};direction:ltr;text-align:left;color:#6b7280;font-size:12px">${a.starts_at?.split('T')[0] || '—'}</td>
         <td style="${td};direction:ltr;text-align:left;font-weight:600;font-size:13px">${a.starts_at?.split('T')[1]?.slice(0, 5) || '—'}</td>
         <td style="${td};font-weight:700;color:#111827">₪${a.price || 0}</td>

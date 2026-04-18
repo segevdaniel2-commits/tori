@@ -9,7 +9,7 @@ const QRCode = require('qrcode');
 const { getDb } = require('../config/database');
 const { sendWelcome } = require('../services/email');
 const authMiddleware = require('../middleware/auth');
-const { adminResetLimiter } = require('../middleware/rateLimiter');
+const { adminResetLimiter, twoFaLimiter } = require('../middleware/rateLimiter');
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 const JWT_OPTS = { algorithm: 'HS256', expiresIn: '7d' };
@@ -294,7 +294,7 @@ router.post('/2fa/disable', authMiddleware, async (req, res) => {
 });
 
 // POST /api/auth/2fa/verify-login — exchange tempToken + TOTP code for full session
-router.post('/2fa/verify-login', (req, res) => {
+router.post('/2fa/verify-login', twoFaLimiter, (req, res) => {
   const { tempToken, code } = req.body;
   if (!tempToken || !code) return res.status(400).json({ error: 'tempToken and code required' });
 

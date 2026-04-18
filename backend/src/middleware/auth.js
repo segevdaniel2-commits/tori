@@ -16,7 +16,7 @@ function authMiddleware(req, res, next) {
     return res.status(401).json({ error: 'Authorization required' });
   }
 
-  if (token.length > 512) {
+  if (token.length > 256) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 

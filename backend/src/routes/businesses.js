@@ -210,10 +210,10 @@ router.put('/staff/:id', (req, res) => {
         phone     = COALESCE(?, phone),
         color     = COALESCE(?, color),
         is_active = COALESCE(?, is_active)
-      WHERE id = ?
-    `).run(cleanName, cleanRole, cleanPhone, cleanColor, is_active !== undefined ? (is_active ? 1 : 0) : null, req.params.id);
+      WHERE id = ? AND business_id = ?
+    `).run(cleanName, cleanRole, cleanPhone, cleanColor, is_active !== undefined ? (is_active ? 1 : 0) : null, req.params.id, req.business.id);
 
-    const updated = db.prepare('SELECT * FROM staff WHERE id = ?').get(req.params.id);
+    const updated = db.prepare('SELECT * FROM staff WHERE id = ? AND business_id = ?').get(req.params.id, req.business.id);
     res.json(updated);
   } catch (err) {
     console.error('[Businesses] Staff update error:', err);
@@ -227,7 +227,7 @@ router.delete('/staff/:id', (req, res) => {
     const db = getDb();
     const staffMember = db.prepare('SELECT * FROM staff WHERE id = ? AND business_id = ?').get(req.params.id, req.business.id);
     if (!staffMember) return res.status(404).json({ error: 'Staff not found' });
-    db.prepare('UPDATE staff SET is_active = 0 WHERE id = ?').run(req.params.id);
+    db.prepare('UPDATE staff SET is_active = 0 WHERE id = ? AND business_id = ?').run(req.params.id, req.business.id);
     res.json({ success: true });
   } catch (err) {
     console.error('[Businesses] Staff delete error:', err);
@@ -312,7 +312,7 @@ router.put('/services/:id', (req, res) => {
         price            = COALESCE(?, price),
         is_active        = COALESCE(?, is_active),
         sort_order       = COALESCE(?, sort_order)
-      WHERE id = ?
+      WHERE id = ? AND business_id = ?
     `).run(
       staff_id         !== undefined ? (staff_id ?? null) : null,
       name             !== undefined ? sanitize(name, 100) : null,
@@ -321,8 +321,9 @@ router.put('/services/:id', (req, res) => {
       is_active        !== undefined ? (is_active ? 1 : 0) : null,
       sort_order       !== undefined ? parseInt(sort_order) : null,
       req.params.id,
+      req.business.id,
     );
-    const updated = db.prepare('SELECT * FROM services WHERE id = ?').get(req.params.id);
+    const updated = db.prepare('SELECT * FROM services WHERE id = ? AND business_id = ?').get(req.params.id, req.business.id);
     res.json(updated);
   } catch (err) {
     console.error('[Businesses] Service update error:', err);
@@ -336,7 +337,7 @@ router.delete('/services/:id', (req, res) => {
     const db = getDb();
     const service = db.prepare('SELECT * FROM services WHERE id = ? AND business_id = ?').get(req.params.id, req.business.id);
     if (!service) return res.status(404).json({ error: 'Service not found' });
-    db.prepare('UPDATE services SET is_active = 0 WHERE id = ?').run(req.params.id);
+    db.prepare('UPDATE services SET is_active = 0 WHERE id = ? AND business_id = ?').run(req.params.id, req.business.id);
     res.json({ success: true });
   } catch (err) {
     console.error('[Businesses] Service delete error:', err);
