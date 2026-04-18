@@ -412,8 +412,8 @@ export default function LandingV2() {
       <section className="relative min-h-screen flex items-center pt-20 pb-12 px-4 md:px-6 overflow-hidden">
         <WebGLShader className="absolute inset-0 w-full h-full block" />
         {/* Bottom fade */}
-        <div className="absolute inset-x-0 bottom-0 h-56 pointer-events-none z-10"
-          style={{ background: 'linear-gradient(to bottom, transparent, #08080F)' }} />
+        <div className="absolute inset-x-0 bottom-0 h-80 pointer-events-none z-10"
+          style={{ background: 'linear-gradient(to bottom, transparent 0%, #08080F 70%)' }} />
         {/* Side vignette */}
         <div className="absolute inset-0 pointer-events-none z-10"
           style={{ background: 'radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(8,8,15,0.55) 100%)' }} />
@@ -540,18 +540,8 @@ export default function LandingV2() {
         </div>
       </section>
 
-      {/* ─── Animated gradient separator (replaces marquee) ───────────────── */}
-      <div className="relative h-px overflow-visible" aria-hidden="true">
-        <div
-          className="absolute inset-x-0 top-0 h-32 -translate-y-1/2 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse 80% 100% at 50% 50%, rgba(244,63,94,0.07) 0%, rgba(249,115,22,0.04) 40%, transparent 70%)',
-          }}
-        />
-      </div>
-
       {/* ─── Stats ────────────────────────────────────────────────────────── */}
-      <section className="py-12 md:py-16 px-4 md:px-6">
+      <section className="pt-0 pb-12 md:pb-16 px-4 md:px-6" style={{ background: '#08080F' }}>
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             {[
