@@ -218,15 +218,16 @@ function TestimonialCard({ t, delay }) {
 function ROICalculator() {
   const [appts, setAppts] = useState(80);
 
-  const avgPrice    = 120;   // ₪ avg per appointment
-  const noShowRate  = 0.13;  // 13% no-show rate without reminders
-  const planCost    = 99;    // basic plan monthly
-  const minsPerAppt = 7;     // admin minutes saved per appointment
+  const avgPrice    = 120;
+  const noShowRate  = 0.13;
+  const planCost    = 99;
+  const minsPerAppt = 7;
 
-  const savedAppts   = Math.round(appts * noShowRate);
-  const savedRevenue = savedAppts * avgPrice;
+  const savedRevenue = Math.round(appts * noShowRate) * avgPrice;
   const timeSaved    = Math.round(appts * minsPerAppt / 60 * 10) / 10;
   const roi          = Math.round((savedRevenue / planCost) * 10) / 10;
+
+  const pct = ((appts - 10) / (300 - 10)) * 100;
 
   return (
     <section className="py-14 md:py-24 px-4 md:px-6 border-t border-gray-800/50" style={{ background: '#08080F' }}>
@@ -254,25 +255,22 @@ function ROICalculator() {
         >
 
           {/* Slider */}
-          <div className="mb-8 md:mb-10">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-gray-400 text-sm">תורים בחודש</span>
-              <span className="text-white font-black text-2xl">{appts}</span>
+          <div className="mb-8 md:mb-10" dir="ltr">
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-gray-400 text-sm font-medium">תורים בחודש</span>
+              <span className="text-white font-black text-3xl tabular-nums">{appts}</span>
             </div>
-            <div className="relative">
-              <input
-                type="range"
-                min={10} max={300} step={5}
-                value={appts}
-                onChange={e => setAppts(Number(e.target.value))}
-                className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to left, #f97316, #f43f5e ${((appts - 10) / 290) * 100}%, rgba(255,255,255,0.1) ${((appts - 10) / 290) * 100}%)`,
-                  direction: 'ltr',
-                }}
-              />
-            </div>
-            <div className="flex justify-between mt-2 text-gray-600 text-xs">
+            <input
+              type="range"
+              min={10} max={300} step={5}
+              value={appts}
+              onChange={e => setAppts(Number(e.target.value))}
+              className="w-full h-2 rounded-full appearance-none cursor-pointer outline-none"
+              style={{
+                background: `linear-gradient(to right, #f97316 0%, #f43f5e ${pct}%, rgba(255,255,255,0.12) ${pct}%, rgba(255,255,255,0.12) 100%)`,
+              }}
+            />
+            <div className="flex justify-between mt-2.5 text-gray-600 text-xs">
               <span>10</span>
               <span>150</span>
               <span>300</span>
@@ -282,58 +280,43 @@ function ROICalculator() {
           {/* Results grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-            <motion.div
-              key={savedRevenue}
-              initial={{ scale: 0.96 }} animate={{ scale: 1 }} transition={{ duration: 0.15 }}
-              className="rounded-xl p-5 text-center"
-              style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)' }}
-            >
-              <div className="w-9 h-9 rounded-xl mx-auto mb-3 flex items-center justify-center"
+            <div className="rounded-xl p-5 text-center" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)' }}>
+              <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 4px 16px rgba(249,115,22,0.35)' }}>
-                <TrendingUp size={16} className="text-white" />
+                <TrendingUp size={18} className="text-white" />
               </div>
-              <div className="text-2xl md:text-3xl font-black text-white mb-1">
+              <div className="text-2xl md:text-3xl font-black text-white mb-1.5 tabular-nums">
                 ₪{savedRevenue.toLocaleString()}
               </div>
-              <div className="text-gray-400 text-xs leading-snug">הכנסה נוספת<br />בחודש מביטולים שנמנעו</div>
-            </motion.div>
+              <div className="text-gray-400 text-xs leading-relaxed">הכנסה שחוזרת אליך<br />מביטולי רגע אחרון</div>
+            </div>
 
-            <motion.div
-              key={timeSaved}
-              initial={{ scale: 0.96 }} animate={{ scale: 1 }} transition={{ duration: 0.15 }}
-              className="rounded-xl p-5 text-center"
-              style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}
-            >
-              <div className="w-9 h-9 rounded-xl mx-auto mb-3 flex items-center justify-center"
+            <div className="rounded-xl p-5 text-center" style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}>
+              <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', boxShadow: '0 4px 16px rgba(6,182,212,0.35)' }}>
-                <Clock size={16} className="text-white" />
+                <Clock size={18} className="text-white" />
               </div>
-              <div className="text-2xl md:text-3xl font-black text-white mb-1">
-                {timeSaved} שע'
+              <div className="text-2xl md:text-3xl font-black text-white mb-1.5 tabular-nums">
+                {timeSaved} שע׳
               </div>
-              <div className="text-gray-400 text-xs leading-snug">זמן שנחסך<br />מטיפול ידני בתורים</div>
-            </motion.div>
+              <div className="text-gray-400 text-xs leading-relaxed">שעות עבודה שנחסכות<br />מתיאומים ידניים</div>
+            </div>
 
-            <motion.div
-              key={roi}
-              initial={{ scale: 0.96 }} animate={{ scale: 1 }} transition={{ duration: 0.15 }}
-              className="rounded-xl p-5 text-center"
-              style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}
-            >
-              <div className="w-9 h-9 rounded-xl mx-auto mb-3 flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 16px rgba(16,185,129,0.35)' }}>
-                <Zap size={16} className="text-white" />
+            <div className="rounded-xl p-5 text-center" style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)' }}>
+              <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #f43f5e, #f97316)', boxShadow: '0 4px 16px rgba(244,63,94,0.35)' }}>
+                <Zap size={18} className="text-white" />
               </div>
-              <div className="text-2xl md:text-3xl font-black text-white mb-1">
-                ×{roi}
+              <div className="text-2xl md:text-3xl font-black text-white mb-1.5 tabular-nums">
+                {roi}×
               </div>
-              <div className="text-gray-400 text-xs leading-snug">ROI על ההשקעה<br />ביחס לעלות המנוי</div>
-            </motion.div>
+              <div className="text-gray-400 text-xs leading-relaxed">תשואה על המנוי<br />החזר השקעה חודשי</div>
+            </div>
 
           </div>
 
           <p className="text-center text-gray-600 text-xs mt-6">
-            * מחושב לפי מחיר תור ממוצע ₪{avgPrice} ושיעור ביטולי רגע אחרון ממוצע בענף (13%)
+            * מחושב לפי תור ממוצע ₪{avgPrice} ושיעור ביטולי רגע אחרון ממוצע בענף ({Math.round(noShowRate * 100)}%)
           </p>
         </motion.div>
 
