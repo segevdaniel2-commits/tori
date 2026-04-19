@@ -1202,6 +1202,7 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const bottomRef = useRef(null);
+  const scrollRef = useRef(null);
   const textareaRef = useRef(null);
   const isEmpty = messages.length === 0;
 
@@ -1217,8 +1218,10 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
   }, [messages]);
 
   useEffect(() => {
-    if (!isEmpty) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+    if (!isEmpty && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading, isEmpty]);
 
   function autoResize() {
     const el = textareaRef.current;
@@ -1311,7 +1314,7 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
       </div>
 
       {/* Body */}
-      <div className="flex-1 min-h-0 overflow-y-auto relative">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto relative">
         {isEmpty ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center px-5 pb-6 gap-5">
             <div className="text-center">
