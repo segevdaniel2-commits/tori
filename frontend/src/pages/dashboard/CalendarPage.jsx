@@ -5,7 +5,7 @@ import { he } from 'date-fns/locale';
 import {
   ChevronRight, ChevronLeft, ChevronDown, Plus, X, Clock, User, Phone,
   Scissors, Calendar, Loader2, Check, Trash2, Lock, RefreshCw, Pencil,
-  ArrowUp, RotateCcw, UserPlus, CalendarPlus, CalendarX2, Sparkles, Send,
+  ArrowUp, RotateCcw, UserPlus, CalendarPlus, CalendarX2, Sparkles, Send, Coffee,
 } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppointmentsApi, useBusinessApi } from '../../hooks/useApi';
@@ -17,9 +17,10 @@ const STATUS_COLORS = {
   completed: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', dot: 'bg-green-500' },
   cancelled: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300', dot: 'bg-red-400' },
   pending: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', dot: 'bg-amber-500' },
+  break: { bg: 'bg-slate-100', text: 'text-slate-500', border: 'border-slate-200', dot: 'bg-slate-400' },
 };
 
-const STATUS_LABELS = { confirmed: 'מאושר', completed: 'הושלם', cancelled: 'בוטל', pending: 'ממתין' };
+const STATUS_LABELS = { confirmed: 'מאושר', completed: 'הושלם', cancelled: 'בוטל', pending: 'ממתין', break: 'הפסקה' };
 
 
 const STATUS_LABELS_NIGHT = {
@@ -27,12 +28,14 @@ const STATUS_LABELS_NIGHT = {
   completed: { label: 'הושלם', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' },
   cancelled: { label: 'בוטל',  cls: 'bg-red-500/15 text-red-400 border-red-500/20' },
   pending:   { label: 'ממתין', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/20' },
+  break:     { label: 'הפסקה', cls: 'bg-slate-500/15 text-slate-400 border-slate-500/20' },
 };
 const STATUS_LABELS_DAY = {
   confirmed: { label: 'מאושר', cls: 'bg-[#fff1eb] text-[#f97316] border-[#f97316]/20' },
   completed: { label: 'הושלם', cls: 'bg-green-50 text-green-700 border-green-200' },
   cancelled: { label: 'בוטל',  cls: 'bg-red-50 text-red-600 border-red-200' },
   pending:   { label: 'ממתין', cls: 'bg-amber-50 text-amber-600 border-amber-200' },
+  break:     { label: 'הפסקה', cls: 'bg-slate-50 text-slate-500 border-slate-200' },
 };
 
 function useNightMode() {
@@ -111,6 +114,53 @@ function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
         </span>
       </motion.div>
     </>
+  );
+}
+
+function BreakDetailModal({ appt, onClose, onUpdate }) {
+  const isNight = useNightMode();
+  const appointmentsApi = useAppointmentsApi();
+  const [deleting, setDeleting] = useState(false);
+  const start = appt.starts_at.slice(11, 16);
+  const end = appt.ends_at?.slice(11, 16);
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await appointmentsApi.cancel(appt.id);
+      onUpdate();
+    } finally { setDeleting(false); }
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4"
+      onClick={onClose}>
+      <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+        className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm"
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+              <Coffee size={18} className="text-slate-500" />
+            </div>
+            <div>
+              <div className="font-bold text-gray-900">{appt.customer_name || 'הפסקה'}</div>
+              <div className="text-sm text-gray-400">{start}{end ? ` – ${end}` : ''}</div>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 text-gray-400"><X size={18} /></button>
+        </div>
+        <div className="p-5">
+          <button onClick={handleDelete} disabled={deleting}
+            className="w-full py-2.5 rounded-xl font-bold text-sm text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+            {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+            מחק הפסקה
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -772,12 +822,23 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
     slotAppts[key].push(a);
   });
 
+  function getApptDuration(a) {
+    if (a.service_duration) return a.service_duration;
+    if (a.ends_at) {
+      const [eh, em] = a.ends_at.slice(11, 16).split(':').map(Number);
+      const [sh2, sm2] = (a.starts_at.split('T')[1] || a.starts_at.slice(11)).slice(0, 5).split(':').map(Number);
+      const diff = eh * 60 + em - sh2 * 60 - sm2;
+      if (diff > 0) return diff;
+    }
+    return step;
+  }
+
   // Pre-compute all occupied slots from every appointment
   const occupied = new Set();
   appointments.forEach(a => {
     const tStr = (a.starts_at.split('T')[1] || a.starts_at.slice(11)).slice(0, 5);
     const [sh, sm] = tStr.split(':').map(Number);
-    const duration = a.service_duration || step;
+    const duration = getApptDuration(a);
     const slotMin = Math.floor((sh * 60 + sm) / step) * step;
     for (let t = slotMin + step; t < slotMin + duration; t += step) {
       occupied.add(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
@@ -803,12 +864,35 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
             <div key={slotTime} style={{ borderBottom: `1px solid ${dividerColor}` }}>
               {appts.map(appt => {
                 const aStart = appt.starts_at.slice(11, 16);
-                const dur = appt.service_duration || step;
+                const dur = getApptDuration(appt);
                 const [ash, asm] = aStart.split(':').map(Number);
                 const endMin = ash * 60 + asm + dur;
                 const endTimeStr = `${String(Math.floor(endMin/60)).padStart(2,'0')}:${String(endMin%60).padStart(2,'0')}`;
                 const st = statusMap[appt.status] || statusMap.confirmed;
                 const cardHeight = Math.max(64, Math.round(dur / step) * 56);
+
+                if (appt.status === 'break') {
+                  return (
+                    <div key={appt.id} className="flex items-stretch cursor-pointer group" style={{ minHeight: cardHeight }}
+                      onClick={() => onApptClick(appt)}>
+                      <div className="w-16 shrink-0 flex flex-col items-end justify-start pr-3 pt-3"
+                        style={{ borderLeft: `1px solid ${dividerColor}` }}>
+                        <span className={`text-xs font-bold ${isNight ? 'text-gray-500' : 'text-gray-500'}`}>{aStart}</span>
+                        <span className={`text-[10px] mt-0.5 text-gray-400`}>{endTimeStr}</span>
+                      </div>
+                      <div className="flex-1 mx-3 my-2 rounded-xl px-3 py-2 flex items-center gap-2 transition-all group-hover:brightness-95"
+                        style={{
+                          background: isNight ? 'rgba(100,116,139,0.12)' : '#f1f5f9',
+                          border: `1px solid ${isNight ? 'rgba(148,163,184,0.15)' : '#e2e8f0'}`,
+                          borderRight: '3px solid #94a3b8',
+                        }}>
+                        <Coffee size={14} className="text-slate-400 shrink-0" />
+                        <span className="text-sm font-semibold text-slate-500">{appt.customer_name || 'הפסקה'}</span>
+                        <span className="text-xs text-slate-400 mr-auto">{dur} דק׳</span>
+                      </div>
+                    </div>
+                  );
+                }
 
                 return (
                   <div key={appt.id} className="flex items-stretch cursor-pointer group" style={{ minHeight: cardHeight }}
@@ -1092,6 +1176,7 @@ const NIGHT_STATUS_COLORS = {
   completed:  { bg: 'bg-emerald-500/10', text: 'text-emerald-300', border: 'border-emerald-500/25', dot: 'bg-emerald-400' },
   cancelled:  { bg: 'bg-red-500/10',    text: 'text-red-400',    border: 'border-red-500/25',    dot: 'bg-red-400' },
   pending:    { bg: 'bg-amber-500/10',   text: 'text-amber-300',  border: 'border-amber-500/25',  dot: 'bg-amber-400' },
+  break:      { bg: 'bg-slate-500/10',   text: 'text-slate-400',  border: 'border-slate-500/25',  dot: 'bg-slate-500' },
 };
 
 // ─── Mobile appointment card ──────────────────────────────────────────────────
@@ -1100,7 +1185,7 @@ function MobileApptCard({ appt, onClick, isNight, requireConfirm, onComplete }) 
   const end = appt.ends_at?.split('T')[1]?.slice(0, 5) || appt.ends_at?.slice(11, 16);
   const palette = isNight ? NIGHT_STATUS_COLORS : STATUS_COLORS;
   const colors = palette[appt.status] || palette.confirmed;
-  const staffColor = appt.staff_color || '#f97316';
+  const staffColor = appt.status === 'break' ? '#94a3b8' : (appt.staff_color || '#f97316');
 
   return (
     <motion.button
@@ -1125,8 +1210,9 @@ function MobileApptCard({ appt, onClick, isNight, requireConfirm, onComplete }) 
 
         {/* Details */}
         <div className="flex-1 min-w-0">
-          <div className={`font-bold text-base leading-tight truncate ${colors.text}`}>
-            {appt.customer_name || 'לקוח'}
+          <div className={`font-bold text-base leading-tight truncate flex items-center gap-1.5 ${colors.text}`}>
+            {appt.status === 'break' && <Coffee size={13} className="shrink-0 opacity-70" />}
+            {appt.customer_name || (appt.status === 'break' ? 'הפסקה' : 'לקוח')}
           </div>
           <div className={`text-sm opacity-70 truncate mt-0.5 ${colors.text}`}>
             {[appt.service_name, appt.staff_name].filter(Boolean).join(' · ') || ''}
@@ -1422,6 +1508,110 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
   );
 }
 
+// ─── Break Modal ──────────────────────────────────────────────────────────────
+function BreakModal({ selectedDate, onClose, onSuccess }) {
+  const isNight = useNightMode();
+  const appointmentsApi = useAppointmentsApi();
+  const [date, setDate] = useState(selectedDate);
+  const [hour, setHour] = useState('13');
+  const [minute, setMinute] = useState('00');
+  const [duration, setDuration] = useState(60);
+  const [label, setLabel] = useState('הפסקה');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const inputCls = isNight
+    ? 'flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#f43f5e]/50'
+    : 'flex-1 px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-800 text-sm focus:outline-none focus:border-[#f43f5e]/60 shadow-sm';
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const starts_at = `${date}T${hour.padStart(2,'0')}:${minute}:00`;
+      const endMin = parseInt(hour)*60 + parseInt(minute) + duration;
+      const endsAt = `${date}T${String(Math.floor(endMin/60)).padStart(2,'0')}:${String(endMin%60).padStart(2,'0')}:00`;
+      await appointmentsApi.create({ status: 'break', starts_at, ends_at: endsAt, notes: label });
+      onSuccess();
+    } catch (err) {
+      setError(err.response?.data?.error || 'שגיאה ביצירת הפסקה');
+    } finally { setLoading(false); }
+  }
+
+  const bg = isNight ? '#12121A' : '#ffffff';
+  const border = isNight ? 'rgba(255,255,255,0.10)' : '#e5e7eb';
+  const textMain = isNight ? '#ffffff' : '#111827';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+        className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl shadow-2xl"
+        style={{ background: bg }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${border}` }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-100">
+              <Coffee size={16} className="text-slate-500" />
+            </div>
+            <span className="font-bold text-base" style={{ color: textMain }}>הוסף הפסקה</span>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100"><X size={16} className="text-gray-400" /></button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {error && <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{error}</p>}
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">תאריך</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              className={inputCls} style={{ width: '100%' }} />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">שעת התחלה</label>
+            <div className="flex gap-2" dir="ltr">
+              <select value={hour} onChange={e => setHour(e.target.value)} className={inputCls}>
+                {Array.from({length:24},(_,i)=><option key={i} value={String(i).padStart(2,'0')}>{String(i).padStart(2,'0')}</option>)}
+              </select>
+              <span className="flex items-center text-gray-400 font-bold">:</span>
+              <select value={minute} onChange={e => setMinute(e.target.value)} className={inputCls}>
+                {['00','15','30','45'].map(m=><option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">משך</label>
+            <select value={duration} onChange={e => setDuration(Number(e.target.value))} className={inputCls} style={{ width: '100%' }}>
+              {[15,20,30,45,60,90,120].map(m=><option key={m} value={m}>{m} דק׳</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">תיאור (אופציונלי)</label>
+            <input value={label} onChange={e => setLabel(e.target.value)} className={inputCls} style={{ width: '100%' }} placeholder="הפסקה" />
+          </div>
+
+          <button type="submit" disabled={loading}
+            className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg,#64748b,#475569)', opacity: loading ? 0.7 : 1 }}>
+            {loading ? <Loader2 size={15} className="animate-spin" /> : <Coffee size={15} />}
+            {loading ? 'שומר...' : 'הוסף הפסקה'}
+          </button>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function CalendarPage() {
   const { business } = useAuthStore();
   const { selectedDate, setSelectedDate } = useDashboardStore();
@@ -1429,6 +1619,7 @@ export default function CalendarPage() {
   const isNight = useNightMode();
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBreakModal, setShowBreakModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [addModalTime, setAddModalTime] = useState(null);
   const [showAiChat, setShowAiChat] = useState(false);
@@ -1505,7 +1696,7 @@ export default function CalendarPage() {
 
   const activeAppts = appointments.filter(a => a.status !== 'cancelled');
   const filteredAppts = staffFilter
-    ? activeAppts.filter(a => a.staff_id === staffFilter)
+    ? activeAppts.filter(a => a.staff_id === staffFilter || a.status === 'break')
     : activeAppts;
   const sortedAppts = [...filteredAppts].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
@@ -1612,6 +1803,11 @@ export default function CalendarPage() {
           style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 8px 24px rgba(244,63,94,0.4)' }}>
           <Plus size={22} className="text-white" />
         </button>
+        <button onClick={() => setShowBreakModal(true)}
+          className="fixed bottom-[84px] right-20 w-12 h-12 rounded-full z-40 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+          style={{ background: '#64748b', boxShadow: '0 6px 18px rgba(100,116,139,0.4)' }}>
+          <Coffee size={18} className="text-white" />
+        </button>
         <button onClick={() => setShowAiChat(true)}
           className="fixed bottom-[84px] left-4 w-14 h-14 rounded-full z-40 flex items-center justify-center shadow-xl active:scale-95 transition-transform"
           style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 8px 24px rgba(99,102,241,0.4)' }}>
@@ -1664,9 +1860,16 @@ export default function CalendarPage() {
                 <ChevronLeft size={17} />
               </button>
             </div>
-            <button onClick={() => { setAddModalTime(null); setShowAddModal(true); }} className="btn-primary text-sm px-4 py-2">
-              <Plus size={15} />הוסף תור
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowBreakModal(true)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-semibold transition-all ${isNight ? 'border-white/10 text-gray-400 hover:border-white/20 hover:text-white' : 'border-gray-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'}`}>
+                <Coffee size={14} />
+                הפסקה
+              </button>
+              <button onClick={() => { setAddModalTime(null); setShowAddModal(true); }} className="btn-primary text-sm px-4 py-2">
+                <Plus size={15} />הוסף תור
+              </button>
+            </div>
           </div>
 
           {/* Staff filter */}
@@ -1718,7 +1921,17 @@ export default function CalendarPage() {
 
       {/* Modals */}
       <AnimatePresence>
-        {selectedAppt && (
+        {selectedAppt && selectedAppt.status === 'break' && (
+          <BreakDetailModal
+            appt={selectedAppt}
+            onClose={() => setSelectedAppt(null)}
+            onUpdate={() => {
+              queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] });
+              setSelectedAppt(null);
+            }}
+          />
+        )}
+        {selectedAppt && selectedAppt.status !== 'break' && (
           <AppointmentModal
             appt={selectedAppt}
             onClose={() => setSelectedAppt(null)}
@@ -1746,6 +1959,16 @@ export default function CalendarPage() {
         {showAiChat && (
           <MobileAiChat isNight={isNight} onClose={() => setShowAiChat(false)}
             onAppointmentChange={() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })} />
+        )}
+        {showBreakModal && (
+          <BreakModal
+            selectedDate={selectedDate}
+            onClose={() => setShowBreakModal(false)}
+            onSuccess={() => {
+              setShowBreakModal(false);
+              queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] });
+            }}
+          />
         )}
       </AnimatePresence>
     </div>

@@ -422,8 +422,8 @@ function HoursSettings() {
   if (!hours) return null;
 
   const timeCls = isNight
-    ? 'border border-white/10 bg-white/5 text-white text-sm rounded-lg px-2 py-2 focus:outline-none focus:border-[#f43f5e]/50 w-[76px] text-center'
-    : 'border border-gray-300 bg-white text-gray-800 text-sm rounded-lg px-2 py-2 focus:outline-none focus:border-[#f43f5e]/60 w-[76px] shadow-sm text-center';
+    ? 'border border-white/10 bg-white/5 text-white text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/50 w-[66px] text-center'
+    : 'border border-gray-300 bg-white text-gray-800 text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/60 w-[66px] shadow-sm text-center';
 
   const dividerCls = isNight ? 'border-white/[0.07]' : 'border-gray-100';
 
@@ -433,32 +433,32 @@ function HoursSettings() {
       <div className={`border rounded-2xl overflow-hidden ${isNight ? 'border-white/[0.10]' : 'border-gray-300 shadow-sm'}`}>
         {hours.map((h, i) => (
           <div key={h.day_of_week}
-            className={`flex items-center gap-2.5 px-3 py-3 border-b last:border-0 transition-all ${dividerCls} ${
+            className={`flex items-start gap-2.5 px-3 py-2.5 border-b last:border-0 transition-all ${dividerCls} ${
               !h.is_open ? 'opacity-50' : ''
             } ${isNight ? 'hover:bg-white/[0.02]' : 'hover:bg-gray-50/60'}`}
           >
             {/* Toggle */}
-            <Toggle value={h.is_open} onChange={v => setDayField(i, 'is_open', v)} />
+            <div className="pt-0.5 shrink-0">
+              <Toggle value={h.is_open} onChange={v => setDayField(i, 'is_open', v)} />
+            </div>
 
-            {/* Day name */}
-            <span className={`font-semibold text-sm w-9 shrink-0 ${isNight ? 'text-white' : 'text-gray-800'}`}>
-              {DAY_LABELS[h.day_of_week]}
-            </span>
-
-            {/* Time range */}
-            <div className="flex items-center gap-1.5">
+            {/* Day name + time range stacked */}
+            <div className="flex-1 min-w-0">
+              <span className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-800'}`}>
+                {DAY_LABELS[h.day_of_week]}
+              </span>
               {h.is_open ? (
-                <>
+                <div className="flex items-center gap-1 mt-1.5" dir="ltr">
                   <input type="time" value={h.open_time}
                     onChange={e => setDayField(i, 'open_time', e.target.value)}
                     className={timeCls} />
-                  <span className={`text-xs font-medium ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>עד</span>
+                  <span className={`text-xs ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>–</span>
                   <input type="time" value={h.close_time}
                     onChange={e => setDayField(i, 'close_time', e.target.value)}
                     className={timeCls} />
-                </>
+                </div>
               ) : (
-                <span className={`text-sm font-medium ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>סגור</span>
+                <div className={`text-xs font-medium mt-1 ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>סגור</div>
               )}
             </div>
           </div>
@@ -1399,6 +1399,26 @@ function SecuritySettings() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // ── Break settings state
+  const [breakEnabled, setBreakEnabled] = useState(() => !!business?.break_start_time);
+  const [breakTime, setBreakTime] = useState(() => business?.break_start_time || '13:00');
+  const [breakDuration, setBreakDuration] = useState(() => business?.break_duration_minutes || 60);
+  const [breakSaving, setBreakSaving] = useState(false);
+  const [breakSaved, setBreakSaved] = useState(false);
+
+  async function saveBreak(time, duration) {
+    setBreakSaving(true);
+    try {
+      const { data } = await api.put('/businesses/settings', {
+        break_start_time: time || null,
+        break_duration_minutes: duration,
+      });
+      updateBusiness(data);
+      setBreakSaved(true);
+      setTimeout(() => setBreakSaved(false), 2000);
+    } catch {} finally { setBreakSaving(false); }
+  }
+
   // ── Login history state
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyData, setHistoryData] = useState(null);
@@ -1649,6 +1669,49 @@ function SecuritySettings() {
             }}
           />
         </div>
+      </Section>
+
+      {/* ── Daily break settings ──────────────────────────────────────── */}
+      <Section title="הפסקה יומית">
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <div>
+            <div className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>הפסקה קבועה ביום</div>
+            <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>חסימת שעה קבועה ביומן לכל יום. לסגור תורים בשעת ההפסקה</div>
+          </div>
+          <Toggle
+            value={breakEnabled}
+            onChange={async v => {
+              setBreakEnabled(v);
+              if (!v) await saveBreak(null, breakDuration);
+              else await saveBreak(breakTime, breakDuration);
+            }}
+          />
+        </div>
+        {breakEnabled && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls(isNight)}>שעת התחלה</label>
+                <input
+                  type="time"
+                  value={breakTime}
+                  onChange={e => setBreakTime(e.target.value)}
+                  className={inputCls(isNight)}
+                  dir="ltr"
+                />
+              </div>
+              <div>
+                <label className={labelCls(isNight)}>משך הפסקה</label>
+                <select value={breakDuration} onChange={e => setBreakDuration(Number(e.target.value))} className={inputCls(isNight)}>
+                  {[15, 20, 30, 45, 60, 90, 120].map(m => (
+                    <option key={m} value={m}>{m} דק׳</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <SaveBtn onClick={() => saveBreak(breakTime, breakDuration)} saving={breakSaving} saved={breakSaved} label="שמור הפסקה" />
+          </div>
+        )}
       </Section>
 
       {/* ── Hide stats toggle ─────────────────────────────────────────── */}

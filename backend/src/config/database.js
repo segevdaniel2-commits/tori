@@ -326,6 +326,8 @@ const init = async () => {
     // Security alerts
     "ALTER TABLE businesses ADD COLUMN security_alerts INTEGER DEFAULT 0",
     "ALTER TABLE businesses ADD COLUMN require_completion_confirm INTEGER DEFAULT 0",
+    "ALTER TABLE businesses ADD COLUMN break_start_time TEXT DEFAULT NULL",
+    "ALTER TABLE businesses ADD COLUMN break_duration_minutes INTEGER DEFAULT 60",
   ];
 
   // ── Indexes (CREATE IF NOT EXISTS — safe to re-run) ─────────────────────────
