@@ -1632,6 +1632,25 @@ function SecuritySettings() {
         </div>
       </div>
 
+      {/* ── Completion confirm toggle ─────────────────────────────────── */}
+      <Section title="ניהול תורים">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>אישור ידני לסיום תור</div>
+            <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>כאשר מופעל — יש לסמן כל תור כ"הושלם" ידנית. כאשר כבוי — תורים שעברו מסומנים אוטומטית כהושלמו</div>
+          </div>
+          <Toggle
+            value={!!(business?.require_completion_confirm)}
+            onChange={async v => {
+              try {
+                const { data } = await api.put('/businesses/settings', { require_completion_confirm: v });
+                updateBusiness(data);
+              } catch {}
+            }}
+          />
+        </div>
+      </Section>
+
       {/* ── Hide stats toggle ─────────────────────────────────────────── */}
       <Section title="פרטיות ונתונים">
         <div className="flex items-center justify-between gap-4">

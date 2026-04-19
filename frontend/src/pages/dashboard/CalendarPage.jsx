@@ -750,7 +750,7 @@ function AddAppointmentModal({ selectedDate, initialTime, initialStaffId, onClos
 }
 
 // ─── Desktop Time Grid ────────────────────────────────────────────────────────
-function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMinutes, onSlotClick, onApptClick, isTodayFlag }) {
+function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMinutes, onSlotClick, onApptClick, isTodayFlag, onComplete, requireConfirm }) {
   const step = Math.max(bufferMinutes || 30, 5);
   const slots = [];
   const [openH, openM] = openTime.split(':').map(Number);
@@ -837,6 +837,15 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
                         <span className={`font-bold text-sm shrink-0 ${isNight ? 'text-white' : 'text-gray-900'}`}>₪{appt.price}</span>
                       )}
                       <span className={`text-xs px-2 py-0.5 rounded-full border shrink-0 ${st.cls}`}>{st.label}</span>
+                      {requireConfirm && appt.status === 'confirmed' && (
+                        <button
+                          onClick={e => { e.stopPropagation(); onComplete?.(appt.id); }}
+                          title="סמן כהושלם"
+                          className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-400"
+                        >
+                          <Check size={13} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -1086,7 +1095,7 @@ const NIGHT_STATUS_COLORS = {
 };
 
 // ─── Mobile appointment card ──────────────────────────────────────────────────
-function MobileApptCard({ appt, onClick, isNight }) {
+function MobileApptCard({ appt, onClick, isNight, requireConfirm, onComplete }) {
   const start = appt.starts_at.split('T')[1]?.slice(0, 5) || appt.starts_at.slice(11, 16);
   const end = appt.ends_at?.split('T')[1]?.slice(0, 5) || appt.ends_at?.slice(11, 16);
   const palette = isNight ? NIGHT_STATUS_COLORS : STATUS_COLORS;
@@ -1124,8 +1133,17 @@ function MobileApptCard({ appt, onClick, isNight }) {
           </div>
         </div>
 
-        {/* Status dot */}
-        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${colors.dot}`} />
+        {/* Status dot / quick complete */}
+        {requireConfirm && appt.status === 'confirmed' ? (
+          <button
+            onClick={e => { e.stopPropagation(); onComplete?.(appt.id); }}
+            className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500 text-white active:scale-90 transition-transform"
+          >
+            <Check size={15} />
+          </button>
+        ) : (
+          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${colors.dot}`} />
+        )}
       </div>
     </motion.button>
   );
@@ -1458,6 +1476,14 @@ export default function CalendarPage() {
   const openTime = dayHours?.open_time || '09:00';
   const closeTime = dayHours?.close_time || '20:00';
   const bufferMinutes = business?.buffer_minutes || 30;
+  const requireConfirm = !!(business?.require_completion_confirm);
+
+  async function quickComplete(apptId) {
+    try {
+      await appointmentsApi.update(apptId, { status: 'completed' });
+      queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] });
+    } catch {}
+  }
 
   function goDay(offset) {
     const d = new Date(selectedDate + 'T00:00:00');
@@ -1577,7 +1603,7 @@ export default function CalendarPage() {
           ) : (
             <div className="space-y-2.5 pb-24">
               <div className="text-xs text-gray-400 font-medium px-1 mb-1">{sortedAppts.length} תורים</div>
-              {sortedAppts.map(appt => <MobileApptCard key={appt.id} appt={appt} onClick={setSelectedAppt} isNight={isNight} />)}
+              {sortedAppts.map(appt => <MobileApptCard key={appt.id} appt={appt} onClick={setSelectedAppt} isNight={isNight} requireConfirm={requireConfirm} onComplete={quickComplete} />)}
             </div>
           )}
         </div>
@@ -1681,6 +1707,8 @@ export default function CalendarPage() {
                 isTodayFlag={isTodayFlag}
                 onApptClick={setSelectedAppt}
                 onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
+                requireConfirm={requireConfirm}
+                onComplete={quickComplete}
               />
             )}
           </div>

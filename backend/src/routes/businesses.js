@@ -49,6 +49,7 @@ router.get('/settings', (req, res) => {
            logo_url, brand_color, plan, is_active, whatsapp_number, buffer_minutes,
            cancellation_hours, trial_ends_at, created_at, updated_at,
            terms_text, bot_tone, green_invoice_enabled, hide_stats, security_alerts,
+           require_completion_confirm,
            subscription_status, stripe_customer_id, stripe_subscription_id
     FROM businesses WHERE id = ?
   `).get(req.business.id);
@@ -60,7 +61,7 @@ router.get('/settings', (req, res) => {
 router.put('/settings', (req, res) => {
   try {
     const db = getDb();
-    const { name, type, owner_name, phone, address, city, description, logo_url, brand_color, buffer_minutes, cancellation_hours, terms_text, bot_tone, green_invoice_api_key, green_invoice_enabled, hide_stats, security_alerts } = req.body;
+    const { name, type, owner_name, phone, address, city, description, logo_url, brand_color, buffer_minutes, cancellation_hours, terms_text, bot_tone, green_invoice_api_key, green_invoice_enabled, hide_stats, security_alerts, require_completion_confirm } = req.body;
 
     const cleanLogoUrl   = logo_url   !== undefined ? safeUrl(logo_url)          : null;
     const cleanBrandColor = brand_color !== undefined ? safeCssColor(brand_color) : null;
@@ -98,6 +99,7 @@ router.put('/settings', (req, res) => {
         green_invoice_enabled = COALESCE(?, green_invoice_enabled),
         hide_stats = COALESCE(?, hide_stats),
         security_alerts = COALESCE(?, security_alerts),
+        require_completion_confirm = COALESCE(?, require_completion_confirm),
         updated_at = datetime('now')
       WHERE id = ?
     `).run(
@@ -111,6 +113,7 @@ router.put('/settings', (req, res) => {
       green_invoice_enabled !== undefined ? (green_invoice_enabled ? 1 : 0) : null,
       hide_stats !== undefined ? (hide_stats ? 1 : 0) : null,
       security_alerts !== undefined ? (security_alerts ? 1 : 0) : null,
+      require_completion_confirm !== undefined ? (require_completion_confirm ? 1 : 0) : null,
       req.business.id
     );
     const updated = db.prepare('SELECT * FROM businesses WHERE id = ?').get(req.business.id);
