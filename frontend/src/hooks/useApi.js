@@ -89,6 +89,7 @@ export function useCustomersApi() {
     get: (id) => api.get(`/customers/${id}`),
     update: (id, data) => api.put(`/customers/${id}`, data),
     quickCreate: (data) => api.post('/customers/quick', data),
+    delete: (id) => api.delete(`/customers/${id}`),
   };
 }
 

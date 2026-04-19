@@ -325,6 +325,7 @@ const init = async () => {
     "ALTER TABLE businesses ADD COLUMN brand_color TEXT DEFAULT NULL",
     // Security alerts
     "ALTER TABLE businesses ADD COLUMN security_alerts INTEGER DEFAULT 0",
+    "ALTER TABLE businesses ADD COLUMN require_completion_confirm INTEGER DEFAULT 0",
   ];
 
   // ── Indexes (CREATE IF NOT EXISTS — safe to re-run) ─────────────────────────

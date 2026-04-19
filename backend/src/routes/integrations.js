@@ -172,6 +172,8 @@ async function syncGoogleCalendar(businessId, refreshToken) {
     const startDate = startRaw.split('T')[0];
 
     const customerName = parsed.customerName || 'לקוח';
+    // Skip events that don't look like real customer appointments
+    if (!parsed.customerName || parsed.customerName === 'לקוח' || parsed.customerName.length < 2) continue;
     const serviceName  = parsed.serviceName  || null;
     const phone = parsed.phone
       ? String(parsed.phone).replace(/[- ]/g, '')
@@ -195,20 +197,8 @@ async function syncGoogleCalendar(businessId, refreshToken) {
         customersCreated++;
       }
     } else {
-      // No phone — still create customer record (name only)
-      const existing = db.prepare(
-        'SELECT id FROM customers WHERE business_id = ? AND name = ? AND whatsapp_phone LIKE ?'
-      ).get(businessId, customerName, 'gcal_%');
-
-      if (existing) {
-        customerId = existing.id;
-      } else {
-        const res = db.prepare(
-          `INSERT INTO customers (business_id, name, whatsapp_phone, source)
-           VALUES (?, ?, ?, 'google_calendar')`
-        ).run(businessId, customerName, `gcal_${event.id}`);
-        customerId = res.lastInsertRowid;
-      }
+      // Skip events with no phone — they're not real customer appointments
+      continue;
     }
 
     // ── Create appointment for all events in range ───────────────────────────

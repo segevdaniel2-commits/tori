@@ -160,6 +160,27 @@ function startScheduler() {
     }
   }, { timezone: 'Asia/Jerusalem' });
 
+  // Every 15 minutes: auto-complete past confirmed appointments for businesses
+  // that do NOT require manual completion confirmation
+  cron.schedule('*/15 * * * *', () => {
+    try {
+      const db = getDb();
+      const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      db.prepare(`
+        UPDATE appointments
+        SET status = 'completed'
+        WHERE status = 'confirmed'
+          AND ends_at < ?
+          AND business_id IN (
+            SELECT id FROM businesses
+            WHERE require_completion_confirm = 0 OR require_completion_confirm IS NULL
+          )
+      `).run(nowStr);
+    } catch (err) {
+      console.error('[Scheduler] Auto-complete error:', err);
+    }
+  }, { timezone: 'Asia/Jerusalem' });
+
   console.log('[Scheduler] Jobs started');
 }
 

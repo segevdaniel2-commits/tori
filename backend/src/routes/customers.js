@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
     const search = req.query.search;
     const offset = (page - 1) * limit;
 
-    let where = "WHERE c.business_id = ? AND c.whatsapp_phone NOT LIKE '999%' AND c.whatsapp_phone NOT LIKE 'manual_%' AND c.name IS NOT NULL AND c.name != ''";
+    let where = "WHERE c.business_id = ? AND c.whatsapp_phone NOT LIKE '999%' AND c.whatsapp_phone NOT LIKE 'manual_%' AND c.whatsapp_phone NOT LIKE 'gcal_%' AND c.name IS NOT NULL AND c.name != ''";
     const params = [req.business.id];
 
     if (search) {
@@ -106,27 +106,42 @@ router.put('/:id', (req, res) => {
     const customer = db.prepare('SELECT * FROM customers WHERE id = ? AND business_id = ?').get(req.params.id, req.business.id);
     if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
-    const { name, notes } = req.body;
+    const { name, notes, whatsapp_phone } = req.body;
 
-    // Validate lengths
-    if (name !== undefined && String(name).length > 100) {
+    if (name !== undefined && String(name).length > 100)
       return res.status(400).json({ error: 'Name too long (max 100 characters)' });
-    }
-    if (notes !== undefined && String(notes).length > 5000) {
+    if (notes !== undefined && String(notes).length > 5000)
       return res.status(400).json({ error: 'Notes too long (max 5000 characters)' });
-    }
+    if (whatsapp_phone !== undefined && String(whatsapp_phone).length > 30)
+      return res.status(400).json({ error: 'Phone too long' });
 
-    const cleanName  = name  !== undefined ? String(name).trim().slice(0, 100)   : undefined;
-    const cleanNotes = notes !== undefined ? String(notes).slice(0, 5000)         : undefined;
+    const cleanName  = name  !== undefined ? String(name).trim().slice(0, 100) : undefined;
+    const cleanNotes = notes !== undefined ? String(notes).slice(0, 5000)       : undefined;
+    const cleanPhone = whatsapp_phone !== undefined ? String(whatsapp_phone).trim().replace(/\s/g, '') : undefined;
 
-    db.prepare('UPDATE customers SET name = COALESCE(?, name), notes = COALESCE(?, notes) WHERE id = ?')
-      .run(cleanName ?? null, cleanNotes ?? null, req.params.id);
+    db.prepare('UPDATE customers SET name = COALESCE(?, name), notes = COALESCE(?, notes), whatsapp_phone = COALESCE(?, whatsapp_phone) WHERE id = ?')
+      .run(cleanName ?? null, cleanNotes ?? null, cleanPhone ?? null, req.params.id);
 
     const updated = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
     res.json(updated);
   } catch (err) {
     console.error('[Customers] Update error:', err);
     res.status(500).json({ error: 'Failed to update customer' });
+  }
+});
+
+// DELETE /api/customers/:id — delete a single customer and their appointments
+router.delete('/:id', (req, res) => {
+  try {
+    const db = getDb();
+    const customer = db.prepare('SELECT id FROM customers WHERE id = ? AND business_id = ?').get(req.params.id, req.business.id);
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+    db.prepare('DELETE FROM appointments WHERE customer_id = ? AND business_id = ?').run(req.params.id, req.business.id);
+    db.prepare('DELETE FROM customers WHERE id = ? AND business_id = ?').run(req.params.id, req.business.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Customers] Delete error:', err);
+    res.status(500).json({ error: 'Failed to delete customer' });
   }
 });
 
