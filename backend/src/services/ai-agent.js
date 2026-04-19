@@ -773,6 +773,25 @@ function isBusinessOpen(business, hours, dateStr) {
   return true;
 }
 
+function getBusyPeriods(db, business, staff, dateStr) {
+  const staffId = staff ? staff.id : null;
+  const existingAppts = db.prepare(`
+    SELECT starts_at, ends_at FROM appointments
+    WHERE business_id = ? AND (staff_id = ? OR ? IS NULL)
+      AND date(starts_at) = ? AND status NOT IN ('cancelled')
+  `).all(business.id, staffId, staffId, dateStr);
+
+  const blocked = db.prepare(`
+    SELECT starts_at, ends_at FROM blocked_times
+    WHERE business_id = ? AND (staff_id = ? OR staff_id IS NULL) AND date(starts_at) = ?
+  `).all(business.id, staffId, dateStr);
+
+  return [...existingAppts, ...blocked].map(b => ({
+    start: timeToMinutes(b.starts_at.split('T')[1]?.slice(0, 5) || b.starts_at.slice(11, 16)),
+    end: timeToMinutes(b.ends_at.split('T')[1]?.slice(0, 5) || b.ends_at.slice(11, 16)),
+  }));
+}
+
 function getAvailableSlots(db, business, staff, service, dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   const dayOfWeek = d.getDay();
@@ -788,23 +807,7 @@ function getAvailableSlots(db, business, staff, service, dateStr) {
   const startMinutes = openH * 60 + openM;
   const endMinutes = closeH * 60 + closeM;
 
-  // Get existing appointments and blocked times for this day
-  const staffId = staff ? staff.id : null;
-  const existingAppts = db.prepare(`
-    SELECT starts_at, ends_at FROM appointments
-    WHERE business_id = ? AND (staff_id = ? OR ? IS NULL)
-      AND date(starts_at) = ? AND status NOT IN ('cancelled')
-  `).all(business.id, staffId, staffId, dateStr);
-
-  const blocked = db.prepare(`
-    SELECT starts_at, ends_at FROM blocked_times
-    WHERE business_id = ? AND (staff_id = ? OR staff_id IS NULL) AND date(starts_at) = ?
-  `).all(business.id, staffId, dateStr);
-
-  const busy = [...existingAppts, ...blocked].map(b => ({
-    start: timeToMinutes(b.starts_at.split('T')[1]?.slice(0, 5) || b.starts_at.slice(11, 16)),
-    end: timeToMinutes(b.ends_at.split('T')[1]?.slice(0, 5) || b.ends_at.slice(11, 16)),
-  }));
+  const busy = getBusyPeriods(db, business, staff, dateStr);
 
   const slots = [];
   let cursor = startMinutes;
@@ -1300,7 +1303,29 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
     if (timeRequested) {
       // Customer requested a specific time — be deterministic
       if (slots.includes(timeRequested)) {
-        contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} פנויה. קבע אותה ישירות ללא שאלות נוספות על שעה.]`;
+        // Gap detection: check if booking at requestedTime leaves a small unusable gap before next busy slot
+        const duration = svcForSlots ? svcForSlots.duration_minutes : 30;
+        const buffer = business.buffer_minutes || 15;
+        const reqMin = timeToMinutes(timeRequested);
+        const slotEndMin = reqMin + duration;
+        const busyPeriods = getBusyPeriods(db, business, staffForSlots, dateToCheck);
+        const nextBusy = busyPeriods.filter(b => b.start >= slotEndMin).sort((a, b) => a.start - b.start)[0];
+        if (nextBusy) {
+          const gap = nextBusy.start - slotEndMin;
+          if (gap > 0 && gap < buffer) {
+            const betterStartMin = nextBusy.start - duration;
+            const betterTime = minutesToTime(betterStartMin);
+            if (betterStartMin > reqMin && slots.includes(betterTime)) {
+              contextHint += `\n[מערכת: השעה ${timeRequested} פנויה אבל תיצור חור של ${gap} דקות לפני ${minutesToTime(nextBusy.start)}. שאל את הלקוח בנימוס אם ${betterTime} מתאים לו במקום ${timeRequested} — ככה לא יהיה חור מבוזבז. אם הלקוח מסכים קבע ב-${betterTime}, אם לא — קבע ב-${timeRequested}.]`;
+            } else {
+              contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} פנויה. קבע אותה ישירות ללא שאלות נוספות על שעה.]`;
+            }
+          } else {
+            contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} פנויה. קבע אותה ישירות ללא שאלות נוספות על שעה.]`;
+          }
+        } else {
+          contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} פנויה. קבע אותה ישירות ללא שאלות נוספות על שעה.]`;
+        }
       } else {
         const { before, after } = findNearestSlots(slots, timeRequested);
         const opts = [before, after].filter(Boolean);
