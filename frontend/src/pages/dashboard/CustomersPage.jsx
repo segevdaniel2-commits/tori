@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Users, Phone, Calendar, Star, X, Loader2, ChevronRight, UserPlus, ArrowDownAZ } from 'lucide-react';
+import { Search, Users, Phone, Calendar, Star, X, Loader2, ChevronRight, UserPlus } from 'lucide-react';
 import { useCustomersApi } from '../../hooks/useApi';
 import { format, parseISO } from 'date-fns';
 import { he } from 'date-fns/locale';
@@ -276,9 +276,9 @@ export default function CustomersPage() {
         <button
           onClick={() => setSortAZ(v => !v)}
           title="מיון א-ת"
-          className={`p-3 rounded-xl border transition-all ${sortAZ ? 'bg-[#f97316] border-[#f97316] text-white' : 'bg-white border-gray-200 text-gray-400 hover:border-[#f97316] hover:text-[#f97316]'}`}
+          className={`px-3 py-2.5 rounded-xl border text-sm font-bold transition-all shrink-0 ${sortAZ ? 'bg-[#f97316] border-[#f97316] text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-[#f97316] hover:text-[#f97316]'}`}
         >
-          <ArrowDownAZ size={18} />
+          א-ת
         </button>
       </div>
 

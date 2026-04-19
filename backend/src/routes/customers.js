@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
     const search = req.query.search;
     const offset = (page - 1) * limit;
 
-    let where = "WHERE c.business_id = ? AND c.whatsapp_phone NOT LIKE '999%'";
+    let where = "WHERE c.business_id = ? AND c.whatsapp_phone NOT LIKE '999%' AND c.whatsapp_phone NOT LIKE 'manual_%' AND c.name IS NOT NULL AND c.name != ''";
     const params = [req.business.id];
 
     if (search) {
@@ -31,7 +31,7 @@ router.get('/', (req, res) => {
       LEFT JOIN appointments a ON a.customer_id = c.id
       ${where}
       GROUP BY c.id
-      ORDER BY c.last_visit_at DESC NULLS LAST, c.created_at DESC
+      ORDER BY COALESCE(c.last_visit_at, c.created_at) DESC
       LIMIT ? OFFSET ?
     `).all(...params, limit, offset);
 

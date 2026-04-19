@@ -706,7 +706,7 @@ function AddAppointmentModal({ selectedDate, initialTime, initialStaffId, onClos
             </div>
             <div>
               <label className="form-label">שעה *</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" dir="ltr">
                 <select
                   value={time.split(':')[0] || '10'}
                   onChange={e => setTime(`${e.target.value}:${time.split(':')[1] || '00'}`)}
