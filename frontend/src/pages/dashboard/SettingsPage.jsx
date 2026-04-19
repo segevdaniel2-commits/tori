@@ -422,8 +422,8 @@ function HoursSettings() {
   if (!hours) return null;
 
   const timeCls = isNight
-    ? 'border border-white/10 bg-white/5 text-white text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/50 w-[66px] text-center'
-    : 'border border-gray-300 bg-white text-gray-800 text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/60 w-[66px] shadow-sm text-center';
+    ? 'border border-white/10 bg-white/5 text-white text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/50 w-[84px] text-center'
+    : 'border border-gray-300 bg-white text-gray-800 text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/60 w-[84px] shadow-sm text-center';
 
   const dividerCls = isNight ? 'border-white/[0.07]' : 'border-gray-100';
 
@@ -685,7 +685,7 @@ function ServicesSettings() {
                     <span className={`text-xs shrink-0 ${mutedText}`}>דק׳</span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <input type="number" value={editForm.price}
+                    <input type="number" min="0" step="5" value={editForm.price}
                       onChange={e => setEditForm(f => ({ ...f, price: Number(e.target.value) }))}
                       className={inputCls(isNight) + ' w-20 py-2 text-center'} />
                     <span className={`text-xs shrink-0 ${mutedText}`}>₪</span>

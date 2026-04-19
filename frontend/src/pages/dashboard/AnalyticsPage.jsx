@@ -487,10 +487,10 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid lg:grid-cols-2 gap-3">
+      <div className="grid lg:grid-cols-3 gap-3">
 
         {/* Appointment status */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 lg:col-span-1">
           <h3 className={`font-bold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>
             סטטוס תורים — {MONTH_NAMES[parseInt(month.split('-')[1]) - 1]} {month.split('-')[0]}
           </h3>
@@ -499,11 +499,11 @@ export default function AnalyticsPage() {
             <div className={`text-center py-12 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
           ) : (
             <div className="flex flex-col items-center gap-5">
-              {/* Donut — centered, large */}
-              <div className="relative" style={{ width: 200, height: 200 }}>
+              {/* Donut — centered */}
+              <div className="relative" style={{ width: 160, height: 160 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={62} outerRadius={90}
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={48} outerRadius={72}
                       paddingAngle={3} dataKey="value" strokeWidth={0} startAngle={90} endAngle={-270}>
                       {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
                     </Pie>
@@ -520,7 +520,7 @@ export default function AnalyticsPage() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className={`text-4xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
+                  <span className={`text-3xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
                   <span className={`text-xs font-semibold mt-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>תורים בחודש</span>
                 </div>
               </div>
@@ -558,12 +558,12 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Peak hours */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 lg:col-span-2">
           <h3 className={`font-bold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
           {hoursData.length === 0 ? (
             <div className={`text-center py-8 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
           ) : (
-            <ResponsiveContainer width="100%" height={190}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={hoursData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <XAxis dataKey="hour" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={20} />

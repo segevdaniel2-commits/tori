@@ -177,10 +177,18 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
   const [editingService, setEditingService] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState(appt.service_id || '');
   const [savingService, setSavingService] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(false);
+  const [selectedStaffId, setSelectedStaffId] = useState(appt.staff_id || '');
+  const [savingStaff, setSavingStaff] = useState(false);
   const appointmentsApi = useAppointmentsApi();
   const { data: servicesList = [] } = useQuery({
     queryKey: ['services'],
     queryFn: () => api.get('/businesses/services').then(r => r.data),
+    staleTime: 60000,
+  });
+  const { data: staffList = [] } = useQuery({
+    queryKey: ['staff'],
+    queryFn: () => api.get('/businesses/staff').then(r => r.data),
     staleTime: 60000,
   });
 
@@ -226,6 +234,17 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
     }
   }
 
+  async function handleSaveStaff() {
+    setSavingStaff(true);
+    try {
+      await appointmentsApi.update(appt.id, { staff_id: selectedStaffId ? Number(selectedStaffId) : null });
+      setEditingStaff(false);
+      onUpdate();
+    } finally {
+      setSavingStaff(false);
+    }
+  }
+
   async function handleStatusChange(newStatus) {
     setUpdating(true);
     try {
@@ -242,7 +261,7 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
     try {
       await appointmentsApi.update(appt.id, { notes: notes.trim() });
       setEditingNotes(false);
-      onUpdate();
+      // Don't close modal — user can see the saved note in-place
     } finally {
       setSavingNotes(false);
     }
@@ -356,8 +375,36 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
               )}
             </div>
             <div className="bg-gray-50 rounded-xl p-3">
-              <div className="text-gray-500 text-xs mb-1 flex items-center gap-1"><User size={11} /> עובד</div>
-              <div className="font-semibold text-gray-900 text-sm">{appt.staff_name || '-'}</div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-gray-500 text-xs flex items-center gap-1"><User size={11} /> עובד</span>
+                {!editingStaff && (
+                  <button onClick={() => setEditingStaff(true)} className="p-0.5 rounded hover:bg-[#f97316]/15 transition-colors">
+                    <Pencil size={10} className="text-[#f97316]" />
+                  </button>
+                )}
+              </div>
+              {editingStaff ? (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <select
+                    value={selectedStaffId}
+                    onChange={e => setSelectedStaffId(e.target.value)}
+                    className="flex-1 text-xs border border-[#f97316]/50 rounded-lg px-2 py-1 focus:outline-none bg-white text-gray-800"
+                  >
+                    <option value="">ללא עובד</option>
+                    {staffList.filter(s => s.is_active).map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                  <button onClick={handleSaveStaff} disabled={savingStaff} className="p-1.5 rounded-lg bg-[#f97316] text-white hover:bg-[#f43f5e] shrink-0">
+                    {savingStaff ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                  </button>
+                  <button onClick={() => { setSelectedStaffId(appt.staff_id || ''); setEditingStaff(false); }} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 shrink-0">
+                    <X size={11} />
+                  </button>
+                </div>
+              ) : (
+                <div className="font-semibold text-gray-900 text-sm">{appt.staff_name || '-'}</div>
+              )}
             </div>
           </div>
 
