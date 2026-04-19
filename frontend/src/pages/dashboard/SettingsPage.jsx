@@ -422,8 +422,8 @@ function HoursSettings() {
   if (!hours) return null;
 
   const timeCls = isNight
-    ? 'border border-white/10 bg-white/5 text-white text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/50 w-[68px] text-center'
-    : 'border border-gray-300 bg-white text-gray-800 text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/60 w-[68px] shadow-sm text-center';
+    ? 'border border-white/10 bg-white/5 text-white text-sm rounded-lg px-2 py-2 focus:outline-none focus:border-[#f43f5e]/50 w-[76px] text-center'
+    : 'border border-gray-300 bg-white text-gray-800 text-sm rounded-lg px-2 py-2 focus:outline-none focus:border-[#f43f5e]/60 w-[76px] shadow-sm text-center';
 
   const dividerCls = isNight ? 'border-white/[0.07]' : 'border-gray-100';
 
@@ -433,7 +433,7 @@ function HoursSettings() {
       <div className={`border rounded-2xl overflow-hidden ${isNight ? 'border-white/[0.10]' : 'border-gray-300 shadow-sm'}`}>
         {hours.map((h, i) => (
           <div key={h.day_of_week}
-            className={`flex items-center gap-2 px-3 py-2 border-b last:border-0 transition-all ${dividerCls} ${
+            className={`flex items-center gap-2.5 px-3 py-3 border-b last:border-0 transition-all ${dividerCls} ${
               !h.is_open ? 'opacity-50' : ''
             } ${isNight ? 'hover:bg-white/[0.02]' : 'hover:bg-gray-50/60'}`}
           >
@@ -441,7 +441,7 @@ function HoursSettings() {
             <Toggle value={h.is_open} onChange={v => setDayField(i, 'is_open', v)} />
 
             {/* Day name */}
-            <span className={`font-semibold text-xs w-8 shrink-0 ${isNight ? 'text-white' : 'text-gray-800'}`}>
+            <span className={`font-semibold text-sm w-9 shrink-0 ${isNight ? 'text-white' : 'text-gray-800'}`}>
               {DAY_LABELS[h.day_of_week]}
             </span>
 
@@ -603,7 +603,7 @@ function ServicesSettings() {
                       </div>
                       <div>
                         <label className={labelCls(isNight)}>מחיר (₪)</label>
-                        <input type="number" min="0"
+                        <input type="number" min="0" step="5"
                           value={newService.price}
                           onChange={e => setNewService(f => ({ ...f, price: e.target.value }))}
                           className={inputCls(isNight)}
@@ -701,15 +701,15 @@ function ServicesSettings() {
                 </div>
               ) : (
                 // View mode
-                <div className="flex items-center gap-2 px-3 py-2">
+                <div className="flex items-center gap-2 px-3 py-3">
                   {/* Name */}
-                  <span className={`flex-1 font-semibold text-xs ${isNight ? 'text-white' : 'text-gray-900'}`}>{svc.name}</span>
+                  <span className={`flex-1 font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>{svc.name}</span>
                   {/* Duration pill */}
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${isNight ? 'bg-white/8 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`text-xs font-medium px-2.5 py-1.5 rounded-full shrink-0 ${isNight ? 'bg-white/8 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
                     {svc.duration_minutes} דק׳
                   </span>
                   {/* Price */}
-                  <span className={`font-bold text-xs w-12 text-left shrink-0 ${isNight ? 'text-white' : 'text-gray-900'}`}>
+                  <span className={`font-bold text-sm w-14 text-left shrink-0 ${isNight ? 'text-white' : 'text-gray-900'}`}>
                     ₪{svc.price}
                   </span>
                   {/* Actions */}
@@ -792,21 +792,21 @@ function StaffSettings() {
       {/* Staff list */}
       <div className={`border rounded-2xl overflow-hidden ${isNight ? 'border-white/[0.10]' : 'border-gray-300 shadow-sm'}`}>
         {activeStaff.map((s, i) => (
-          <div key={s.id} className={`flex items-center gap-2 px-3 py-2 border-b last:border-0 transition-all ${isNight ? 'border-white/[0.07] hover:bg-white/[0.02]' : 'border-gray-100 hover:bg-gray-50/60'}`}>
+          <div key={s.id} className={`flex items-center gap-3 px-3 py-3 border-b last:border-0 transition-all ${isNight ? 'border-white/[0.07] hover:bg-white/[0.02]' : 'border-gray-100 hover:bg-gray-50/60'}`}>
             {/* Avatar */}
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white font-bold text-xs shrink-0"
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
               style={{ background: `linear-gradient(135deg, ${s.color}, ${s.color}bb)` }}>
               {s.name?.[0]}
             </div>
             {/* Name */}
-            <span className={`flex-1 font-semibold text-xs truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{s.name}</span>
+            <span className={`flex-1 font-semibold text-sm truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{s.name}</span>
             {/* Role */}
-            <span className={`text-xs shrink-0 ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{s.role === 'owner' ? 'בעלים' : 'עובד'}</span>
+            <span className={`text-xs px-2.5 py-1 rounded-full shrink-0 ${isNight ? 'bg-white/8 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>{s.role === 'owner' ? 'בעלים' : 'עובד'}</span>
             {/* Delete */}
             {s.role !== 'owner' && (
               <button onClick={() => handleDelete(s.id)}
-                className={`shrink-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all ${isNight ? 'text-gray-600 hover:bg-red-500/20 hover:text-red-400' : 'text-gray-300 hover:bg-red-50 hover:text-red-500'}`}>
-                <Trash2 size={12} />
+                className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isNight ? 'text-gray-600 hover:bg-red-500/20 hover:text-red-400' : 'text-gray-300 hover:bg-red-50 hover:text-red-500'}`}>
+                <Trash2 size={14} />
               </button>
             )}
           </div>
@@ -1868,11 +1868,11 @@ function ManagementSettings() {
   function SubSection({ icon: Icon, label, children }) {
     return (
       <div>
-        <div className={`flex items-center gap-2 mb-2.5`}>
-          <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${isNight ? 'bg-white/[0.07]' : 'bg-[#f43f5e]/8'}`}>
-            <Icon size={13} className="text-[#f43f5e]" />
+        <div className={`flex items-center gap-2.5 mb-3`}>
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isNight ? 'bg-white/[0.07]' : 'bg-[#f43f5e]/8'}`}>
+            <Icon size={16} className="text-[#f43f5e]" />
           </div>
-          <span className={`font-bold text-sm ${isNight ? 'text-gray-200' : 'text-gray-800'}`}>{label}</span>
+          <span className={`font-bold text-base ${isNight ? 'text-gray-200' : 'text-gray-800'}`}>{label}</span>
         </div>
         {children}
       </div>

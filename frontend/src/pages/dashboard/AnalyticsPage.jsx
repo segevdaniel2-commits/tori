@@ -496,14 +496,14 @@ export default function AnalyticsPage() {
           </h3>
 
           {total === 0 ? (
-            <div className={`text-center py-8 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
+            <div className={`text-center py-12 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
           ) : (
-            <div className="flex items-center gap-4">
-              {/* Donut with total inside */}
-              <div className="relative shrink-0" style={{ width: 128, height: 128 }}>
+            <div className="flex flex-col items-center gap-5">
+              {/* Donut — centered, large */}
+              <div className="relative" style={{ width: 200, height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={38} outerRadius={58}
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={62} outerRadius={90}
                       paddingAngle={3} dataKey="value" strokeWidth={0} startAngle={90} endAngle={-270}>
                       {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
                     </Pie>
@@ -520,41 +520,39 @@ export default function AnalyticsPage() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className={`text-2xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
-                  <span className={`text-[10px] font-medium mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>תורים</span>
+                  <span className={`text-4xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
+                  <span className={`text-xs font-semibold mt-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>תורים בחודש</span>
                 </div>
               </div>
 
-              {/* Legend */}
-              <div className="flex-1 space-y-2.5">
+              {/* Legend — horizontal pills */}
+              <div className="w-full grid grid-cols-2 gap-2">
                 {pieData.map(d => (
-                  <div key={d.name} className="flex items-center justify-between">
+                  <div key={d.name} className={`flex items-center justify-between rounded-xl px-3 py-2.5 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
                     <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+                      <div className="w-3 h-3 rounded-full shrink-0" style={{ background: d.color }} />
                       <span className={`text-sm font-medium ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>{d.name}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <span className={`text-base font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{d.value}</span>
-                      <span className={`text-xs w-9 text-left tabular-nums ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {Math.round((d.value / total) * 100)}%
-                      </span>
+                      <span className={`text-xs tabular-nums ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{Math.round((d.value / total) * 100)}%</span>
                     </div>
                   </div>
                 ))}
-
-                {monthlyReport && (
-                  <div className={`pt-2.5 border-t flex gap-3 ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
-                    <div className={`flex-1 rounded-xl p-2.5 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
-                      <div className={`text-[10px] mb-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>הכנסות</div>
-                      <div className="text-sm font-black text-[#f43f5e]">₪{monthlyReport.summary.revenue?.toLocaleString() || 0}</div>
-                    </div>
-                    <div className={`flex-1 rounded-xl p-2.5 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
-                      <div className={`text-[10px] mb-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>לקוחות חדשים</div>
-                      <div className="text-sm font-black text-[#06b6d4]">{monthlyReport.newCustomers ?? 0}</div>
-                    </div>
-                  </div>
-                )}
               </div>
+
+              {monthlyReport && (
+                <div className={`w-full flex gap-3 border-t pt-4 ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
+                  <div className={`flex-1 rounded-xl p-3 text-center ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                    <div className="text-lg font-black text-[#f43f5e]">₪{monthlyReport.summary.revenue?.toLocaleString() || 0}</div>
+                    <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>הכנסות החודש</div>
+                  </div>
+                  <div className={`flex-1 rounded-xl p-3 text-center ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                    <div className="text-lg font-black text-[#06b6d4]">{monthlyReport.newCustomers ?? 0}</div>
+                    <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>לקוחות חדשים</div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
