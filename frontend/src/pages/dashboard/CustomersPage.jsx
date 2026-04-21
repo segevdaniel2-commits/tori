@@ -279,11 +279,11 @@ function CustomerCard({ customer, onClick, onEdit, onDelete, index }) {
       {/* Hover actions */}
       <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <button onClick={e => { e.stopPropagation(); onEdit(customer); }}
-          className="w-6 h-6 rounded-lg bg-white border border-gray-100 shadow-sm hover:border-[#f97316]/40 hover:text-[#f97316] text-gray-300 flex items-center justify-center transition-all">
+          className="w-6 h-6 rounded-lg bg-white border border-gray-200 shadow hover:border-[#f97316] hover:text-[#f97316] text-gray-500 flex items-center justify-center transition-all">
           <Pencil size={10} />
         </button>
         <button onClick={e => { e.stopPropagation(); onDelete(customer); }}
-          className="w-6 h-6 rounded-lg bg-white border border-gray-100 shadow-sm hover:border-red-300 hover:text-red-400 text-gray-300 flex items-center justify-center transition-all">
+          className="w-6 h-6 rounded-lg bg-white border border-gray-200 shadow hover:border-red-400 hover:text-red-500 text-gray-500 flex items-center justify-center transition-all">
           <Trash2 size={10} />
         </button>
       </div>

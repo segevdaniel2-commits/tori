@@ -854,7 +854,7 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
   const [closeH, closeM] = closeTime.split(':').map(Number);
   const openTotal = openH * 60 + openM;
   const closeTotal = closeH * 60 + closeM;
-  for (let t = openTotal; t < closeTotal; t += step) {
+  for (let t = openTotal; t <= closeTotal; t += step) {
     slots.push(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
   }
 
@@ -902,9 +902,10 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
       {slots.map((slotTime, idx) => {
         if (occupied.has(slotTime)) return null;
 
+        const isClosingMarker = idx === slots.length - 1;
         const appts = slotAppts[slotTime] || [];
         const isNowSlot = isTodayFlag && slotTime <= nowStr && nowStr < (slots[idx + 1] || '24:00');
-        const isPast = isTodayFlag && slotTime < nowStr && appts.length === 0;
+        const isPast = isClosingMarker || (isTodayFlag && slotTime < nowStr && appts.length === 0);
 
         if (appts.length > 0) {
           return (
@@ -1995,13 +1996,13 @@ export default function CalendarPage() {
             style={{ background: isNight ? '#0d1117' : '#ffffff' }}>
             <div className={`flex items-center justify-between px-5 py-3.5 border-b shrink-0 ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
               <span className={`font-semibold text-sm ${isNight ? 'text-white' : 'text-gray-800'}`}>
-                {!isBusinessOpen ? 'עסק סגור היום' : sortedAppts.length === 0 ? 'אין תורים היום' : `${sortedAppts.length} תורים`}
+                {!isBusinessOpen ? 'עסק סגור היום' : sortedAppts.filter(a => a.status !== 'break').length === 0 ? 'אין תורים היום' : `${sortedAppts.filter(a => a.status !== 'break').length} תורים`}
               </span>
-              {sortedAppts.length > 0 && (
+              {sortedAppts.filter(a => a.status !== 'break').length > 0 && (
                 <span style={{ color: isNight ? 'rgba(255,255,255,0.35)' : '#b0b7c3', fontSize: 12 }}>
                   הכנסה צפויה{' '}
                   <span style={{ fontWeight: 700, fontSize: 14, color: isNight ? '#ffffff' : '#374151' }}>
-                    ₪{sortedAppts.reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
+                    ₪{sortedAppts.filter(a => a.status !== 'break').reduce((s, a) => s + (Number(a.price) || 0), 0).toLocaleString()}
                   </span>
                 </span>
               )}

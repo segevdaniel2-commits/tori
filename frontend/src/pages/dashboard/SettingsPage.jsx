@@ -117,9 +117,15 @@ function Toggle({ value, onChange }) {
 function Section({ title, children }) {
   const isNight = useContext(NightCtx);
   return (
-    <div className={`border rounded-2xl p-4 space-y-3 ${isNight ? 'border-white/[0.10]' : 'border-gray-300 shadow-sm'}`}>
-      {title && <p className={`text-xs font-bold uppercase tracking-widest ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{title}</p>}
-      {children}
+    <div className={`rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.10]' : 'border-gray-200 shadow-sm'}`}>
+      {title && (
+        <div className={`px-4 py-2.5 border-b ${isNight ? 'bg-white/[0.04] border-white/[0.08]' : 'bg-gray-50 border-gray-200'}`}>
+          <p className={`text-[11px] font-extrabold uppercase tracking-widest ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>{title}</p>
+        </div>
+      )}
+      <div className="p-4 space-y-3">
+        {children}
+      </div>
     </div>
   );
 }
@@ -268,7 +274,7 @@ function GeneralSettings() {
         </div>
         <div>
           <label className={labelCls(isNight)}>תיאור קצר</label>
-          <textarea {...f('description')} className={inputCls(isNight) + ' resize-none'} rows={2} placeholder="תיאור שיופיע ללקוחות בבוט..." />
+          <textarea {...f('description')} className={inputCls(isNight) + ' resize-none overflow-y-auto'} style={{ height: '64px' }} placeholder="תיאור שיופיע ללקוחות בבוט..." />
         </div>
       </Section>
 
@@ -278,26 +284,26 @@ function GeneralSettings() {
         </p>
         <textarea
           {...f('terms_text')}
-          className={inputCls(isNight) + ' resize-none'}
-          rows={4}
+          className={inputCls(isNight) + ' resize-none overflow-y-auto'}
+          style={{ height: '96px' }}
           placeholder="לדוגמה: ביטול תור יש לבצע 24 שעות מראש. איחור של מעל 10 דקות יגרור ביטול התור..."
         />
       </Section>
 
       <Section title="מיקום ויצירת קשר">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
+        <div className="flex gap-2">
+          <div className="flex-[2]">
             <label className={labelCls(isNight)}>כתובת</label>
             <input {...f('address')} className={inputCls(isNight)} />
           </div>
-          <div>
+          <div className="flex-1">
             <label className={labelCls(isNight)}>עיר</label>
             <input {...f('city')} className={inputCls(isNight)} />
           </div>
-        </div>
-        <div className="max-w-xs">
-          <label className={labelCls(isNight)}>טלפון</label>
-          <input {...f('phone')} className={inputCls(isNight)} dir="ltr" placeholder="050-0000000" />
+          <div className="w-36 shrink-0">
+            <label className={labelCls(isNight)}>טלפון</label>
+            <input {...f('phone')} className={inputCls(isNight)} dir="ltr" placeholder="050-0000000" />
+          </div>
         </div>
       </Section>
 
@@ -1930,20 +1936,22 @@ function ManagementSettings() {
 
   function SubSection({ icon: Icon, label, children }) {
     return (
-      <div>
-        <div className={`flex items-center gap-2.5 mb-3`}>
-          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isNight ? 'bg-white/[0.07]' : 'bg-[#f43f5e]/8'}`}>
-            <Icon size={16} className="text-[#f43f5e]" />
+      <div className={`rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.10]' : 'border-gray-200 shadow-sm'}`}>
+        <div className={`flex items-center gap-3 px-4 py-3 border-b ${isNight ? 'bg-white/[0.04] border-white/[0.08]' : 'bg-gray-50 border-gray-200'}`}>
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isNight ? 'bg-[#f43f5e]/20' : 'bg-[#f43f5e]/10'}`}>
+            <Icon size={14} className="text-[#f43f5e]" />
           </div>
-          <span className={`font-bold text-base ${isNight ? 'text-gray-200' : 'text-gray-800'}`}>{label}</span>
+          <span className={`font-extrabold text-sm tracking-wide ${isNight ? 'text-gray-200' : 'text-gray-700'}`}>{label}</span>
         </div>
-        {children}
+        <div className="p-4">
+          {children}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
       <SubSection icon={Clock} label="שעות פעילות">
         <HoursSettings />
       </SubSection>

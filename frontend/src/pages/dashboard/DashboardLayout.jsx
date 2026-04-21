@@ -639,7 +639,7 @@ export default function DashboardLayout() {
         <AnimatePresence>
           {notifications
             .slice(0, 3)
-            .filter(n => Date.now() - new Date(n.createdAt).getTime() < 8000)
+            .filter(n => Date.now() - new Date(n.createdAt).getTime() < 5000)
             .map(n => (
               <motion.div
                 key={n.id}
