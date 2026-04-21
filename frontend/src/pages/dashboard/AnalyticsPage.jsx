@@ -490,85 +490,63 @@ export default function AnalyticsPage() {
       <div className="grid lg:grid-cols-3 gap-3">
 
         {/* Appointment status */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 lg:col-span-1">
-          <h3 className={`font-bold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>
-            סטטוס תורים — {MONTH_NAMES[parseInt(month.split('-')[1]) - 1]} {month.split('-')[0]}
-          </h3>
+        <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-1 ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
+          <div className="flex items-baseline justify-between mb-4">
+            <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>סטטוס תורים</h3>
+            <span className={`text-xs ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{MONTH_NAMES[parseInt(month.split('-')[1]) - 1]} {month.split('-')[0]}</span>
+          </div>
 
           {total === 0 ? (
-            <div className={`text-center py-12 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
+            <div className={`text-center py-10 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
           ) : (
-            <div className="flex flex-col items-center gap-5">
-              {/* Donut — centered */}
-              <div className="relative" style={{ width: 160, height: 160 }}>
+            <div className="flex items-center gap-4">
+              {/* Donut — compact */}
+              <div className="relative shrink-0" style={{ width: 120, height: 120 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={48} outerRadius={72}
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={36} outerRadius={54}
                       paddingAngle={3} dataKey="value" strokeWidth={0} startAngle={90} endAngle={-270}>
                       {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
                     </Pie>
-                    <Tooltip content={({ active, payload }) =>
-                      active && payload?.[0] ? (
-                        <div className="rounded-xl shadow-lg px-3 py-2 text-right"
-                          style={{ background: isNight ? '#1a1a2e' : '#fff', border: `1px solid ${isNight ? 'rgba(255,255,255,0.1)' : '#e5e7eb'}` }}>
-                          <span className="text-sm font-bold" style={{ color: payload[0].payload.color }}>
-                            {payload[0].name}: {payload[0].value}
-                          </span>
-                        </div>
-                      ) : null
-                    } />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className={`text-3xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
-                  <span className={`text-xs font-semibold mt-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>תורים בחודש</span>
+                  <span className={`text-2xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
+                  <span className={`text-[10px] mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>תורים</span>
                 </div>
               </div>
 
-              {/* Legend — horizontal pills */}
-              <div className="w-full grid grid-cols-2 gap-2">
+              {/* Legend — vertical */}
+              <div className="flex-1 space-y-2.5">
                 {pieData.map(d => (
-                  <div key={d.name} className={`flex items-center justify-between rounded-xl px-3 py-2.5 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                  <div key={d.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full shrink-0" style={{ background: d.color }} />
-                      <span className={`text-sm font-medium ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>{d.name}</span>
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+                      <span className={`text-sm ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>{d.name}</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-baseline gap-1.5 tabular-nums">
                       <span className={`text-base font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{d.value}</span>
-                      <span className={`text-xs tabular-nums ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{Math.round((d.value / total) * 100)}%</span>
+                      <span className={`text-[11px] ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{Math.round((d.value / total) * 100)}%</span>
                     </div>
                   </div>
                 ))}
               </div>
-
-              {monthlyReport && (
-                <div className={`w-full flex gap-3 border-t pt-4 ${isNight ? 'border-white/[0.07]' : 'border-gray-100'}`}>
-                  <div className={`flex-1 rounded-xl p-3 text-center ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
-                    <div className="text-lg font-black text-[#f43f5e]">₪{monthlyReport.summary.revenue?.toLocaleString() || 0}</div>
-                    <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>הכנסות החודש</div>
-                  </div>
-                  <div className={`flex-1 rounded-xl p-3 text-center ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
-                    <div className="text-lg font-black text-[#06b6d4]">{monthlyReport.newCustomers ?? 0}</div>
-                    <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>לקוחות חדשים</div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
 
         {/* Peak hours */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 lg:col-span-2">
+        <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-2 ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
           <h3 className={`font-bold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
           {hoursData.length === 0 ? (
             <div className={`text-center py-8 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
           ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={hoursData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+            <ResponsiveContainer width="100%" height={190}>
+              <BarChart data={hoursData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }}>
                 <XAxis dataKey="hour" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={20} />
+                <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={20} domain={[0, 'dataMax+1']} />
                 <Tooltip content={<CustomTooltip isNight={isNight} />} />
-                <Bar dataKey="count" name="תורים" fill="#f43f5e" radius={[4, 4, 0, 0]} fillOpacity={0.85} />
+                <Bar dataKey="count" name="תורים" fill="#f43f5e" radius={[5, 5, 0, 0]} fillOpacity={0.88} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
           )}

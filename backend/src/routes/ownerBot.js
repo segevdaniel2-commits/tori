@@ -20,7 +20,7 @@ function getBusinessContext(db, businessId) {
 
   // Staff
   const staff = db.prepare(
-    "SELECT name, role FROM staff WHERE business_id = ? AND is_active = 1"
+    "SELECT id, name, role FROM staff WHERE business_id = ? AND is_active = 1"
   ).all(businessId);
 
   // Today's appointments
@@ -366,7 +366,7 @@ router.post('/chat', async (req, res) => {
             customer = { id: r.lastInsertRowid };
           }
 
-          const staff = ctx.staff[0];
+          const staff = ctx.staff.find(s => s.role === 'owner') || ctx.staff[0];
           db.prepare(`INSERT INTO appointments (business_id, customer_id, staff_id, service_id, starts_at, ends_at, price, status, source) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmed', 'owner_bot')`)
             .run(req.business.id, customer.id, staff?.id || null, svc?.id || null, startsAt, endsAt, svc?.price || null);
           return { conflict: false };

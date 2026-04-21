@@ -1348,6 +1348,7 @@ const BOT_ACTION_CARDS = [
 ];
 
 function CalendarBotPanel({ isNight, onAppointmentChange }) {
+  const { addNotification } = useNotificationStore();
   const [messages, setMessages] = useState(() => loadBotChat());
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -1396,7 +1397,10 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
         history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
       });
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply, id: Date.now() + 1 }]);
-      if (data.reply.includes('✓')) onAppointmentChange?.();
+      if (data.reply.includes('✓')) {
+        onAppointmentChange?.();
+        addNotification({ title: 'תור נוסף', message: 'תור חדש נקבע בהצלחה', type: 'appointment', read: false });
+      }
     } catch (err) {
       const detail = err?.response?.data?.error || err?.message || '';
       setError(`שגיאה.${detail ? ` (${detail})` : ''}`);

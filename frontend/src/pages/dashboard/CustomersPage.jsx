@@ -297,7 +297,7 @@ function CustomerCard({ customer, onClick, onEdit, onDelete, index }) {
       {/* Name + phone */}
       <div className="min-w-0">
         <div className="font-bold text-gray-900 text-[13px] leading-tight truncate">{customer.name || 'לא ידוע'}</div>
-        <div className="text-[11px] text-gray-400 font-mono truncate mt-0.5" dir="ltr">{customer.whatsapp_phone}</div>
+        <div className="text-xs text-gray-500 font-mono truncate mt-0.5" dir="ltr">{customer.whatsapp_phone}</div>
       </div>
 
       {/* Stats */}
