@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format, addDays, subDays, parseISO, isToday } from 'date-fns';
 import { he } from 'date-fns/locale';
 import {
-  ChevronRight, ChevronLeft, ChevronDown, Plus, X, Clock, User, Phone,
+  ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Plus, X, Clock, User, Phone,
   Scissors, Calendar, Loader2, Check, Trash2, Lock, RefreshCw, Pencil,
   ArrowUp, RotateCcw, UserPlus, CalendarPlus, CalendarX2, Sparkles, Send, Coffee,
 } from 'lucide-react';
@@ -1564,30 +1564,48 @@ function BreakModal({ selectedDate, onClose, onSuccess }) {
   const isNight = useNightMode();
   const appointmentsApi = useAppointmentsApi();
 
-  const roundedNow = () => {
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  const initTime = () => {
     const now = new Date();
     const rounded = Math.ceil(now.getMinutes() / 5) * 5;
     const d = new Date(now);
     d.setMinutes(rounded, 0, 0);
-    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes() % 60).padStart(2,'0')}`;
+    return { h: d.getHours() % 24, m: d.getMinutes() % 60 };
   };
 
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
   const [date, setDate] = useState(selectedDate || todayStr);
-  const [startTime, setStartTime] = useState(roundedNow);
+  const [hour, setHour] = useState(() => initTime().h);
+  const [minute, setMinute] = useState(() => initTime().m);
   const [duration, setDuration] = useState(30);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const isToday = date === todayStr;
+  const nowH = new Date().getHours();
+  const nowM = new Date().getMinutes();
+
+  function changeHour(delta) {
+    setHour(h => ((h + delta) % 24 + 24) % 24);
+  }
+  function changeMinute(delta) {
+    const steps = Math.round(minute / 5);
+    const newSteps = ((steps + delta) % 12 + 12) % 12;
+    setMinute(newSteps * 5);
+  }
+
+  const isPast = isToday && (hour < nowH || (hour === nowH && minute < nowM));
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const starts_at = `${date}T${startTime}:00`;
-      const [h, m] = startTime.split(':').map(Number);
-      const endMin = h * 60 + m + duration;
+      const hh = String(hour).padStart(2, '0');
+      const mm = String(minute).padStart(2, '0');
+      const starts_at = `${date}T${hh}:${mm}:00`;
+      const endMin = hour * 60 + minute + duration;
       const ends_at = `${date}T${String(Math.floor(endMin / 60)).padStart(2,'0')}:${String(endMin % 60).padStart(2,'0')}:00`;
       await appointmentsApi.create({ status: 'break', starts_at, ends_at, notes: 'הפסקה' });
       onSuccess();
@@ -1599,12 +1617,11 @@ function BreakModal({ selectedDate, onClose, onSuccess }) {
   const bg = isNight ? '#12121A' : '#ffffff';
   const textMain = isNight ? '#ffffff' : '#111827';
   const textSub = isNight ? 'rgba(255,255,255,0.38)' : '#9ca3af';
-  const rowCls = isNight ? 'border-white/8 bg-white/[0.04]' : 'border-gray-100 bg-gray-50';
-  const dividerCls = isNight ? 'bg-white/10' : 'bg-gray-200';
+  const surfaceCls = isNight ? 'bg-white/[0.04] border-white/8' : 'bg-gray-50 border-gray-100';
+  const chevCls = `w-8 h-7 flex items-center justify-center rounded-lg transition-colors select-none ${isNight ? 'text-gray-500 hover:text-white hover:bg-white/10' : 'text-gray-300 hover:text-gray-600 hover:bg-gray-100'}`;
+  const numCls = `text-3xl font-black tabular-nums leading-none ${isPast && isToday ? (isNight ? 'text-gray-600' : 'text-gray-300') : isNight ? 'text-white' : 'text-gray-900'}`;
 
-  const dateLabel = date === todayStr
-    ? 'היום'
-    : format(parseISO(date), 'd בMMMM', { locale: he });
+  const dateLabel = isToday ? 'היום' : format(parseISO(date), 'd בMMMM', { locale: he });
 
   return (
     <motion.div
@@ -1636,41 +1653,58 @@ function BreakModal({ selectedDate, onClose, onSuccess }) {
         <form onSubmit={handleSubmit} className="px-5 pb-5 space-y-3">
           {error && <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{error}</p>}
 
-          {/* Time + duration row */}
-          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl border ${rowCls}`} dir="ltr">
-            <input
-              type="time"
-              value={startTime}
-              onChange={e => setStartTime(e.target.value)}
-              className={`flex-1 text-base font-bold bg-transparent border-none outline-none ${isNight ? 'text-white' : 'text-gray-900'}`}
-            />
-            <div className={`w-px h-5 shrink-0 ${dividerCls}`} />
-            <select
-              value={duration}
-              onChange={e => setDuration(Number(e.target.value))}
-              className={`text-sm font-medium bg-transparent border-none outline-none cursor-pointer ${isNight ? 'text-slate-300' : 'text-slate-500'}`}
-            >
-              {[15,20,30,45,60,90,120].map(m => <option key={m} value={m}>{m} דק׳</option>)}
-            </select>
+          {/* Custom time picker */}
+          <div className={`rounded-2xl border p-4 ${surfaceCls}`}>
+            <div className="flex items-center justify-center gap-3" dir="ltr">
+              {/* Hour */}
+              <div className="flex flex-col items-center gap-1">
+                <button type="button" className={chevCls} onClick={() => changeHour(1)}><ChevronUp size={16} /></button>
+                <span className={numCls}>{String(hour).padStart(2,'0')}</span>
+                <button type="button" className={chevCls} onClick={() => changeHour(-1)}><ChevronDown size={16} /></button>
+              </div>
+
+              <span className={`text-3xl font-black mb-0.5 ${isNight ? 'text-gray-600' : 'text-gray-200'}`}>:</span>
+
+              {/* Minute */}
+              <div className="flex flex-col items-center gap-1">
+                <button type="button" className={chevCls} onClick={() => changeMinute(1)}><ChevronUp size={16} /></button>
+                <span className={numCls}>{String(minute).padStart(2,'0')}</span>
+                <button type="button" className={chevCls} onClick={() => changeMinute(-1)}><ChevronDown size={16} /></button>
+              </div>
+            </div>
+
+            {isPast && isToday && (
+              <p className="text-center text-[11px] text-amber-500 mt-2">שעה שכבר עברה</p>
+            )}
+          </div>
+
+          {/* Duration pills */}
+          <div className="flex gap-1.5 flex-wrap" dir="rtl">
+            {[15, 20, 30, 45, 60, 90, 120].map(d => (
+              <button key={d} type="button"
+                onClick={() => setDuration(d)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  duration === d
+                    ? 'bg-slate-600 text-white shadow-sm'
+                    : isNight ? 'bg-white/[0.06] text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}>
+                {d < 60 ? `${d}′` : `${d / 60}ש׳`}
+              </button>
+            ))}
           </div>
 
           {/* Date hint + change link */}
           <div className="flex items-center justify-between px-1">
             <span className="text-xs" style={{ color: textSub }}>{dateLabel}</span>
-            <button
-              type="button"
+            <button type="button"
               onClick={() => setShowDatePicker(v => !v)}
-              className="text-xs font-medium text-[#f43f5e]/60 hover:text-[#f43f5e] transition-colors"
-            >
+              className="text-xs font-medium text-[#f43f5e]/60 hover:text-[#f43f5e] transition-colors">
               {showDatePicker ? 'סגור' : 'שנה תאריך'}
             </button>
           </div>
 
           {showDatePicker && (
-            <input
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
               className={`w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none ${
                 isNight ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-gray-200 text-gray-800'
               }`}
