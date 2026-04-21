@@ -1559,27 +1559,33 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
 function BreakModal({ selectedDate, onClose, onSuccess }) {
   const isNight = useNightMode();
   const appointmentsApi = useAppointmentsApi();
-  const [date, setDate] = useState(selectedDate);
-  const [hour, setHour] = useState('13');
-  const [minute, setMinute] = useState('00');
-  const [duration, setDuration] = useState(60);
-  const [label, setLabel] = useState('הפסקה');
+
+  const roundedNow = () => {
+    const now = new Date();
+    const rounded = Math.ceil(now.getMinutes() / 5) * 5;
+    const d = new Date(now);
+    d.setMinutes(rounded, 0, 0);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes() % 60).padStart(2,'0')}`;
+  };
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const [date, setDate] = useState(selectedDate || todayStr);
+  const [startTime, setStartTime] = useState(roundedNow);
+  const [duration, setDuration] = useState(30);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const inputCls = isNight
-    ? 'flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#f43f5e]/50'
-    : 'flex-1 px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-800 text-sm focus:outline-none focus:border-[#f43f5e]/60 shadow-sm';
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const starts_at = `${date}T${hour.padStart(2,'0')}:${minute}:00`;
-      const endMin = parseInt(hour)*60 + parseInt(minute) + duration;
-      const endsAt = `${date}T${String(Math.floor(endMin/60)).padStart(2,'0')}:${String(endMin%60).padStart(2,'0')}:00`;
-      await appointmentsApi.create({ status: 'break', starts_at, ends_at: endsAt, notes: label });
+      const starts_at = `${date}T${startTime}:00`;
+      const [h, m] = startTime.split(':').map(Number);
+      const endMin = h * 60 + m + duration;
+      const ends_at = `${date}T${String(Math.floor(endMin / 60)).padStart(2,'0')}:${String(endMin % 60).padStart(2,'0')}:00`;
+      await appointmentsApi.create({ status: 'break', starts_at, ends_at, notes: 'הפסקה' });
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.error || 'שגיאה ביצירת הפסקה');
@@ -1587,71 +1593,91 @@ function BreakModal({ selectedDate, onClose, onSuccess }) {
   }
 
   const bg = isNight ? '#12121A' : '#ffffff';
-  const border = isNight ? 'rgba(255,255,255,0.10)' : '#e5e7eb';
   const textMain = isNight ? '#ffffff' : '#111827';
+  const textSub = isNight ? 'rgba(255,255,255,0.38)' : '#9ca3af';
+  const rowCls = isNight ? 'border-white/8 bg-white/[0.04]' : 'border-gray-100 bg-gray-50';
+  const dividerCls = isNight ? 'bg-white/10' : 'bg-gray-200';
+
+  const dateLabel = date === todayStr
+    ? 'היום'
+    : format(parseISO(date), 'd בMMMM', { locale: he });
 
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4"
+      className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center sm:p-4"
       onClick={onClose}
     >
       <motion.div
-        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-        className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl shadow-2xl"
+        initial={{ y: 32, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 32, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+        className="w-full sm:max-w-xs rounded-t-3xl sm:rounded-2xl shadow-2xl"
         style={{ background: bg }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${border}` }}>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-100">
-              <Coffee size={16} className="text-slate-500" />
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-4">
+          <div className="flex items-center gap-2">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isNight ? 'bg-white/8' : 'bg-slate-100'}`}>
+              <Coffee size={14} className="text-slate-500" />
             </div>
-            <span className="font-bold text-base" style={{ color: textMain }}>הוסף הפסקה</span>
+            <span className="font-bold text-sm" style={{ color: textMain }}>הפסקה</span>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100"><X size={16} className="text-gray-400" /></button>
+          <button onClick={onClose}
+            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isNight ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}>
+            <X size={14} style={{ color: textSub }} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {error && <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{error}</p>}
+        <form onSubmit={handleSubmit} className="px-5 pb-5 space-y-3">
+          {error && <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{error}</p>}
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">תאריך</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)}
-              className={inputCls} style={{ width: '100%' }} />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">שעת התחלה</label>
-            <div className="flex gap-2" dir="ltr">
-              <select value={hour} onChange={e => setHour(e.target.value)} className={inputCls}>
-                {Array.from({length:24},(_,i)=><option key={i} value={String(i).padStart(2,'0')}>{String(i).padStart(2,'0')}</option>)}
-              </select>
-              <span className="flex items-center text-gray-400 font-bold">:</span>
-              <select value={minute} onChange={e => setMinute(e.target.value)} className={inputCls}>
-                {['00','15','30','45'].map(m=><option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">משך</label>
-            <select value={duration} onChange={e => setDuration(Number(e.target.value))} className={inputCls} style={{ width: '100%' }}>
-              {[15,20,30,45,60,90,120].map(m=><option key={m} value={m}>{m} דק׳</option>)}
+          {/* Time + duration row */}
+          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl border ${rowCls}`} dir="ltr">
+            <input
+              type="time"
+              value={startTime}
+              onChange={e => setStartTime(e.target.value)}
+              className={`flex-1 text-base font-bold bg-transparent border-none outline-none ${isNight ? 'text-white' : 'text-gray-900'}`}
+            />
+            <div className={`w-px h-5 shrink-0 ${dividerCls}`} />
+            <select
+              value={duration}
+              onChange={e => setDuration(Number(e.target.value))}
+              className={`text-sm font-medium bg-transparent border-none outline-none cursor-pointer ${isNight ? 'text-slate-300' : 'text-slate-500'}`}
+            >
+              {[15,20,30,45,60,90,120].map(m => <option key={m} value={m}>{m} דק׳</option>)}
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">תיאור (אופציונלי)</label>
-            <input value={label} onChange={e => setLabel(e.target.value)} className={inputCls} style={{ width: '100%' }} placeholder="הפסקה" />
+          {/* Date hint + change link */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs" style={{ color: textSub }}>{dateLabel}</span>
+            <button
+              type="button"
+              onClick={() => setShowDatePicker(v => !v)}
+              className="text-xs font-medium text-[#f43f5e]/60 hover:text-[#f43f5e] transition-colors"
+            >
+              {showDatePicker ? 'סגור' : 'שנה תאריך'}
+            </button>
           </div>
 
+          {showDatePicker && (
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none ${
+                isNight ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-gray-200 text-gray-800'
+              }`}
+            />
+          )}
+
           <button type="submit" disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 mt-1"
             style={{ background: 'linear-gradient(135deg,#64748b,#475569)', opacity: loading ? 0.7 : 1 }}>
-            {loading ? <Loader2 size={15} className="animate-spin" /> : <Coffee size={15} />}
-            {loading ? 'שומר...' : 'הוסף הפסקה'}
+            {loading && <Loader2 size={13} className="animate-spin" />}
+            {loading ? 'שומר...' : 'שמור הפסקה'}
           </button>
         </form>
       </motion.div>
