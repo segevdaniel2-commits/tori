@@ -487,72 +487,113 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid lg:grid-cols-3 gap-3">
+      {(() => {
+        // Compute insights from monthly appointments
+        const appts = monthlyReport?.appointments || [];
+        const svcCount = {};
+        appts.forEach(a => { if (a.service_name) svcCount[a.service_name] = (svcCount[a.service_name] || 0) + 1; });
+        const topService = Object.entries(svcCount).sort((a, b) => b[1] - a[1])[0];
+        const avgValue = (completed > 0 && monthlyReport?.summary?.revenue)
+          ? Math.round(monthlyReport.summary.revenue / completed)
+          : null;
 
-        {/* Appointment status */}
-        <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-1 ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
-          <div className="flex items-baseline justify-between mb-4">
-            <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>סטטוס תורים</h3>
-            <span className={`text-xs ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{MONTH_NAMES[parseInt(month.split('-')[1]) - 1]} {month.split('-')[0]}</span>
-          </div>
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 items-start">
 
-          {total === 0 ? (
-            <div className={`text-center py-10 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
-          ) : (
-            <div className="flex items-center gap-4">
-              {/* Donut — compact */}
-              <div className="relative shrink-0" style={{ width: 120, height: 120 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={36} outerRadius={54}
-                      paddingAngle={3} dataKey="value" strokeWidth={0} startAngle={90} endAngle={-270}>
-                      {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className={`text-2xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
-                  <span className={`text-[10px] mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>תורים</span>
-                </div>
+            {/* Appointment status */}
+            <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-2 self-start ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
+              <div className="flex items-baseline justify-between mb-3">
+                <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>סטטוס תורים</h3>
+                <span className={`text-xs ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{MONTH_NAMES[parseInt(month.split('-')[1]) - 1]} {month.split('-')[0]}</span>
               </div>
 
-              {/* Legend — vertical */}
-              <div className="flex-1 space-y-2.5">
-                {pieData.map(d => (
-                  <div key={d.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
-                      <span className={`text-sm ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>{d.name}</span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5 tabular-nums">
-                      <span className={`text-base font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{d.value}</span>
-                      <span className={`text-[11px] ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{Math.round((d.value / total) * 100)}%</span>
+              {total === 0 ? (
+                <div className={`text-center py-6 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="relative shrink-0" style={{ width: 110, height: 110 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={pieData} cx="50%" cy="50%" innerRadius={32} outerRadius={50}
+                          paddingAngle={3} dataKey="value" strokeWidth={0} startAngle={90} endAngle={-270}>
+                          {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className={`text-2xl font-black leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
+                      <span className={`text-[10px] mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>תורים</span>
                     </div>
                   </div>
-                ))}
+                  <div className="flex-1 space-y-2">
+                    {pieData.map(d => (
+                      <div key={d.name} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
+                          <span className={`text-sm ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>{d.name}</span>
+                        </div>
+                        <div className="flex items-baseline gap-1.5 tabular-nums">
+                          <span className={`text-base font-black ${isNight ? 'text-white' : 'text-gray-900'}`}>{d.value}</span>
+                          <span className={`text-[11px] ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{Math.round((d.value / total) * 100)}%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Insights card */}
+            <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-1 self-start space-y-3 ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
+              <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>תובנות</h3>
+
+              <div className={`rounded-xl p-3 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                <div className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>שירות מוביל</div>
+                {topService ? (
+                  <>
+                    <div className={`font-bold text-sm truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>{topService[0]}</div>
+                    <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{topService[1]} תורים</div>
+                  </>
+                ) : (
+                  <div className={`text-xs ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים</div>
+                )}
+              </div>
+
+              <div className={`rounded-xl p-3 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                <div className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>ממוצע לתור</div>
+                {avgValue !== null ? (
+                  <div className={`font-black text-lg ${isNight ? 'text-white' : 'text-gray-900'}`}>₪{avgValue.toLocaleString()}</div>
+                ) : (
+                  <div className={`text-xs ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים</div>
+                )}
+              </div>
+
+              <div className={`rounded-xl p-3 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
+                <div className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>לקוחות חדשים</div>
+                <div className={`font-black text-lg ${isNight ? 'text-white' : 'text-gray-900'}`}>{monthlyReport?.newCustomers ?? '-'}</div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Peak hours */}
-        <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-2 ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
-          <h3 className={`font-bold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
-          {hoursData.length === 0 ? (
-            <div className={`text-center py-8 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={190}>
-              <BarChart data={hoursData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }}>
-                <XAxis dataKey="hour" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={20} domain={[0, 'dataMax+1']} />
-                <Tooltip content={<CustomTooltip isNight={isNight} />} />
-                <Bar dataKey="count" name="תורים" fill="#f43f5e" radius={[5, 5, 0, 0]} fillOpacity={0.88} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
+            {/* Peak hours */}
+            <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-2 ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
+              <h3 className={`font-bold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
+              {hoursData.length === 0 ? (
+                <div className={`text-center py-8 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={hoursData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }} barCategoryGap="25%">
+                    <XAxis dataKey="hour" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={20} domain={[0, 'dataMax+1']} />
+                    <Tooltip content={<CustomTooltip isNight={isNight} />} />
+                    <Bar dataKey="count" name="תורים" fill="#f43f5e" radius={[5, 5, 0, 0]} fillOpacity={0.88} maxBarSize={32} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
 
-      </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

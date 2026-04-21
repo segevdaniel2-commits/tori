@@ -264,16 +264,12 @@ function QuickAddSheet({ onClose, onSuccess }) {
 }
 
 function CustomerCard({ customer, onClick, onEdit, onDelete, index }) {
-  const initial = (customer.name || '?')[0].toUpperCase();
-  const COLORS = ['#f97316', '#8b5cf6', '#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#3b82f6', '#ec4899'];
-  const color = COLORS[customer.id % COLORS.length];
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.018 }}
-      className="bg-white border border-gray-100 rounded-2xl p-3 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group relative flex flex-col gap-2"
+      className="bg-white border border-gray-100 rounded-2xl p-3.5 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group relative flex flex-col gap-2.5"
       onClick={() => onClick(customer.id)}
     >
       {/* Hover actions */}
@@ -288,27 +284,21 @@ function CustomerCard({ customer, onClick, onEdit, onDelete, index }) {
         </button>
       </div>
 
-      {/* Avatar */}
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0"
-        style={{ background: color }}>
-        {initial}
-      </div>
-
       {/* Name + phone */}
-      <div className="min-w-0">
-        <div className="font-bold text-gray-900 text-[13px] leading-tight truncate">{customer.name || 'לא ידוע'}</div>
-        <div className="text-xs text-gray-500 font-mono truncate mt-0.5" dir="ltr">{customer.whatsapp_phone}</div>
+      <div className="min-w-0 pt-1">
+        <div className="font-black text-gray-900 text-[15px] leading-tight truncate">{customer.name || 'לא ידוע'}</div>
+        <div className="text-xs text-gray-400 font-mono truncate mt-1" dir="ltr">{customer.whatsapp_phone}</div>
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-0 pt-1.5 border-t border-gray-50 mt-auto">
+      <div className="flex items-center gap-0 pt-2 border-t border-gray-100 mt-auto">
         <div className="flex-1 text-center">
-          <div className="text-[13px] font-black text-gray-800 leading-none">{customer.total_visits || 0}</div>
+          <div className="text-sm font-black text-gray-800 leading-none">{customer.total_visits || 0}</div>
           <div className="text-[9px] text-gray-400 mt-0.5 uppercase tracking-wide">ביקורים</div>
         </div>
         <div className="w-px h-5 bg-gray-100" />
         <div className="flex-1 text-center">
-          <div className="text-[13px] font-black text-gray-800 leading-none">₪{(customer.total_spent || 0).toLocaleString()}</div>
+          <div className="text-sm font-black text-gray-800 leading-none">₪{(customer.total_spent || 0).toLocaleString()}</div>
           <div className="text-[9px] text-gray-400 mt-0.5 uppercase tracking-wide">הוצאה</div>
         </div>
       </div>
@@ -394,7 +384,7 @@ export default function CustomersPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {customers.map((customer, i) => (
               <CustomerCard
                 key={customer.id}

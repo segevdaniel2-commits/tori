@@ -228,6 +228,11 @@ ${upcomingText}
 כשברור: CANCEL:{שם}|{תאריך YYYY-MM-DD}|{שעה HH:MM}
 (ללא טקסט לאחר ה-CANCEL)
 
+הוספת הפסקה — כשהספר מבקש לחסום שעה/הפסקה ביומן:
+אסוף: תאריך, שעה, משך (בדקות).
+כשמוכן: BREAK:{תאריך YYYY-MM-DD}|{שעה HH:MM}|{משך בדקות}
+(ללא טקסט לאחר ה-BREAK)
+
 כללים:
 - אל תמציא נתונים
 - טלפון לקוח — רק אם ביקשו במפורש לפי שם
@@ -424,6 +429,40 @@ router.post('/chat', async (req, res) => {
         return res.json({ reply: `✓ התור של ${customerName.trim()} ב-${displayDate} בשעה ${time} בוטל.` });
       } catch (cancelErr) {
         console.error('[OwnerBot] Cancel error:', cancelErr.message);
+      }
+    }
+
+    // ── Detect and execute break action ──────────────────────────────────────
+    // Format: BREAK:{date YYYY-MM-DD}|{time HH:MM}|{duration minutes}
+    const breakMatch = reply.match(/BREAK:(\d{4}-\d{2}-\d{2})\|(\d{2}:\d{2})\|(\d+)/);
+    if (breakMatch) {
+      const [, date, time, durStr] = breakMatch;
+      try {
+        const duration = Math.max(5, Math.min(480, parseInt(durStr, 10) || 30));
+        const startsAt = `${date}T${time}:00`;
+        const [bh, bm] = time.split(':').map(Number);
+        const endMin = bh * 60 + bm + duration;
+        const _p = n => String(n).padStart(2, '0');
+        const endsAt = `${date}T${_p(Math.floor(endMin / 60))}:${_p(endMin % 60)}:00`;
+
+        const conflict = db.prepare(
+          `SELECT id FROM appointments WHERE business_id = ? AND status NOT IN ('cancelled') AND starts_at < ? AND ends_at > ?`
+        ).get(req.business.id, endsAt, startsAt);
+        if (conflict) {
+          return res.json({ reply: `השעה ${time} תפוסה — יש כבר תור. תרצה שעה אחרת?` });
+        }
+
+        db.prepare(`INSERT INTO blocked_times (business_id, starts_at, ends_at, reason) VALUES (?, ?, ?, ?)`)
+          .run(req.business.id, startsAt, endsAt, 'הפסקה');
+
+        const io = req.app.get('io');
+        if (io) io.to(`business_${req.business.id}`).emit('appointment:created', { starts_at: startsAt });
+
+        const [dy, dm, dd] = date.split('-');
+        const displayDate = `${Number(dd)}/${Number(dm)}/${dy}`;
+        return res.json({ reply: `✓ הפסקה נקבעה ב-${displayDate} בשעה ${time} (${duration} דק׳).` });
+      } catch (breakErr) {
+        console.error('[OwnerBot] Break error:', breakErr.message);
       }
     }
 

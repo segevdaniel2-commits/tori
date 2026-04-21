@@ -847,7 +847,7 @@ function AddAppointmentModal({ selectedDate, initialTime, initialStaffId, onClos
 }
 
 // ─── Desktop Time Grid ────────────────────────────────────────────────────────
-function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMinutes, onSlotClick, onApptClick, isTodayFlag, onComplete, requireConfirm }) {
+function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMinutes, onSlotClick, onBreakSlotClick, onApptClick, isTodayFlag, onComplete, requireConfirm }) {
   const step = Math.max(bufferMinutes || 30, 5);
   const slots = [];
   const [openH, openM] = openTime.split(':').map(Number);
@@ -998,9 +998,16 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
             </div>
             <div className={`flex-1 mx-3 rounded-xl flex items-center justify-center transition-all ${isPast ? '' : isNight ? 'group-hover:bg-white/[0.03]' : 'group-hover:bg-[#fff7ed]'}`} style={{ height: 40 }}>
               {!isPast && (
-                <span className={`text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
-                  <Plus size={11} />קבע תור
-                </span>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-3">
+                  <span className={`text-xs flex items-center gap-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
+                    <Plus size={11} />קבע תור
+                  </span>
+                  <span
+                    className={`text-xs flex items-center gap-1 ${isNight ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-slate-600'} transition-colors`}
+                    onClick={e => { e.stopPropagation(); onBreakSlotClick?.(slotTime); }}>
+                    <Coffee size={11} />הפסקה
+                  </span>
+                </div>
               )}
               {isNowSlot && <div className="w-full h-px mx-2" style={{ background: '#f43f5e', opacity: 0.4 }} />}
             </div>
@@ -1561,13 +1568,17 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
 }
 
 // ─── Break Modal ──────────────────────────────────────────────────────────────
-function BreakModal({ selectedDate, onClose, onSuccess }) {
+function BreakModal({ selectedDate, onClose, onSuccess, initialTime = null }) {
   const isNight = useNightMode();
   const appointmentsApi = useAppointmentsApi();
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
   const initTime = () => {
+    if (initialTime) {
+      const [h, m] = initialTime.split(':').map(Number);
+      return { h, m };
+    }
     const now = new Date();
     const rounded = Math.ceil(now.getMinutes() / 5) * 5;
     const d = new Date(now);
@@ -1732,6 +1743,7 @@ export default function CalendarPage() {
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBreakModal, setShowBreakModal] = useState(false);
+  const [breakModalTime, setBreakModalTime] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [addModalTime, setAddModalTime] = useState(null);
   const [showAiChat, setShowAiChat] = useState(false);
@@ -1805,6 +1817,27 @@ export default function CalendarPage() {
   const [staffFilter, setStaffFilter] = useState(null); // null = all staff
   // Reset filter when date changes
   useEffect(() => { setStaffFilter(null); }, [selectedDate]);
+
+  // Auto-create daily break from settings when none exists for this date
+  useEffect(() => {
+    if (!business?.break_start_time || isLoading) return;
+    const breakTime = business.break_start_time;
+    const existing = appointments.find(a =>
+      a.status === 'break' && a.starts_at.startsWith(selectedDate) && a.starts_at.slice(11, 16) === breakTime
+    );
+    if (!existing) {
+      const duration = business.break_duration_minutes || 60;
+      const [bh, bm] = breakTime.split(':').map(Number);
+      const endMin = bh * 60 + bm + duration;
+      const _p = n => String(n).padStart(2, '0');
+      api.post('/appointments', {
+        status: 'break',
+        starts_at: `${selectedDate}T${breakTime}:00`,
+        ends_at: `${selectedDate}T${_p(Math.floor(endMin / 60))}:${_p(endMin % 60)}:00`,
+        notes: 'הפסקה קבועה',
+      }).then(() => queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] })).catch(() => {});
+    }
+  }, [selectedDate, appointments, isLoading, business?.break_start_time, business?.break_duration_minutes]);
 
   const activeAppts = appointments.filter(a => a.status !== 'cancelled');
   const filteredAppts = staffFilter
@@ -1908,6 +1941,7 @@ export default function CalendarPage() {
                 isTodayFlag={isTodayFlag}
                 onApptClick={setSelectedAppt}
                 onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
+                onBreakSlotClick={(time) => { setBreakModalTime(time); setShowBreakModal(true); }}
                 requireConfirm={requireConfirm}
                 onComplete={quickComplete}
               />
@@ -1919,7 +1953,7 @@ export default function CalendarPage() {
           style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 8px 24px rgba(244,63,94,0.4)' }}>
           <Plus size={22} className="text-white" />
         </button>
-        <button onClick={() => setShowBreakModal(true)}
+        <button onClick={() => { setBreakModalTime(null); setShowBreakModal(true); }}
           className="fixed bottom-[84px] right-20 w-12 h-12 rounded-full z-40 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
           style={{ background: '#64748b', boxShadow: '0 6px 18px rgba(100,116,139,0.4)' }}>
           <Coffee size={18} className="text-white" />
@@ -2026,6 +2060,7 @@ export default function CalendarPage() {
                 isTodayFlag={isTodayFlag}
                 onApptClick={setSelectedAppt}
                 onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
+                onBreakSlotClick={(time) => { setBreakModalTime(time); setShowBreakModal(true); }}
                 requireConfirm={requireConfirm}
                 onComplete={quickComplete}
               />
@@ -2079,9 +2114,11 @@ export default function CalendarPage() {
         {showBreakModal && (
           <BreakModal
             selectedDate={selectedDate}
-            onClose={() => setShowBreakModal(false)}
+            initialTime={breakModalTime}
+            onClose={() => { setShowBreakModal(false); setBreakModalTime(null); }}
             onSuccess={() => {
               setShowBreakModal(false);
+              setBreakModalTime(null);
               queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] });
             }}
           />
