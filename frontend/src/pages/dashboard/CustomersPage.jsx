@@ -311,7 +311,7 @@ export default function CustomersPage() {
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [sortAZ, setSortAZ] = useState(false);
+  const [sortAZ, setSortAZ] = useState(true);
   const [editCustomer, setEditCustomer] = useState(null);
   const [deleteCustomer, setDeleteCustomer] = useState(null);
   const customersApi = useCustomersApi();

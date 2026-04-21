@@ -94,6 +94,9 @@ function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
             <span>{duration} דק׳</span>
             {appt.staff_name && <><span className={isNight ? 'text-gray-700' : 'text-gray-300'}>·</span><span>{appt.staff_name}</span></>}
           </div>
+          {appt.notes && (
+            <div className={`text-xs mt-1 truncate italic ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{appt.notes}</div>
+          )}
         </div>
 
         {/* Phone */}
@@ -180,6 +183,12 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
   const [editingStaff, setEditingStaff] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState(appt.staff_id || '');
   const [savingStaff, setSavingStaff] = useState(false);
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [customerPhone, setCustomerPhone] = useState(appt.customer_phone || '');
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [editingTime, setEditingTime] = useState(false);
+  const [newTime, setNewTime] = useState(appt.starts_at.slice(11, 16));
+  const [savingTime, setSavingTime] = useState(false);
   const appointmentsApi = useAppointmentsApi();
   const { data: servicesList = [] } = useQuery({
     queryKey: ['services'],
@@ -261,9 +270,38 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
     try {
       await appointmentsApi.update(appt.id, { notes: notes.trim() });
       setEditingNotes(false);
-      // Don't close modal — user can see the saved note in-place
     } finally {
       setSavingNotes(false);
+    }
+  }
+
+  async function handleSavePhone() {
+    if (!appt.customer_id) return;
+    setSavingPhone(true);
+    try {
+      await api.put(`/customers/${appt.customer_id}`, { whatsapp_phone: customerPhone.trim().replace(/\s/g, '') });
+      setEditingPhone(false);
+      onUpdate();
+    } finally {
+      setSavingPhone(false);
+    }
+  }
+
+  async function handleSaveTime() {
+    if (!newTime) return;
+    setSavingTime(true);
+    try {
+      const dur = appt.service_duration || 30;
+      const [h, m] = newTime.split(':').map(Number);
+      const endMin = h * 60 + m + dur;
+      const _p = n => String(n).padStart(2, '0');
+      const newStartsAt = `${dateStr}T${newTime}:00`;
+      const newEndsAt = `${dateStr}T${_p(Math.floor(endMin / 60))}:${_p(endMin % 60)}:00`;
+      await appointmentsApi.update(appt.id, { starts_at: newStartsAt, ends_at: newEndsAt });
+      setEditingTime(false);
+      onUpdate();
+    } finally {
+      setSavingTime(false);
     }
   }
 
@@ -321,11 +359,39 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                   </button>
                 </div>
               )}
-              {appt.customer_phone && (
-                <a href={`tel:${appt.customer_phone}`} className="text-[#f43f5e] text-sm hover:underline flex items-center gap-1 mt-0.5">
-                  <Phone size={12} />
-                  {appt.customer_phone}
-                </a>
+              {editingPhone ? (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <input
+                    value={customerPhone}
+                    onChange={e => setCustomerPhone(e.target.value)}
+                    className="flex-1 text-sm border border-[#f97316]/50 rounded-lg px-2 py-1 focus:outline-none min-w-0"
+                    style={{ background: isNight ? 'rgba(255,255,255,0.08)' : '#fff', color: isNight ? '#fff' : '#111' }}
+                    dir="ltr"
+                    autoFocus
+                    onKeyDown={e => { if (e.key === 'Enter') handleSavePhone(); if (e.key === 'Escape') { setCustomerPhone(appt.customer_phone || ''); setEditingPhone(false); } }}
+                  />
+                  <button onClick={handleSavePhone} disabled={savingPhone} className="p-1.5 rounded-lg bg-[#f97316] text-white shrink-0">
+                    {savingPhone ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                  </button>
+                  <button onClick={() => { setCustomerPhone(appt.customer_phone || ''); setEditingPhone(false); }} className="p-1.5 rounded-lg text-gray-500 shrink-0" style={{ background: isNight ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
+                    <X size={11} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 mt-0.5">
+                  {customerPhone ? (
+                    <a href={`tel:${customerPhone}`} className="text-[#f43f5e] text-sm hover:underline flex items-center gap-1" dir="ltr">
+                      <Phone size={12} />{customerPhone}
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 text-xs italic">אין טלפון</span>
+                  )}
+                  {appt.customer_id && (
+                    <button onClick={() => setEditingPhone(true)} className="p-1 rounded hover:bg-[#f97316]/15 shrink-0">
+                      <Pencil size={10} className="text-[#f97316]" />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -336,8 +402,33 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
               <div className="font-semibold text-gray-900 text-sm">{format(parseISO(dateStr), 'EEEE, d MMMM', { locale: he })}</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-3">
-              <div className="text-gray-500 text-xs mb-1 flex items-center gap-1"><Clock size={11} /> שעה</div>
-              <div className="font-semibold text-gray-900 text-sm">{start}{end ? ` עד ${end}` : ''}</div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-gray-500 text-xs flex items-center gap-1"><Clock size={11} /> שעה</span>
+                {!editingTime && (
+                  <button onClick={() => setEditingTime(true)} className="p-0.5 rounded hover:bg-[#f97316]/15 transition-colors">
+                    <Pencil size={10} className="text-[#f97316]" />
+                  </button>
+                )}
+              </div>
+              {editingTime ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="time"
+                    value={newTime}
+                    onChange={e => setNewTime(e.target.value)}
+                    className="flex-1 text-xs border border-[#f97316]/50 rounded-lg px-1.5 py-1 focus:outline-none bg-white text-gray-900"
+                    dir="ltr"
+                  />
+                  <button onClick={handleSaveTime} disabled={savingTime} className="p-1 rounded-lg bg-[#f97316] text-white shrink-0">
+                    {savingTime ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
+                  </button>
+                  <button onClick={() => { setNewTime(appt.starts_at.slice(11, 16)); setEditingTime(false); }} className="p-1 rounded-lg bg-gray-200 text-gray-600 shrink-0">
+                    <X size={10} />
+                  </button>
+                </div>
+              ) : (
+                <div className="font-semibold text-gray-900 text-sm">{start}{end ? ` עד ${end}` : ''}</div>
+              )}
             </div>
             <div className="bg-gray-50 rounded-xl p-3">
               <div className="flex items-center justify-between mb-1">
@@ -349,26 +440,23 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                 )}
               </div>
               {editingService ? (
-                <div className="flex items-center gap-1">
-                  <select
-                    value={selectedServiceId}
-                    onChange={e => setSelectedServiceId(e.target.value)}
-                    className="flex-1 text-xs border border-gray-200 rounded-lg px-1.5 py-1 focus:outline-none bg-white text-gray-900"
-                    style={{ minWidth: 0 }}
-                  >
-                    <option value="">בחר שירות</option>
-                    {servicesList.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                  <button onClick={handleSaveService} disabled={savingService || !selectedServiceId}
-                    className="p-1 rounded-lg bg-[#f97316] text-white shrink-0">
-                    {savingService ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
-                  </button>
-                  <button onClick={() => { setSelectedServiceId(appt.service_id || ''); setEditingService(false); }}
-                    className="p-1 rounded-lg bg-gray-200 text-gray-600 shrink-0">
-                    <X size={10} />
-                  </button>
+                <div className="space-y-1.5">
+                  <CustomSelect
+                    value={String(selectedServiceId)}
+                    onChange={v => setSelectedServiceId(v)}
+                    options={[{ value: '', label: 'בחר שירות' }, ...servicesList.map(s => ({ value: String(s.id), label: s.name }))]}
+                    placeholder="בחר שירות"
+                  />
+                  <div className="flex gap-1">
+                    <button onClick={handleSaveService} disabled={savingService || !selectedServiceId}
+                      className="flex-1 flex items-center justify-center gap-1 p-1.5 rounded-lg bg-[#f97316] text-white text-xs">
+                      {savingService ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />} שמור
+                    </button>
+                    <button onClick={() => { setSelectedServiceId(appt.service_id || ''); setEditingService(false); }}
+                      className="p-1.5 rounded-lg bg-gray-200 text-gray-600">
+                      <X size={10} />
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="font-semibold text-gray-900 text-sm">{appt.service_name || '-'}</div>
@@ -384,23 +472,21 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                 )}
               </div>
               {editingStaff ? (
-                <div className="flex items-center gap-1.5 mt-1">
-                  <select
-                    value={selectedStaffId}
-                    onChange={e => setSelectedStaffId(e.target.value)}
-                    className="flex-1 text-xs border border-[#f97316]/50 rounded-lg px-2 py-1 focus:outline-none bg-white text-gray-800"
-                  >
-                    <option value="">ללא עובד</option>
-                    {staffList.filter(s => s.is_active).map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                  <button onClick={handleSaveStaff} disabled={savingStaff} className="p-1.5 rounded-lg bg-[#f97316] text-white hover:bg-[#f43f5e] shrink-0">
-                    {savingStaff ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
-                  </button>
-                  <button onClick={() => { setSelectedStaffId(appt.staff_id || ''); setEditingStaff(false); }} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 shrink-0">
-                    <X size={11} />
-                  </button>
+                <div className="space-y-1.5 mt-1">
+                  <CustomSelect
+                    value={String(selectedStaffId)}
+                    onChange={v => setSelectedStaffId(v)}
+                    options={[{ value: '', label: 'ללא עובד' }, ...staffList.filter(s => s.is_active).map(s => ({ value: String(s.id), label: s.name }))]}
+                    placeholder="ללא עובד"
+                  />
+                  <div className="flex gap-1">
+                    <button onClick={handleSaveStaff} disabled={savingStaff} className="flex-1 flex items-center justify-center gap-1 p-1.5 rounded-lg bg-[#f97316] text-white text-xs">
+                      {savingStaff ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />} שמור
+                    </button>
+                    <button onClick={() => { setSelectedStaffId(appt.staff_id || ''); setEditingStaff(false); }} className="p-1.5 rounded-lg bg-gray-100 text-gray-500">
+                      <X size={11} />
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="font-semibold text-gray-900 text-sm">{appt.staff_name || '-'}</div>
@@ -804,25 +890,21 @@ function AddAppointmentModal({ selectedDate, initialTime, initialStaffId, onClos
             <div>
               <label className="form-label">שעה *</label>
               <div className="flex items-center gap-2" dir="ltr">
-                <select
-                  value={time.split(':')[0] || '10'}
-                  onChange={e => setTime(`${e.target.value}:${time.split(':')[1] || '00'}`)}
-                  className="form-input flex-1 text-center"
-                >
-                  {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => (
-                    <option key={h} value={h}>{h}</option>
-                  ))}
-                </select>
+                <div className="flex-1">
+                  <CustomSelect
+                    value={time.split(':')[0] || '10'}
+                    onChange={h => setTime(`${h}:${time.split(':')[1] || '00'}`)}
+                    options={Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => ({ value: h, label: h }))}
+                  />
+                </div>
                 <span className="text-gray-400 font-bold text-lg shrink-0">:</span>
-                <select
-                  value={time.split(':')[1] || '00'}
-                  onChange={e => setTime(`${time.split(':')[0] || '10'}:${e.target.value}`)}
-                  className="form-input flex-1 text-center"
-                >
-                  {['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
+                <div className="flex-1">
+                  <CustomSelect
+                    value={time.split(':')[1] || '00'}
+                    onChange={m => setTime(`${time.split(':')[0] || '10'}:${m}`)}
+                    options={['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => ({ value: m, label: m }))}
+                  />
+                </div>
               </div>
             </div>
           </div>

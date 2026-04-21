@@ -346,6 +346,19 @@ function findNearestSlots(slots, requestedTime) {
   return { before, after };
 }
 
+// Find free gaps between busy periods within business hours
+function findFreeGaps(busyPeriods, openMin, closeMin) {
+  const sorted = [...busyPeriods].sort((a, b) => a.start - b.start);
+  const gaps = [];
+  let cursor = openMin;
+  for (const p of sorted) {
+    if (p.start > cursor) gaps.push({ start: cursor, end: p.start });
+    cursor = Math.max(cursor, p.end);
+  }
+  if (cursor < closeMin) gaps.push({ start: cursor, end: closeMin });
+  return gaps;
+}
+
 // ─── Quick-reply: handle simple messages without AI ──────────────────────────
 // Greetings, thanks, and confused short replies that need no intelligence.
 
@@ -1327,12 +1340,46 @@ async function handleBusinessBot(db, phone, text, conv, businessId, lockedStaff,
           contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} פנויה. קבע אותה ישירות ללא שאלות נוספות על שעה.]`;
         }
       } else {
-        const { before, after } = findNearestSlots(slots, timeRequested);
-        const opts = [before, after].filter(Boolean);
-        if (opts.length) {
-          contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} תפוסה. הצע בדיוק את: ${opts.join(' או ')} — לא שעות אחרות.]`;
+        // Time not in available slots — check for nearby gaps that the service could fill
+        const duration = svcForSlots ? svcForSlots.duration_minutes : 30;
+        const reqMin = timeToMinutes(timeRequested);
+        const busyForGap = getBusyPeriods(db, business, staffForSlots, dateToCheck);
+        const hoursRow = db.prepare('SELECT open_time, close_time FROM business_hours WHERE business_id = ? AND day_of_week = ?')
+          .get(business.id, new Date(dateToCheck + 'T00:00:00').getDay());
+        if (hoursRow) {
+          const openMin = timeToMinutes(hoursRow.open_time);
+          const closeMin = timeToMinutes(hoursRow.close_time);
+          const gaps = findFreeGaps(busyForGap, openMin, closeMin);
+          // Find a gap near the requested time that fits the service
+          const nearbyGap = gaps.find(g => {
+            const gapDur = g.end - g.start;
+            if (gapDur < duration) return false;
+            // Requested time is within or close to (within 30 min of) this gap
+            return (reqMin >= g.start && reqMin < g.end) || Math.abs(reqMin - g.start) <= 30 || Math.abs(reqMin - g.end) <= 30;
+          });
+          if (nearbyGap) {
+            const gapStartTime = minutesToTime(nearbyGap.start);
+            const gapEndTime = minutesToTime(nearbyGap.end);
+            const gapDur = nearbyGap.end - nearbyGap.start;
+            if (slots.includes(gapStartTime)) {
+              contextHint += `\n[מערכת: השעה ${timeRequested} לא זמינה. יש חור פנוי בין ${gapStartTime} ל-${gapEndTime} (${gapDur} דקות) — בדיוק מתאים לשירות של ${duration} דקות. שאל בנימוס אם ${gapStartTime} מתאים ללקוח כדי למלא את החור. רק אחרי אישורו — קבע ב-${gapStartTime}.]`;
+            } else {
+              const { before, after } = findNearestSlots(slots, timeRequested);
+              const opts = [before, after].filter(Boolean);
+              if (opts.length) contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} תפוסה. הצע בדיוק את: ${opts.join(' או ')} — לא שעות אחרות.]`;
+              else contextHint += `\n[מערכת: אין שעות פנויות ב-${formatHebrewDate(dateToCheck)}.]`;
+            }
+          } else {
+            const { before, after } = findNearestSlots(slots, timeRequested);
+            const opts = [before, after].filter(Boolean);
+            if (opts.length) contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} תפוסה. הצע בדיוק את: ${opts.join(' או ')} — לא שעות אחרות.]`;
+            else contextHint += `\n[מערכת: אין שעות פנויות ב-${formatHebrewDate(dateToCheck)}.]`;
+          }
         } else {
-          contextHint += `\n[מערכת: אין שעות פנויות ב-${formatHebrewDate(dateToCheck)}.]`;
+          const { before, after } = findNearestSlots(slots, timeRequested);
+          const opts = [before, after].filter(Boolean);
+          if (opts.length) contextHint += `\n[מערכת: השעה ${timeRequested} ב-${formatHebrewDate(dateToCheck)} תפוסה. הצע בדיוק את: ${opts.join(' או ')} — לא שעות אחרות.]`;
+          else contextHint += `\n[מערכת: אין שעות פנויות ב-${formatHebrewDate(dateToCheck)}.]`;
         }
       }
     } else {

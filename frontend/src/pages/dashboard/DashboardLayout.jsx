@@ -95,6 +95,13 @@ export default function DashboardLayout() {
   // Desktop sidebar hover state
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
+  // Tick every second so toast filter re-evaluates
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   // Notifications dropdown
   const [showNotifs, setShowNotifs] = useState(false);
   const notifsRef = useRef(null);

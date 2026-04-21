@@ -113,6 +113,72 @@ function Toggle({ value, onChange }) {
   );
 }
 
+// ─── Custom select ────────────────────────────────────────────────────────────
+function CustomSelect({ value, onChange, options, isNight }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = options.find(o => String(o.value) === String(value));
+
+  useEffect(() => {
+    function handler(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all focus:outline-none ${
+          isNight
+            ? 'bg-white/[0.04] border-white/[0.10] text-gray-200 hover:border-white/20'
+            : 'bg-white border-gray-200 text-gray-800 hover:border-[#f43f5e]/40'
+        }`}
+      >
+        <span>{selected ? selected.label : '—'}</span>
+        <ChevronDown size={14} className={`transition-transform shrink-0 ${isNight ? 'text-gray-500' : 'text-gray-400'} ${open ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.13 }}
+            className={`absolute top-full mt-1.5 right-0 left-0 z-50 rounded-2xl shadow-xl overflow-hidden border ${
+              isNight ? 'bg-[#0d1117] border-white/[0.10] shadow-black/50' : 'bg-white border-gray-100 shadow-gray-200/80'
+            }`}
+          >
+            <div className="max-h-52 overflow-y-auto py-1">
+              {options.map(o => {
+                const isSel = String(o.value) === String(value);
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => { onChange(o.value); setOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm text-right transition-colors ${
+                      isSel
+                        ? 'bg-gradient-to-r from-[#f97316]/10 via-[#f43f5e]/10 to-[#06b6d4]/10 text-[#f43f5e] font-semibold'
+                        : isNight ? 'text-gray-300 hover:bg-white/[0.06]' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span>{o.label}</span>
+                    {isSel && <Check size={13} className="text-[#f43f5e] shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ─── Section card ─────────────────────────────────────────────────────────────
 function Section({ title, children }) {
   const isNight = useContext(NightCtx);
@@ -311,15 +377,21 @@ function GeneralSettings() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls(isNight)}>הפסקה בין תורים</label>
-            <select value={form.buffer_minutes} onChange={e => setForm(p => ({ ...p, buffer_minutes: Number(e.target.value) }))} className={inputCls(isNight)}>
-              {[0,5,10,15,20,30,45,60].map(m => <option key={m} value={m}>{m === 0 ? 'ללא' : `${m} דק׳`}</option>)}
-            </select>
+            <CustomSelect
+              isNight={isNight}
+              value={form.buffer_minutes}
+              onChange={v => setForm(p => ({ ...p, buffer_minutes: Number(v) }))}
+              options={[0,5,10,15,20,30,45,60].map(m => ({ value: m, label: m === 0 ? 'ללא' : `${m} דק׳` }))}
+            />
           </div>
           <div>
             <label className={labelCls(isNight)}>ביטול מינימום</label>
-            <select value={form.cancellation_hours} onChange={e => setForm(p => ({ ...p, cancellation_hours: Number(e.target.value) }))} className={inputCls(isNight)}>
-              {[1,2,4,8,12,24,48].map(h => <option key={h} value={h}>{h} שעות</option>)}
-            </select>
+            <CustomSelect
+              isNight={isNight}
+              value={form.cancellation_hours}
+              onChange={v => setForm(p => ({ ...p, cancellation_hours: Number(v) }))}
+              options={[1,2,4,8,12,24,48].map(h => ({ value: h, label: `${h} שעות` }))}
+            />
           </div>
         </div>
       </Section>
@@ -1708,11 +1780,12 @@ function SecuritySettings() {
               </div>
               <div>
                 <label className={labelCls(isNight)}>משך הפסקה</label>
-                <select value={breakDuration} onChange={e => setBreakDuration(Number(e.target.value))} className={inputCls(isNight)}>
-                  {[15, 20, 30, 45, 60, 90, 120].map(m => (
-                    <option key={m} value={m}>{m} דק׳</option>
-                  ))}
-                </select>
+                <CustomSelect
+                  isNight={isNight}
+                  value={breakDuration}
+                  onChange={v => setBreakDuration(Number(v))}
+                  options={[15,20,30,45,60,90,120].map(m => ({ value: m, label: `${m} דק׳` }))}
+                />
               </div>
             </div>
             <SaveBtn onClick={() => saveBreak(breakTime, breakDuration)} saving={breakSaving} saved={breakSaved} label="שמור הפסקה" />
