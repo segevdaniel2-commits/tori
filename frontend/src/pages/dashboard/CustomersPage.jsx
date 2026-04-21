@@ -263,60 +263,53 @@ function QuickAddSheet({ onClose, onSuccess }) {
   );
 }
 
-// Compact customer card
 function CustomerCard({ customer, onClick, onEdit, onDelete, index }) {
   const initial = (customer.name || '?')[0].toUpperCase();
-  const GRADIENTS = [
-    'from-[#f97316] to-[#f43f5e]',
-    'from-violet-500 to-purple-600',
-    'from-cyan-500 to-blue-600',
-    'from-emerald-500 to-teal-600',
-    'from-pink-500 to-rose-600',
-    'from-amber-500 to-orange-600',
-  ];
-  const grad = GRADIENTS[customer.id % GRADIENTS.length];
+  const COLORS = ['#f97316', '#8b5cf6', '#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#3b82f6', '#ec4899'];
+  const color = COLORS[customer.id % COLORS.length];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.025 }}
-      className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group relative"
+      transition={{ delay: index * 0.018 }}
+      className="bg-white border border-gray-100 rounded-2xl p-3 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group relative flex flex-col gap-2"
       onClick={() => onClick(customer.id)}
     >
-      {/* Action buttons — appear on hover */}
-      <div className="absolute top-3 left-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Hover actions */}
+      <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <button onClick={e => { e.stopPropagation(); onEdit(customer); }}
-          className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-[#f97316] hover:text-white text-gray-500 flex items-center justify-center transition-all">
-          <Pencil size={11} />
+          className="w-6 h-6 rounded-lg bg-white border border-gray-100 shadow-sm hover:border-[#f97316]/40 hover:text-[#f97316] text-gray-300 flex items-center justify-center transition-all">
+          <Pencil size={10} />
         </button>
         <button onClick={e => { e.stopPropagation(); onDelete(customer); }}
-          className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-500 hover:text-white text-gray-500 flex items-center justify-center transition-all">
-          <Trash2 size={11} />
+          className="w-6 h-6 rounded-lg bg-white border border-gray-100 shadow-sm hover:border-red-300 hover:text-red-400 text-gray-300 flex items-center justify-center transition-all">
+          <Trash2 size={10} />
         </button>
       </div>
 
       {/* Avatar */}
-      <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center text-white font-black text-lg mb-3`}>
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0"
+        style={{ background: color }}>
         {initial}
       </div>
 
-      {/* Name */}
-      <div className="font-bold text-gray-900 text-sm leading-tight truncate mb-0.5">{customer.name}</div>
+      {/* Name + phone */}
+      <div className="min-w-0">
+        <div className="font-bold text-gray-900 text-[13px] leading-tight truncate">{customer.name || 'לא ידוע'}</div>
+        <div className="text-[11px] text-gray-400 font-mono truncate mt-0.5" dir="ltr">{customer.whatsapp_phone}</div>
+      </div>
 
-      {/* Phone */}
-      <div className="text-xs text-gray-400 font-mono truncate mb-3" dir="ltr">{customer.whatsapp_phone}</div>
-
-      {/* Stats row */}
-      <div className="flex items-center justify-between border-t border-gray-50 pt-2.5">
-        <div className="text-center">
-          <div className="font-black text-gray-900 text-sm leading-none">{customer.total_visits || 0}</div>
-          <div className="text-[10px] text-gray-400 mt-0.5">ביקורים</div>
+      {/* Stats */}
+      <div className="flex items-center gap-0 pt-1.5 border-t border-gray-50 mt-auto">
+        <div className="flex-1 text-center">
+          <div className="text-[13px] font-black text-gray-800 leading-none">{customer.total_visits || 0}</div>
+          <div className="text-[9px] text-gray-400 mt-0.5 uppercase tracking-wide">ביקורים</div>
         </div>
-        <div className="w-px h-6 bg-gray-100" />
-        <div className="text-center">
-          <div className="font-black text-gray-900 text-sm leading-none">₪{(customer.total_spent || 0).toLocaleString()}</div>
-          <div className="text-[10px] text-gray-400 mt-0.5">הוצאה</div>
+        <div className="w-px h-5 bg-gray-100" />
+        <div className="flex-1 text-center">
+          <div className="text-[13px] font-black text-gray-800 leading-none">₪{(customer.total_spent || 0).toLocaleString()}</div>
+          <div className="text-[9px] text-gray-400 mt-0.5 uppercase tracking-wide">הוצאה</div>
         </div>
       </div>
     </motion.div>
@@ -401,7 +394,7 @@ export default function CustomersPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2.5">
             {customers.map((customer, i) => (
               <CustomerCard
                 key={customer.id}

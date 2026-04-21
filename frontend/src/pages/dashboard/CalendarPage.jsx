@@ -1852,22 +1852,26 @@ export default function CalendarPage() {
             <div className="flex items-center justify-center py-16">
               <Loader2 size={28} className="animate-spin text-[#f97316]" />
             </div>
-          ) : sortedAppts.length === 0 ? (
+          ) : !isBusinessOpen ? (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-                <Calendar size={28} className="text-gray-300" />
-              </div>
-              <p className="text-gray-500 font-semibold text-base mb-1">אין תורים ביום זה</p>
-              <p className="text-gray-400 text-sm mb-5">הוסף תור ידנית או המתן לתורים מהבוט</p>
-              <button onClick={() => setShowAddModal(true)} className="btn-primary text-sm px-5 py-2.5">
-                <Plus size={15} />הוסף תור
-              </button>
+              <Lock size={32} className="text-gray-200 mb-3" />
+              <p className="text-gray-400 font-semibold">העסק סגור ביום זה</p>
             </motion.div>
           ) : (
-            <div className="space-y-2.5 pb-24">
-              <div className="text-xs text-gray-400 font-medium px-1 mb-1">{sortedAppts.length} תורים</div>
-              {sortedAppts.map(appt => <MobileApptCard key={appt.id} appt={appt} onClick={setSelectedAppt} isNight={isNight} requireConfirm={requireConfirm} onComplete={quickComplete} />)}
+            <div className="pb-28">
+              <DesktopTimeGrid
+                appointments={sortedAppts}
+                isNight={isNight}
+                openTime={openTime}
+                closeTime={closeTime}
+                bufferMinutes={bufferMinutes}
+                isTodayFlag={isTodayFlag}
+                onApptClick={setSelectedAppt}
+                onSlotClick={(time) => { setAddModalTime(time); setShowAddModal(true); }}
+                requireConfirm={requireConfirm}
+                onComplete={quickComplete}
+              />
             </div>
           )}
         </div>

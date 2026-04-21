@@ -313,6 +313,12 @@ router.post('/chat', async (req, res) => {
         const endsAt = `${endDate.getFullYear()}-${_p(endDate.getMonth()+1)}-${_p(endDate.getDate())}T${_p(endDate.getHours())}:${_p(endDate.getMinutes())}:00`;
         const cleanPhone = phone.replace(/[\s\-]/g, '');
 
+        // Guard: reject booking a time that has already passed today
+        const nowISO = new Date().toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+        if (`${date}T${time}` < nowISO) {
+          return res.json({ reply: `אי אפשר לקבוע תור לשעה שכבר עברה (${time}).` });
+        }
+
         // Check if customer exists by name first
         const existingByName = db.prepare(
           `SELECT id FROM customers WHERE business_id = ? AND name = ? COLLATE NOCASE LIMIT 1`
@@ -321,6 +327,29 @@ router.post('/chat', async (req, res) => {
         // New customer with no phone — ask for it
         if (!existingByName && !cleanPhone) {
           return res.json({ reply: `מה מספר הטלפון של ${customerName.trim()}?` });
+        }
+
+        // Gap detection: check if booking would leave a small unusable gap before next busy slot
+        const bufferMin = req.business?.buffer_minutes || 15;
+        const nextAppt = db.prepare(
+          `SELECT starts_at FROM appointments WHERE business_id = ? AND status NOT IN ('cancelled') AND starts_at >= ? ORDER BY starts_at LIMIT 1`
+        ).get(req.business.id, endsAt);
+        const nextBlock = db.prepare(
+          `SELECT starts_at FROM blocked_times WHERE business_id = ? AND starts_at >= ? ORDER BY starts_at LIMIT 1`
+        ).get(req.business.id, endsAt);
+        const candidates = [nextAppt?.starts_at, nextBlock?.starts_at].filter(Boolean).sort();
+        if (candidates.length) {
+          const nextStart = candidates[0];
+          const [endH, endM] = endsAt.slice(11, 16).split(':').map(Number);
+          const [nextH, nextM] = nextStart.slice(11, 16).split(':').map(Number);
+          const gap = (nextH * 60 + nextM) - (endH * 60 + endM);
+          if (gap > 0 && gap < bufferMin) {
+            const betterStartMin = nextH * 60 + nextM - dur;
+            const betterTime = `${_p(Math.floor(betterStartMin / 60))}:${_p(betterStartMin % 60)}`;
+            if (betterTime !== time && betterStartMin >= 0) {
+              return res.json({ reply: `שים לב — ${time} תיצור חור של ${gap} דקות לפני ${_p(nextH)}:${_p(nextM)}. לקבוע ב-${betterTime} במקום (ללא חור)?` });
+            }
+          }
         }
 
         // Conflict check + INSERT in a single exclusive transaction to prevent race conditions
@@ -351,7 +380,10 @@ router.post('/chat', async (req, res) => {
         const io = req.app.get('io');
         if (io) io.to(`business_${req.business.id}`).emit('appointment:created', { starts_at: startsAt });
 
-        const humanReply = reply.replace(/BOOK:[^\n]+/, `✓ נקבע תור ל${customerName.trim()} ב-${date} בשעה ${time}${svc ? ` (${svc.name})` : ''}.`);
+        // Format date as D/M/YYYY for display
+        const [dy, dm, dd] = date.split('-');
+        const displayDate = `${Number(dd)}/${Number(dm)}/${dy}`;
+        const humanReply = reply.replace(/BOOK:[^\n]+/, `✓ נקבע תור ל${customerName.trim()} ב-${displayDate} בשעה ${time}${svc ? ` (${svc.name})` : ''}.`);
         return res.json({ reply: humanReply });
       } catch (bookErr) {
         console.error('[OwnerBot] Booking error:', bookErr.message);
@@ -387,7 +419,9 @@ router.post('/chat', async (req, res) => {
         db.prepare(`UPDATE appointments SET status = 'cancelled' WHERE id = ?`).run(appt.id);
         const io = req.app.get('io');
         if (io) io.to(`business_${req.business.id}`).emit('appointment:cancelled', { id: appt.id });
-        return res.json({ reply: `✓ התור של ${customerName.trim()} ב-${date} בשעה ${time} בוטל.` });
+        const [cy, cm, cd] = date.split('-');
+        const displayDate = `${Number(cd)}/${Number(cm)}/${cy}`;
+        return res.json({ reply: `✓ התור של ${customerName.trim()} ב-${displayDate} בשעה ${time} בוטל.` });
       } catch (cancelErr) {
         console.error('[OwnerBot] Cancel error:', cancelErr.message);
       }
