@@ -143,7 +143,7 @@ router.post('/webhook', async (req, res) => {
                 text = transcribed;
                 console.log(`[WhatsApp] Audio transcribed for ${phone}: ${text.slice(0, 80)}`);
               } else {
-                await sendWhatsAppMessage(phone, 'לא הצלחתי לשמוע את ההקלטה. תוכל לכתוב?');
+                await sendWhatsAppMessage(phone, 'לא הצלחתי לשמוע את ההקלטה. תוכל לכתוב?', true);
                 continue;
               }
             } else continue;
@@ -166,7 +166,7 @@ router.post('/webhook', async (req, res) => {
           const reply = await processMessage(phone, text, req.app.get('io'));
 
           if (reply) {
-            await sendWhatsAppMessage(phone, reply);
+            await sendWhatsAppMessage(phone, reply, true); // isReply=true: responding to customer message
 
             try {
               const db = getDb();
@@ -183,12 +183,20 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
-async function sendWhatsAppMessage(to, text) {
-  const phoneId = process.env.WHATSAPP_PHONE_ID || '1064513836752035';
+// Bot is reply-only: only messages sent in direct response to an incoming message
+// are allowed. Proactive/scheduled outbound sends must NOT use this function.
+// Pass isReply=true only from the webhook handler (after receiving a customer message).
+async function sendWhatsAppMessage(to, text, isReply = false) {
+  if (!isReply) {
+    console.log(`[WhatsApp] BLOCKED proactive send to ${to} — bot is reply-only`);
+    return;
+  }
+
+  const phoneId = process.env.WHATSAPP_PHONE_ID;
   const token = process.env.WHATSAPP_TOKEN || process.env.WA_TOKEN_FALLBACK;
 
   if (!phoneId || !token) {
-    console.log(`[WhatsApp] DEV MODE - Would send to ${to}: ${text.slice(0, 80)}`);
+    console.log(`[WhatsApp] DEV MODE - Would reply to ${to}: ${text.slice(0, 80)}`);
     return;
   }
 
@@ -280,8 +288,9 @@ router.get('/diag', authMiddleware, async (req, res) => {
   // 2. WhatsApp token
   try {
     const token = process.env.WHATSAPP_TOKEN || process.env.WA_TOKEN_FALLBACK;
-    const phoneId = process.env.WHATSAPP_PHONE_ID || '1064513836752035';
+    const phoneId = process.env.WHATSAPP_PHONE_ID;
     if (!token) { results.whatsapp = { ok: false, error: 'WHATSAPP_TOKEN not set' }; }
+    else if (!phoneId) { results.whatsapp = { ok: false, error: 'WHATSAPP_PHONE_ID not set' }; }
     else {
       const r = await axios.get(`https://graph.facebook.com/v19.0/${phoneId}`, {
         headers: { Authorization: `Bearer ${token}` }, timeout: 8000

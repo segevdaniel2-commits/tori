@@ -1,7 +1,6 @@
 const cron = require('node-cron');
 const { getDb } = require('../config/database');
 const { sendTrialEnding, sendTrialExpired } = require('./email');
-const { sendWhatsAppMessage } = require('../routes/whatsapp');
 
 function startScheduler() {
   // Every day at 10:00 AM: check trial ending tomorrow
@@ -28,13 +27,6 @@ function startScheduler() {
         try {
           await sendTrialEnding(business);
           db.prepare("INSERT INTO trial_notifications (business_id, type) VALUES (?, 'day_before')").run(business.id);
-
-          // Also send WhatsApp if they have a phone
-          if (business.phone) {
-            const msg = `שלום ${business.owner_name}! 👋 הניסיון החינמי של טורי ל-${business.name} מסתיים מחר. כדי להמשיך לקבל תורים אוטומטיים, שדרג ב: ${process.env.CLIENT_URL}/dashboard/settings`;
-            await sendWhatsAppMessage(business.phone.replace(/\D/g, '').replace(/^0/, '972'), msg);
-          }
-
           console.log(`[Scheduler] Sent trial ending notification to ${business.email}`);
         } catch (err) {
           console.error(`[Scheduler] Failed to notify ${business.email}:`, err.message);
@@ -116,15 +108,9 @@ function startScheduler() {
             const startDate = appt.starts_at.slice(0, 10).split('-').reverse().join('/');
             const staffLine = appt.staff_name ? ` עם ${appt.staff_name}` : '';
 
-            const msg = label === '24h'
-              ? `היי ${appt.customer_name || ''} 👋\nתזכורת: מחר יש לך תור ב*${appt.business_name}*\n📅 ${startDate} בשעה ${startTime}${staffLine}\n✂️ ${appt.service_name}\n\nלביטול שלח "ביטול תור" 🙏`
-              : `היי ${appt.customer_name || ''} ⏰\nבעוד שעה התור שלך ב*${appt.business_name}*\n🕐 ${startTime}${staffLine} · ${appt.service_name}\n\n${appt.address ? `📍 ${appt.address}` : ''}`;
-
-            const phone = appt.whatsapp_phone.replace(/\D/g, '').replace(/^0/, '972');
-            await sendWhatsAppMessage(phone, msg);
-
+            // Reminder logging only — WhatsApp outbound is reply-only (no proactive sends)
             db.prepare(`UPDATE appointments SET reminder_${label}_sent = 1 WHERE id = ?`).run(appt.id);
-            console.log(`[Scheduler] Sent ${label} reminder to ${phone} for appt #${appt.id}`);
+            console.log(`[Scheduler] Reminder ${label} marked for appt #${appt.id} (whatsapp outbound disabled)`);
           } catch (err) {
             console.error(`[Scheduler] Reminder error appt #${appt.id}:`, err.message);
           }
