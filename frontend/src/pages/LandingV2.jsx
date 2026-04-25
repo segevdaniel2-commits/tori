@@ -329,48 +329,78 @@ export default function LandingV2() {
       <GlassFilter />
 
       {/* ─── Nav ─────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50" style={glassNav}>
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="fixed top-4 left-0 right-0 z-50 px-4 flex justify-center pointer-events-none">
+        <motion.nav
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="pointer-events-auto w-full"
+          style={{ maxWidth: 780 }}
+        >
+          {/* Outer glow */}
+          <div className="absolute inset-0 rounded-2xl pointer-events-none"
+            style={{ boxShadow: '0 0 0 1px rgba(249,115,22,0.08), 0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)' }} />
 
-          <Link to="/" className="flex items-center gap-2">
-            <span className="font-black text-xl tracking-tight" style={{
-              background: 'linear-gradient(135deg, #f97316, #ea580c)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>Tori</span>
-            <ToriLogo size={32} />
-          </Link>
+          <div className="relative rounded-2xl overflow-hidden">
+            {/* Glass backdrop */}
+            <div className="absolute inset-0"
+              style={{
+                background: 'rgba(13,8,5,0.52)',
+                backdropFilter: 'blur(32px) saturate(180%) url("#lg-filter")',
+                WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+              }} />
+            {/* Top highlight line */}
+            <div className="absolute inset-x-0 top-0 h-px pointer-events-none"
+              style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.14) 50%, transparent 95%)' }} />
+            {/* Bottom shadow line */}
+            <div className="absolute inset-x-0 bottom-0 h-px pointer-events-none"
+              style={{ background: 'rgba(0,0,0,0.25)' }} />
+            {/* Inner border */}
+            <div className="absolute inset-0 rounded-2xl pointer-events-none"
+              style={{ border: '1px solid rgba(255,255,255,0.08)' }} />
 
-          <div className="hidden md:flex items-center gap-8">
-            {[['פיצ׳רים', '#features'], ['מחירים', '#pricing'], ['עדויות', '#testimonials']].map(([label, href]) => (
-              <a key={href} href={href} className="text-gray-400 hover:text-white text-sm font-medium transition-colors">{label}</a>
-            ))}
+            <div className="relative z-10 px-5 h-14 flex items-center justify-between gap-4">
+
+              <Link to="/" className="flex items-center gap-1.5 shrink-0">
+                <span className="font-black text-lg tracking-tight" style={{
+                  background: 'linear-gradient(135deg, #f97316, #ea580c)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>Tori</span>
+                <ToriLogo size={28} />
+              </Link>
+
+              <div className="hidden md:flex items-center gap-6">
+                {[['פיצ׳רים', '#features'], ['מחירים', '#pricing'], ['עדויות', '#testimonials']].map(([label, href]) => (
+                  <a key={href} href={href} className="text-gray-400 hover:text-white text-sm font-medium transition-colors">{label}</a>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Link to="/login">
+                  <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                    className="text-gray-300 hover:text-white text-sm font-semibold px-3.5 py-1.5 rounded-xl transition-all"
+                    style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+                    }}>
+                    כניסה
+                  </motion.button>
+                </Link>
+                <Link to="/register">
+                  <motion.button whileHover={{ scale: 1.04, boxShadow: '0 6px 20px rgba(249,115,22,0.55)' }} whileTap={{ scale: 0.97 }}
+                    className="text-white text-sm font-bold px-4 py-2 rounded-xl"
+                    style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 3px 12px rgba(249,115,22,0.45)' }}>
+                    <span className="hidden sm:inline">התחל בחינם</span>
+                    <span className="sm:hidden">הצטרף</span>
+                  </motion.button>
+                </Link>
+              </div>
+
+            </div>
           </div>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link to="/login">
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className="text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all"
-                style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  backdropFilter: 'blur(8px)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
-                }}>
-                כניסה
-              </motion.button>
-            </Link>
-            <Link to="/register">
-              <motion.button whileHover={{ scale: 1.03, boxShadow: '0 6px 20px rgba(249,115,22,0.5)' }} whileTap={{ scale: 0.97 }}
-                className="text-white text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl"
-                style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 4px 16px rgba(249,115,22,0.4)' }}>
-                <span className="hidden sm:inline">התחל בחינם</span>
-                <span className="sm:hidden">הצטרף</span>
-              </motion.button>
-            </Link>
-          </div>
-
-        </div>
-      </nav>
+        </motion.nav>
+      </div>
 
       {/* ─── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center pt-20 pb-12 px-4 md:px-6 overflow-hidden">
