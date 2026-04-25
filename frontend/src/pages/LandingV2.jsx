@@ -6,6 +6,7 @@ import {
   Zap, Check, Star, Bot, ChevronLeft, X,
   Smartphone, TrendingUp, Clock, ClipboardList, Link2, Cpu,
 } from 'lucide-react';
+import { WebGLShader } from '@/components/ui/web-gl-shader';
 
 // ─── Global SVG Glass Filter (render once) ────────────────────────────────────
 function GlassFilter() {
@@ -373,17 +374,16 @@ export default function LandingV2() {
 
       {/* ─── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center pt-20 pb-12 px-4 md:px-6 overflow-hidden">
-        {/* Background glows */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[700px] opacity-15"
-            style={{ background: 'radial-gradient(ellipse at 50% 5%, #f97316, transparent 60%)' }} />
-          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] opacity-08"
-            style={{ background: 'radial-gradient(circle, #ea580c, transparent 70%)' }} />
-        </div>
-        <div className="absolute inset-x-0 bottom-0 h-48 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, transparent, #0d0805)' }} />
+        {/* WebGL wave animation */}
+        <WebGLShader className="absolute inset-0 w-full h-full block" />
+        {/* Bottom fade */}
+        <div className="absolute inset-x-0 bottom-0 h-80 pointer-events-none z-10"
+          style={{ background: 'linear-gradient(to bottom, transparent 0%, #0d0805 70%)' }} />
+        {/* Side vignette */}
+        <div className="absolute inset-0 pointer-events-none z-10"
+          style={{ background: 'radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(13,8,5,0.55) 100%)' }} />
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full">
+        <div className="relative z-20 max-w-7xl mx-auto w-full">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
             {/* Text */}
