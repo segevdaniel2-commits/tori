@@ -327,9 +327,9 @@ function NavBar() {
 
   return (
     <>
+      <div className={`fixed z-50 inset-x-0 flex justify-center px-4 transition-all duration-300 ${scrolled ? 'top-2' : 'top-4'}`}>
       <motion.header
-        className={`fixed z-50 left-1/2 -translate-x-1/2 transition-all duration-300 ${scrolled ? 'top-2' : 'top-4'}`}
-        style={{ width: 'min(860px, calc(100vw - 32px))' }}
+        style={{ width: 'min(860px, 100%)' }}
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -388,6 +388,7 @@ function NavBar() {
           </div>
         </div>
       </motion.header>
+      </div>
 
       {/* Mobile full-screen menu */}
       <AnimatePresence>
