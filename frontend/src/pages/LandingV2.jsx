@@ -4,8 +4,54 @@ import { motion, useInView, AnimatePresence, MotionConfig } from 'framer-motion'
 import {
   MessageCircle, Calendar, BarChart3, Users, Bell, FileText,
   Zap, Check, Star, Bot, ChevronLeft, X,
-  Smartphone, TrendingUp, Clock, ClipboardList, Link2, Cpu, Search, Heart, Settings,
+  Smartphone, TrendingUp, Clock, ClipboardList, Link2, Cpu,
 } from 'lucide-react';
+
+// ─── Global SVG Glass Filter (render once) ────────────────────────────────────
+function GlassFilter() {
+  return (
+    <svg className="hidden" aria-hidden="true">
+      <defs>
+        <filter id="lg-filter" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.06 0.06" numOctaves="1" seed="2" result="turbulence" />
+          <feGaussianBlur in="turbulence" stdDeviation="1.5" result="blurredNoise" />
+          <feDisplacementMap in="SourceGraphic" in2="blurredNoise" scale="55" xChannelSelector="R" yChannelSelector="B" result="displaced" />
+          <feGaussianBlur in="displaced" stdDeviation="3" result="finalBlur" />
+          <feComposite in="finalBlur" in2="finalBlur" operator="over" />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
+
+// ─── Liquid Glass style helpers ────────────────────────────────────────────────
+const glassCard = {
+  background: 'rgba(255,255,255,0.045)',
+  backdropFilter: 'blur(20px) saturate(160%)',
+  WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+  border: '1px solid rgba(255,255,255,0.09)',
+  boxShadow: [
+    'inset 0 1px 0 rgba(255,255,255,0.13)',
+    'inset 0 -1px 0 rgba(0,0,0,0.08)',
+    'inset 1px 0 0 rgba(255,255,255,0.06)',
+    'inset -1px 0 0 rgba(0,0,0,0.04)',
+    '0 8px 32px rgba(0,0,0,0.35)',
+    '0 2px 8px rgba(0,0,0,0.2)',
+  ].join(', '),
+};
+
+const glassNav = {
+  background: 'rgba(13,8,5,0.55)',
+  backdropFilter: 'blur(28px) saturate(200%) url("#lg-filter")',
+  WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+  borderBottom: '1px solid rgba(255,255,255,0.07)',
+  boxShadow: [
+    'inset 0 1px 0 rgba(255,255,255,0.08)',
+    'inset 0 -1px 0 rgba(0,0,0,0.12)',
+    '0 4px 24px rgba(0,0,0,0.5)',
+    '0 1px 0 rgba(249,115,22,0.08)',
+  ].join(', '),
+};
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 function ToriLogo({ size = 34 }) {
@@ -19,12 +65,8 @@ function ToriLogo({ size = 34 }) {
           <stop offset="100%" stopColor="#c2410c" />
         </linearGradient>
       </defs>
-      <text
-        x="50%" y="78%"
-        textAnchor="middle"
-        fill={`url(#${id})`}
-        style={{ fontFamily: "'Inter','Heebo',sans-serif", fontWeight: 900, fontSize: 38, letterSpacing: '-2px' }}
-      >T</text>
+      <text x="50%" y="78%" textAnchor="middle" fill={`url(#${id})`}
+        style={{ fontFamily: "'Inter','Heebo',sans-serif", fontWeight: 900, fontSize: 38, letterSpacing: '-2px' }}>T</text>
     </svg>
   );
 }
@@ -32,29 +74,25 @@ function ToriLogo({ size = 34 }) {
 // ─── 3D Clay Icon ─────────────────────────────────────────────────────────────
 function Icon3D({ icon: Icon, size = 22, boxSize = 56, glow = true }) {
   return (
-    <div
-      className="relative flex items-center justify-center shrink-0"
-      style={{
-        width: boxSize, height: boxSize,
-        borderRadius: boxSize * 0.32,
-        background: 'linear-gradient(145deg, #fff7ed 0%, #fed7aa 35%, #f97316 70%, #ea580c 100%)',
-        boxShadow: glow
-          ? '0 10px 30px rgba(249,115,22,0.55), 0 3px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -2px 5px rgba(154,52,18,0.2)'
-          : '0 4px 14px rgba(249,115,22,0.35), inset 0 1px 0 rgba(255,255,255,0.7)',
-      }}
-    >
-      {/* Gloss overlay */}
+    <div className="relative flex items-center justify-center shrink-0" style={{
+      width: boxSize, height: boxSize,
+      borderRadius: boxSize * 0.32,
+      background: 'linear-gradient(145deg, #fff7ed 0%, #fed7aa 35%, #f97316 70%, #ea580c 100%)',
+      boxShadow: glow
+        ? '0 10px 30px rgba(249,115,22,0.55), 0 3px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -2px 5px rgba(154,52,18,0.2)'
+        : '0 4px 14px rgba(249,115,22,0.35), inset 0 1px 0 rgba(255,255,255,0.7)',
+    }}>
       <div className="absolute inset-0 pointer-events-none" style={{
         borderRadius: 'inherit',
         background: 'linear-gradient(135deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
       }} />
-      <Icon size={size} className="relative z-10 text-white drop-shadow" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
+      <Icon size={size} className="relative z-10 text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
     </div>
   );
 }
 
 // ─── Animated counter ─────────────────────────────────────────────────────────
-function Counter({ to, suffix = '', prefix = '', duration = 2.2 }) {
+function Counter({ to, suffix = '', duration = 2.2 }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
   const [display, setDisplay] = useState(0);
@@ -72,7 +110,7 @@ function Counter({ to, suffix = '', prefix = '', duration = 2.2 }) {
     requestAnimationFrame(step);
   }, [inView, to, duration]);
 
-  return <span ref={ref}>{prefix}{display.toLocaleString()}{suffix}</span>;
+  return <span ref={ref}>{display.toLocaleString()}{suffix}</span>;
 }
 
 // ─── WhatsApp chat bubbles ─────────────────────────────────────────────────────
@@ -93,37 +131,26 @@ function ChatBubbles() {
   }, [visible]);
 
   return (
-    <div className="flex flex-col gap-8 w-full max-w-[420px] mx-auto py-8 px-4">
+    <div className="flex flex-col gap-6 w-full max-w-[420px] mx-auto py-6 px-4">
       {CHAT.slice(0, visible).map((msg, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, y: 10, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="flex"
-          style={{ justifyContent: msg.from === 'user' ? 'flex-start' : 'flex-end' }}
-        >
-          <div className={`max-w-[82%] px-4 py-3 text-sm leading-relaxed whitespace-pre-line shadow-md ${
+        <motion.div key={i} initial={{ opacity: 0, y: 10, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.3 }} className="flex"
+          style={{ justifyContent: msg.from === 'user' ? 'flex-start' : 'flex-end' }}>
+          <div className={`max-w-[82%] px-4 py-3 text-sm leading-relaxed shadow-md ${
             msg.from === 'user'
               ? 'bg-[#005C4B] text-white rounded-2xl rounded-tr-sm'
               : 'bg-[#1F2C34] text-gray-100 border border-white/5 rounded-2xl rounded-tl-sm'
           }`}>
             {msg.text}
-            {msg.from === 'user' && (
-              <span className="block text-left text-[10px] text-teal-300/70 mt-1 leading-none">✓✓</span>
-            )}
+            {msg.from === 'user' && <span className="block text-left text-[10px] text-teal-300/70 mt-1 leading-none">✓✓</span>}
           </div>
         </motion.div>
       ))}
-
       {visible < CHAT.length && visible > 0 && (
         <div className="flex" style={{ justifyContent: 'flex-end' }}>
           <div className="bg-[#1F2C34] border border-white/5 px-4 py-3 rounded-2xl rounded-tl-sm">
             <div className="flex gap-1.5 items-center h-4">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
-                  style={{ animationDelay: `${i * 0.18}s` }} />
-              ))}
+              {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: `${i*0.18}s` }} />)}
             </div>
           </div>
         </div>
@@ -132,7 +159,7 @@ function ChatBubbles() {
   );
 }
 
-// ─── Feature card ─────────────────────────────────────────────────────────────
+// ─── Glass Feature Card ───────────────────────────────────────────────────────
 function FeatureCard({ icon, title, desc, delay = 0 }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
@@ -140,23 +167,19 @@ function FeatureCard({ icon, title, desc, delay = 0 }) {
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.45, delay, ease: 'easeOut' }}
-      whileHover={{ y: -5 }}
-      className="relative rounded-2xl p-6 group cursor-default overflow-hidden transition-colors duration-300"
-      style={{
-        background: 'rgba(18,12,5,0.85)',
-        border: '1px solid rgba(249,115,22,0.15)',
-        backdropFilter: 'blur(12px)',
-      }}
+      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
+      whileHover={{ y: -6, boxShadow: [...Object.values(glassCard.boxShadow ? [glassCard.boxShadow] : []), '0 0 0 1px rgba(249,115,22,0.2)'].join(', ') }}
+      className="relative rounded-2xl p-6 group cursor-default overflow-hidden transition-all duration-300"
+      style={{ ...glassCard, borderRadius: 20 }}
     >
-      {/* Hover glow */}
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.1), transparent 70%)' }} />
-      {/* Border glow on hover */}
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{ boxShadow: 'inset 0 0 0 1px rgba(249,115,22,0.35)' }} />
+      {/* Orange tint glow on hover */}
+      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at 40% 0%, rgba(249,115,22,0.08), transparent 65%)' }} />
+      {/* Inner top highlight (glass feel) */}
+      <div className="absolute inset-x-0 top-0 h-px pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15) 50%, transparent)' }} />
 
       <div className="mb-5 group-hover:scale-105 transition-transform duration-300">
         <Icon3D icon={icon} size={22} boxSize={54} />
@@ -167,31 +190,26 @@ function FeatureCard({ icon, title, desc, delay = 0 }) {
   );
 }
 
-// ─── Modal ─────────────────────────────────────────────────────────────────────
+// ─── Modal ────────────────────────────────────────────────────────────────────
 function Modal({ open, onClose, title, children }) {
   useEffect(() => {
-    if (open) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = '';
+    document.body.style.overflow = open ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.25 }}
-        className="bg-[#0d0805] border border-[#f97316]/20 rounded-2xl p-8 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
-        onClick={e => e.stopPropagation()}
-        dir="rtl"
+        initial={{ opacity: 0, scale: 0.95, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.25 }}
+        className="rounded-2xl p-8 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+        style={{ ...glassCard, background: 'rgba(13,8,5,0.85)' }}
+        onClick={e => e.stopPropagation()} dir="rtl"
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-white">{title}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
-            <X size={20} />
-          </button>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors"><X size={20} /></button>
         </div>
         <div className="text-gray-400 text-sm leading-relaxed space-y-4">{children}</div>
       </motion.div>
@@ -203,13 +221,14 @@ function Modal({ open, onClose, title, children }) {
 function TestimonialCard({ t, delay }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay, duration: 0.4 }}
-      className="rounded-2xl p-6 hover:border-[#f97316]/40 transition-colors cursor-default"
-      style={{ background: 'rgba(18,12,5,0.9)', border: '1px solid rgba(249,115,22,0.15)' }}
+      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }} transition={{ delay, duration: 0.4 }}
+      whileHover={{ y: -4 }}
+      className="rounded-2xl p-6 transition-all duration-300 relative overflow-hidden"
+      style={{ ...glassCard, borderRadius: 20 }}
     >
+      <div className="absolute inset-x-0 top-0 h-px pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 50%, transparent)' }} />
       <div className="flex gap-1 mb-4">
         {Array(5).fill(0).map((_, j) => <Star key={j} size={14} className="fill-amber-400 text-amber-400" />)}
       </div>
@@ -231,59 +250,35 @@ function TestimonialCard({ t, delay }) {
 // ─── ROI Calculator ───────────────────────────────────────────────────────────
 function ROICalculator() {
   const [appts, setAppts] = useState(80);
-
-  const avgPrice    = 120;
-  const noShowRate  = 0.13;
-  const planCost    = 99;
-  const minsPerAppt = 7;
-
+  const avgPrice = 120, noShowRate = 0.13, planCost = 99, minsPerAppt = 7;
   const savedRevenue = Math.round(appts * noShowRate) * avgPrice;
   const timeSaved    = Math.round(appts * minsPerAppt / 60 * 10) / 10;
   const roi          = Math.round((savedRevenue / planCost) * 10) / 10;
-
   const pct = ((appts - 10) / (300 - 10)) * 100;
 
   return (
-    <section className="py-14 md:py-24 px-4 md:px-6" style={{ borderTop: '1px solid rgba(249,115,22,0.12)', background: '#0a0602' }}>
+    <section className="py-14 md:py-24 px-4 md:px-6" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: '#0a0602' }}>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-10 md:mb-14">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3"
-          >
-            כמה טורי יחסוך לך?
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.15 }}
-            className="text-gray-400 text-base md:text-lg"
-          >
-            הזז את הסליידר וראה את החיסכון החודשי שלך
-          </motion.p>
+          <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3">כמה טורי יחסוך לך?</motion.h2>
+          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.15 }}
+            className="text-gray-400 text-base md:text-lg">הזז את הסליידר וראה את החיסכון החודשי שלך</motion.p>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-          className="rounded-2xl p-6 md:p-10"
-          style={{ background: 'rgba(18,12,5,0.9)', border: '1px solid rgba(249,115,22,0.2)', backdropFilter: 'blur(12px)' }}
-        >
+        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+          className="rounded-2xl p-6 md:p-10 relative overflow-hidden" style={{ ...glassCard, borderRadius: 24 }}>
+          <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14) 50%, transparent)' }} />
+
           <div className="mb-8 md:mb-10" dir="ltr">
             <div className="flex items-center justify-between mb-5">
               <span className="text-gray-400 text-sm font-medium">תורים בחודש</span>
               <span className="text-white font-black text-3xl tabular-nums">{appts}</span>
             </div>
-            <input
-              type="range"
-              min={10} max={300} step={5}
-              value={appts}
-              onChange={e => setAppts(Number(e.target.value))}
+            <input type="range" min={10} max={300} step={5} value={appts} onChange={e => setAppts(Number(e.target.value))}
               className="w-full h-2 rounded-full appearance-none cursor-pointer outline-none"
-              style={{
-                background: `linear-gradient(to right, #f97316 0%, #ea580c ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`,
-              }}
-            />
-            <div className="flex justify-between mt-2.5 text-gray-600 text-xs">
-              <span>10</span><span>150</span><span>300</span>
-            </div>
+              style={{ background: `linear-gradient(to right, #f97316 0%, #ea580c ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)` }} />
+            <div className="flex justify-between mt-2.5 text-gray-600 text-xs"><span>10</span><span>150</span><span>300</span></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -292,11 +287,10 @@ function ROICalculator() {
               { icon: Clock,      label: 'שעות עבודה שנחסכות\nמתיאומים ידניים',  value: `${timeSaved} שע׳` },
               { icon: Zap,        label: 'תשואה על המנוי\nהחזר השקעה חודשי',   value: `${roi}×` },
             ].map(({ icon, label, value }, i) => (
-              <div key={i} className="rounded-xl p-5 text-center"
-                style={{ background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.18)' }}>
-                <div className="mx-auto mb-3">
-                  <Icon3D icon={icon} size={18} boxSize={42} />
-                </div>
+              <div key={i} className="rounded-xl p-5 text-center relative overflow-hidden"
+                style={{ ...glassCard, borderRadius: 16, background: 'rgba(249,115,22,0.06)' }}>
+                <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 50%, transparent)' }} />
+                <div className="mx-auto mb-3 flex justify-center"><Icon3D icon={icon} size={18} boxSize={42} /></div>
                 <div className="text-2xl md:text-3xl font-black text-white mb-1.5 tabular-nums">{value}</div>
                 <div className="text-gray-400 text-xs leading-relaxed whitespace-pre-line">{label}</div>
               </div>
@@ -304,7 +298,7 @@ function ROICalculator() {
           </div>
 
           <p className="text-center text-gray-600 text-xs mt-6">
-            * מחושב לפי תור ממוצע ₪{avgPrice} ושיעור ביטולי רגע אחרון ממוצע בענף ({Math.round(noShowRate * 100)}%)
+            * מחושב לפי תור ממוצע ₪{avgPrice} ושיעור ביטולי רגע אחרון ({Math.round(noShowRate * 100)}%)
           </p>
         </motion.div>
       </div>
@@ -315,9 +309,9 @@ function ROICalculator() {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function LandingV2() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
-  const [termsOpen, setTermsOpen] = useState(false);
-  const [accessOpen, setAccessOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [termsOpen, setTermsOpen]     = useState(false);
+  const [accessOpen, setAccessOpen]   = useState(false);
+  const [isMobile, setIsMobile]       = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -330,10 +324,13 @@ export default function LandingV2() {
     <MotionConfig reducedMotion={isMobile ? 'always' : 'never'}>
     <div className="min-h-screen overflow-x-hidden" style={{ background: '#0d0805', color: '#e8e8f0', direction: 'rtl' }}>
 
-      {/* ─── Nav ──────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50"
-        style={{ background: 'rgba(13,8,5,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(249,115,22,0.12)' }}>
+      {/* Single global glass filter */}
+      <GlassFilter />
+
+      {/* ─── Nav ─────────────────────────────────────────────────────────── */}
+      <nav className="fixed top-0 left-0 right-0 z-50" style={glassNav}>
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+
           <Link to="/" className="flex items-center gap-2">
             <span className="font-black text-xl tracking-tight" style={{
               background: 'linear-gradient(135deg, #f97316, #ea580c)',
@@ -348,73 +345,64 @@ export default function LandingV2() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-5">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/login">
-              <motion.button
-                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all"
-                style={{ border: '1px solid rgba(249,115,22,0.25)' }}
-              >
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(8px)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                }}>
                 כניסה
               </motion.button>
             </Link>
             <Link to="/register">
-              <motion.button
-                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+              <motion.button whileHover={{ scale: 1.03, boxShadow: '0 6px 20px rgba(249,115,22,0.5)' }} whileTap={{ scale: 0.97 }}
                 className="text-white text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl"
-                style={{
-                  background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                  boxShadow: '0 4px 16px rgba(249,115,22,0.4)',
-                }}
-              >
+                style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 4px 16px rgba(249,115,22,0.4)' }}>
                 <span className="hidden sm:inline">התחל בחינם</span>
                 <span className="sm:hidden">הצטרף</span>
               </motion.button>
             </Link>
           </div>
+
         </div>
       </nav>
 
-      {/* ─── Hero ─────────────────────────────────────────────────────────── */}
+      {/* ─── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center pt-20 pb-12 px-4 md:px-6 overflow-hidden">
-        {/* Background glow */}
+        {/* Background glows */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] opacity-20"
-            style={{ background: 'radial-gradient(ellipse at 50% 10%, #f97316, transparent 65%)' }} />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] opacity-10"
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[700px] opacity-15"
+            style={{ background: 'radial-gradient(ellipse at 50% 5%, #f97316, transparent 60%)' }} />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] opacity-08"
             style={{ background: 'radial-gradient(circle, #ea580c, transparent 70%)' }} />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-48 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, transparent 0%, #0d0805 100%)' }} />
+          style={{ background: 'linear-gradient(to bottom, transparent, #0d0805)' }} />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
             {/* Text */}
             <div className="text-center lg:text-right">
-              {/* Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
                 className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold mb-6"
-                style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.28)', color: '#fb923c' }}
-              >
+                style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', color: '#fb923c', backdropFilter: 'blur(8px)' }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#f97316] animate-pulse inline-block" />
                 סוכן AI לעסקי שירות
               </motion.div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}
+              <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}
                 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight mb-5"
-                style={{ fontFamily: 'Heebo, sans-serif' }}
-              >
+                style={{ fontFamily: 'Heebo, sans-serif' }}>
                 <span className="relative inline-block">
                   הסוכן
-                  <motion.span
-                    initial={{ opacity: 0, rotate: 20, y: 8 }}
-                    animate={{ opacity: 1, rotate: 15, y: 0 }}
+                  <motion.span initial={{ opacity: 0, rotate: 20, y: 8 }} animate={{ opacity: 1, rotate: 15, y: 0 }}
                     transition={{ delay: 0.6, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute -top-5 -right-7 inline-block"
-                  >
+                    className="absolute -top-5 -right-7 inline-block">
                     <svg viewBox="0 0 24 24" fill="#25D366" className="w-8 h-8 drop-shadow-lg"
                       style={{ filter: 'drop-shadow(0 4px 12px rgba(37,211,102,0.5))' }}>
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -422,69 +410,46 @@ export default function LandingV2() {
                   </motion.span>
                 </span>{' '}שמנהל לך
                 <br />
-                <span style={{
-                  background: 'linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fbbf24 100%)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>
+                <span style={{ background: 'linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   את העסק
-                </span>
-                {' '}24/7
+                </span>{' '}24/7
               </motion.h1>
 
-              <motion.p
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.17 }}
-                className="text-gray-400 text-base md:text-lg lg:text-xl leading-relaxed mb-7 max-w-xl mx-auto lg:mx-0"
-              >
+              <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.17 }}
+                className="text-gray-400 text-base md:text-lg lg:text-xl leading-relaxed mb-7 max-w-xl mx-auto lg:mx-0">
                 טורי הוא סוכן AI שמקבל תורים, עונה ללקוחות ומנהל את היומן שלך ישירות בוואטסאפ. הלקוחות שלך מדברים עם בוט שמרגיש כמו אדם אמיתי, אתה פשוט עובד.
               </motion.p>
 
-              <motion.div
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.26 }}
-                className="flex flex-col lg:flex-row gap-3 mb-6"
-              >
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.26 }}
+                className="flex flex-col lg:flex-row gap-3 mb-6">
                 <Link to="/register" className="w-full lg:w-auto">
-                  <motion.button
-                    whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(249,115,22,0.45)' }}
-                    whileTap={{ scale: 0.97 }}
+                  <motion.button whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(249,115,22,0.45)' }} whileTap={{ scale: 0.97 }}
                     className="w-full text-white font-bold text-lg px-8 py-4 rounded-2xl inline-flex items-center justify-center gap-2"
-                    style={{
-                      background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                      boxShadow: '0 8px 24px rgba(249,115,22,0.45)',
-                    }}
-                  >
+                    style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 8px 24px rgba(249,115,22,0.45)' }}>
                     <Zap size={19} />
                     התחל 30 יום חינם
                   </motion.button>
                 </Link>
-                <motion.a
-                  href="#features"
-                  whileHover={{ scale: 1.02 }}
+                <motion.a href="#features" whileHover={{ scale: 1.02 }}
                   className="w-full lg:w-auto text-gray-300 hover:text-white font-semibold text-base px-8 py-3.5 rounded-2xl transition-all inline-flex items-center gap-2 justify-center"
-                  style={{ border: '1px solid rgba(249,115,22,0.2)' }}
-                >
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }}>
                   ראה איך זה עובד
                   <ChevronLeft size={16} />
                 </motion.a>
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-                className="flex flex-wrap gap-4 items-center justify-center lg:justify-start mb-5"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+                className="flex flex-wrap gap-4 items-center justify-center lg:justify-start mb-5">
                 {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך דקה'].map(t => (
                   <div key={t} className="flex items-center gap-1.5 text-gray-500 text-sm">
-                    <Check size={13} className="text-[#f97316]" />
-                    {t}
+                    <Check size={13} className="text-[#f97316]" />{t}
                   </div>
                 ))}
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
-                className="flex justify-center lg:justify-start"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className="flex justify-center lg:justify-start">
                 <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs text-gray-400"
-                  style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)' }}>
+                  style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)', backdropFilter: 'blur(8px)' }}>
                   <Smartphone size={12} className="text-[#f97316]" />
                   אפליקציה לאייפון ואנדרואיד — בקרוב
                 </div>
@@ -492,31 +457,30 @@ export default function LandingV2() {
             </div>
 
             {/* Chat preview */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92, x: -20 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="hidden sm:flex justify-center"
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.92, x: -20 }} animate={{ opacity: 1, scale: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 }} className="hidden sm:flex justify-center">
               <div className="relative">
                 <div className="absolute inset-0 -z-10 blur-3xl opacity-20"
                   style={{ background: 'radial-gradient(circle, #f97316, transparent 70%)' }} />
-                <div className="flex items-center gap-3 px-4 py-3 mb-1 rounded-2xl"
-                  style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)' }}>
-                  <div className="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-md shadow-green-500/30">
-                    <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-white text-sm font-semibold">Tori - Jonson Barber</div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block animate-pulse" />
-                      <span className="text-green-400 text-xs">מחובר עכשיו</span>
+                {/* Glass chat container */}
+                <div className="rounded-2xl overflow-hidden" style={{ ...glassCard, borderRadius: 20 }}>
+                  <div className="flex items-center gap-3 px-4 py-3 mb-1"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div className="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-md shadow-green-500/30">
+                      <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-white text-sm font-semibold">Tori - Jonson Barber</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block animate-pulse" />
+                        <span className="text-green-400 text-xs">מחובר עכשיו</span>
+                      </div>
                     </div>
                   </div>
+                  <ChatBubbles />
                 </div>
-                <ChatBubbles />
               </div>
             </motion.div>
 
@@ -524,25 +488,21 @@ export default function LandingV2() {
         </div>
       </section>
 
-      {/* ─── Stats ────────────────────────────────────────────────────────── */}
-      <section className="pt-0 pb-12 md:pb-16 px-4 md:px-6" style={{ background: '#0d0805' }}>
+      {/* ─── Stats ───────────────────────────────────────────────────────── */}
+      <section className="pt-0 pb-12 md:pb-16 px-4 md:px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
             {[
               { value: 24, suffix: '/7',   label: 'זמינות הבוט' },
               { value: 30, suffix: ' יום', label: 'ניסיון חינמי' },
               { value: 2,  suffix: ' דק׳', label: 'זמן הגדרה ממוצע' },
               { value: 98, suffix: '%',    label: 'לקוחות מרוצים' },
             ].map((s, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center p-5 md:p-8 rounded-2xl transition-all"
-                style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.14)' }}
-              >
+              <motion.div key={i} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="text-center p-5 md:p-8 rounded-2xl relative overflow-hidden"
+                style={{ ...glassCard, borderRadius: 20 }}>
+                <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 50%, transparent)' }} />
                 <div className="text-4xl font-black text-white mb-1" style={{ fontFamily: 'Heebo, sans-serif' }}>
                   <Counter to={s.value} suffix={s.suffix} />
                 </div>
@@ -553,39 +513,30 @@ export default function LandingV2() {
         </div>
       </section>
 
-      {/* ─── Features ─────────────────────────────────────────────────────── */}
-      <section id="features" className="py-14 md:py-24 px-4 md:px-6" style={{ background: '#0d0805' }}>
+      {/* ─── Features ────────────────────────────────────────────────────── */}
+      <section id="features" className="py-14 md:py-24 px-4 md:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10 md:mb-16">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
-              className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3"
-            >
-              כל מה שהעסק שלך צריך
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
-              className="text-gray-400 text-lg max-w-2xl mx-auto"
-            >
-              לא עוד שיחות טלפון, לא עוד ניהול ידני — טורי עושה הכל בשבילך.
-            </motion.p>
+            <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+              className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3">כל מה שהעסק שלך צריך</motion.h2>
+            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
+              className="text-gray-400 text-lg max-w-2xl mx-auto">לא עוד שיחות טלפון, לא עוד ניהול ידני — טורי עושה הכל בשבילך.</motion.p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <FeatureCard icon={Bot}          delay={0}    title="בוט וואטסאפ AI"       desc="מקבל תורים, מבטל ועונה על שאלות בעברית שוטפת, 24 שעות ביממה. הלקוחות מרגישים שמדברים עם אדם אמיתי." />
-            <FeatureCard icon={Calendar}     delay={0.06} title="יומן חכם בזמן אמת"    desc="ממשק ויזואלי נוח לניהול כל התורים. הוסף ידנית, חסום זמנים, ראה את כל הפעילות במקום אחד." />
-            <FeatureCard icon={BarChart3}    delay={0.12} title="אנליטיקות ודוחות"     desc="גרפים של הכנסות, שירותים פופולריים ושעות עמוסות. דוח חודשי שיעזור לך לקבל החלטות חכמות." />
-            <FeatureCard icon={Users}        delay={0.18} title="ריבוי עובדים"          desc="כמה עובדים עם לוחות זמנים וצבעים נפרדים. מושלם לסלון שמעסיק מספר אנשים במקביל." />
-            <FeatureCard icon={Bell}         delay={0.24} title="תזכורות אוטומטיות"    desc="הבוט שולח ללקוח תזכורת יום לפני התור. פחות ביטולי רגע אחרון ויותר כסף בכיס." />
-            <FeatureCard icon={FileText}     delay={0.30} title="חשבוניות ירוקות"      desc="אינטגרציה עם מערכת חשבוניות ירוקות לניהול חשבוניות ישירות מתוך היומן, בלי לצאת מהמסך." />
+            <FeatureCard icon={Bot}       delay={0}    title="בוט וואטסאפ AI"     desc="מקבל תורים, מבטל ועונה על שאלות בעברית שוטפת, 24 שעות ביממה." />
+            <FeatureCard icon={Calendar}  delay={0.07} title="יומן חכם בזמן אמת"  desc="ממשק ויזואלי נוח לניהול כל התורים. הוסף ידנית, חסום זמנים, ראה הכל במקום אחד." />
+            <FeatureCard icon={BarChart3} delay={0.14} title="אנליטיקות ודוחות"   desc="גרפים של הכנסות, שירותים פופולריים ושעות עמוסות. דוח חודשי לקבלת החלטות חכמות." />
+            <FeatureCard icon={Users}     delay={0.21} title="ריבוי עובדים"        desc="כמה עובדים עם לוחות זמנים וצבעים נפרדים. מושלם לסלון שמעסיק מספר אנשים." />
+            <FeatureCard icon={Bell}      delay={0.28} title="תזכורות אוטומטיות"  desc="הבוט שולח ללקוח תזכורת יום לפני התור. פחות ביטולי רגע אחרון ויותר כסף בכיס." />
+            <FeatureCard icon={FileText}  delay={0.35} title="חשבוניות ירוקות"    desc="אינטגרציה עם חשבוניות ירוקות לניהול חשבוניות ישירות מתוך היומן." />
           </div>
 
-          {/* App coming soon strip */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
-            className="mt-8 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"
-            style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)' }}
-          >
+          {/* App strip */}
+          <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
+            className="mt-8 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden"
+            style={{ ...glassCard, borderRadius: 20 }}>
+            <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 50%, transparent)' }} />
             <div className="flex items-center gap-3">
               <Icon3D icon={Smartphone} size={17} boxSize={40} glow={false} />
               <div>
@@ -602,8 +553,8 @@ export default function LandingV2() {
         </div>
       </section>
 
-      {/* ─── How it works ─────────────────────────────────────────────────── */}
-      <section className="py-14 md:py-24 px-4 md:px-6" style={{ background: '#0a0602', borderTop: '1px solid rgba(249,115,22,0.1)', borderBottom: '1px solid rgba(249,115,22,0.1)' }}>
+      {/* ─── How it works ────────────────────────────────────────────────── */}
+      <section className="py-14 md:py-24 px-4 md:px-6" style={{ background: '#0a0602', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10 md:mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3">מה התהליך?</h2>
@@ -612,41 +563,20 @@ export default function LandingV2() {
 
           <div className="grid md:grid-cols-3 gap-4 md:gap-6">
             {[
-              {
-                icon: ClipboardList,
-                step: '01',
-                title: 'נרשמים תוך 2 דקות',
-                desc: 'שם העסק, שירותים, מחירים ושעות עבודה — הכל בממשק פשוט ומהיר.',
-              },
-              {
-                icon: Link2,
-                step: '02',
-                title: 'מחברים את הוואטסאפ',
-                desc: 'שולחים ללקוחות קישור אחד, מהרגע הזה הבוט מקבל תורים במקומך.',
-              },
-              {
-                icon: Cpu,
-                step: '03',
-                title: 'הבוט עובד, אתה נח',
-                desc: 'תורים, ביטולים, תזכורות — הכל רץ לבד 24/7, גם כשאתה ישן.',
-              },
+              { icon: ClipboardList, step: '01', title: 'נרשמים תוך 2 דקות', desc: 'שם העסק, שירותים, מחירים ושעות עבודה — הכל בממשק פשוט ומהיר.' },
+              { icon: Link2,         step: '02', title: 'מחברים את הוואטסאפ', desc: 'שולחים ללקוחות קישור אחד, מהרגע הזה הבוט מקבל תורים במקומך.' },
+              { icon: Cpu,           step: '03', title: 'הבוט עובד, אתה נח',  desc: 'תורים, ביטולים, תזכורות — הכל רץ לבד 24/7, גם כשאתה ישן.' },
             ].map((s, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
+              <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
                 transition={{ delay: i * 0.12, duration: 0.4 }}
-                className="relative rounded-2xl p-6 md:p-8 transition-colors duration-300 group"
-                style={{ background: 'rgba(18,12,5,0.9)', border: '1px solid rgba(249,115,22,0.15)' }}
-              >
+                className="relative rounded-2xl p-6 md:p-8 group transition-all duration-300 overflow-hidden"
+                style={{ ...glassCard, borderRadius: 20 }}>
+                <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.13) 50%, transparent)' }} />
                 <div className="absolute top-6 left-6 text-5xl font-black select-none pointer-events-none"
-                  style={{ color: 'rgba(249,115,22,0.05)', fontFamily: 'Heebo, sans-serif' }}>{s.step}</div>
-
+                  style={{ color: 'rgba(249,115,22,0.06)', fontFamily: 'Heebo, sans-serif' }}>{s.step}</div>
                 <div className="mb-6 group-hover:scale-105 transition-transform duration-300">
                   <Icon3D icon={s.icon} size={24} boxSize={58} />
                 </div>
-
                 <h3 className="text-white font-bold text-xl mb-3">{s.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{s.desc}</p>
               </motion.div>
@@ -655,29 +585,27 @@ export default function LandingV2() {
         </div>
       </section>
 
-      {/* ─── ROI Calculator ───────────────────────────────────────────────── */}
+      {/* ─── ROI Calculator ──────────────────────────────────────────────── */}
       <ROICalculator />
 
-      {/* ─── Testimonials ─────────────────────────────────────────────────── */}
-      <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6" style={{ background: '#0a0602', borderTop: '1px solid rgba(249,115,22,0.1)' }}>
+      {/* ─── Testimonials ────────────────────────────────────────────────── */}
+      <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6" style={{ background: '#0a0602', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10 md:mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3">מה אומרים עלינו</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-4 md:gap-6">
             {[
-              { name: 'שירלי ב.',  role: 'סלון ריסים, תל אביב',     text: 'לפני טורי הייתי מפסידה תורים כי לא תמיד עניתי לטלפון. עכשיו הבוט עונה בשבילי גם בשתיים בלילה וגם ביום שישי בצהריים. לא מבינה איך עבדתי בלעדיו.' },
-              { name: 'ניצן מ.',  role: 'סלון ציפורניים, תל אביב', text: 'הלקוחות שלי קובעות תורים בלילה כשאני ישנה, ואני מגיעה בבוקר עם לוח מלא. שלושה שבועות אחרי שעברתי לטורי ההכנסות עלו בעשרים אחוז.' },
-              { name: 'רועי ח.',  role: 'ספר, ירושלים',             text: 'יש לי שתי עובדות וחשבתי שיהיה מסובך לנהל שני לוחות זמנים, אבל טורי מסדר הכל לבד, אני כמעט לא צריך לגעת ביומן.' },
-            ].map((t, i) => (
-              <TestimonialCard key={i} t={t} delay={i * 0.1} />
-            ))}
+              { name: 'שירלי ב.', role: 'סלון ריסים, תל אביב',     text: 'לפני טורי הייתי מפסידה תורים כי לא תמיד עניתי לטלפון. עכשיו הבוט עונה בשבילי גם בשתיים בלילה. לא מבינה איך עבדתי בלעדיו.' },
+              { name: 'ניצן מ.', role: 'סלון ציפורניים, תל אביב', text: 'הלקוחות קובעות תורים בלילה כשאני ישנה, ואני מגיעה בבוקר עם לוח מלא. שלושה שבועות אחרי — ההכנסות עלו בעשרים אחוז.' },
+              { name: 'רועי ח.', role: 'ספר, ירושלים',             text: 'יש לי שתי עובדות וחשבתי שיהיה מסובך לנהל שני לוחות זמנים, אבל טורי מסדר הכל לבד, אני כמעט לא צריך לגעת ביומן.' },
+            ].map((t, i) => <TestimonialCard key={i} t={t} delay={i * 0.1} />)}
           </div>
         </div>
       </section>
 
-      {/* ─── Pricing ──────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-14 md:py-24 px-4 md:px-6" style={{ background: '#0d0805', borderTop: '1px solid rgba(249,115,22,0.1)' }}>
+      {/* ─── Pricing ─────────────────────────────────────────────────────── */}
+      <section id="pricing" className="py-14 md:py-24 px-4 md:px-6" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10 md:mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3">מחירים פשוטים ושקופים</h2>
@@ -685,72 +613,49 @@ export default function LandingV2() {
           </div>
           <div className="grid md:grid-cols-3 gap-4 md:gap-6 items-stretch">
             {[
-              {
-                plan: 'ניסיון חינמי', price: 0, highlight: false, badge: 'ללא כרטיס אשראי', delay: 0,
-                features: ['30 יום מלאים חינם', 'בוט וואטסאפ פעיל', 'יומן וניהול לקוחות', 'ללא כרטיס אשראי', 'עובד אחד'],
-              },
-              {
-                plan: 'Basic', price: 99, highlight: true, badge: 'הכי פופולרי', delay: 0.1,
-                features: ['עובד אחד', 'תורים ללא הגבלה', 'בוט AI 24 שעות', 'יומן ואנליטיקות', 'תמיכה טכנית'],
-              },
-              {
-                plan: 'Business', price: 250, highlight: false, badge: null, delay: 0.2,
-                features: ['עד 4 עובדים', 'תורים ללא הגבלה', 'בוט AI 24 שעות', 'דוחות מתקדמים', 'תזכורות אוטומטיות', 'גוגל קלנדר', 'חשבוניות ירוקות'],
-              },
+              { plan: 'ניסיון חינמי', price: 0,   highlight: false, badge: 'ללא כרטיס אשראי', delay: 0,   features: ['30 יום מלאים חינם','בוט וואטסאפ פעיל','יומן וניהול לקוחות','ללא כרטיס אשראי','עובד אחד'] },
+              { plan: 'Basic',        price: 99,  highlight: true,  badge: 'הכי פופולרי',     delay: 0.1, features: ['עובד אחד','תורים ללא הגבלה','בוט AI 24 שעות','יומן ואנליטיקות','תמיכה טכנית'] },
+              { plan: 'Business',     price: 250, highlight: false, badge: null,               delay: 0.2, features: ['עד 4 עובדים','תורים ללא הגבלה','בוט AI 24 שעות','דוחות מתקדמים','תזכורות אוטומטיות','גוגל קלנדר','חשבוניות ירוקות'] },
             ].map(({ plan, price, highlight, badge, delay, features }) => (
-              <motion.div
-                key={plan}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
+              <motion.div key={plan}
+                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.18, delay: delay * 0.5, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.2, delay: delay * 0.5, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ y: -4 }}
-                className="relative rounded-2xl p-6 md:p-8 transition-all duration-300 flex flex-col h-full"
+                className="relative rounded-2xl p-6 md:p-8 transition-all duration-300 flex flex-col h-full overflow-hidden"
                 style={highlight
-                  ? { background: 'linear-gradient(145deg, #9a3412, #431407)', border: '1px solid rgba(249,115,22,0.5)', boxShadow: '0 0 40px rgba(249,115,22,0.2)' }
-                  : { background: 'rgba(18,12,5,0.9)', border: '1px solid rgba(249,115,22,0.15)' }
-                }
-              >
+                  ? { background: 'linear-gradient(145deg, rgba(154,52,18,0.6), rgba(67,20,7,0.8))', border: '1px solid rgba(249,115,22,0.4)', boxShadow: '0 0 40px rgba(249,115,22,0.15), inset 0 1px 0 rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }
+                  : { ...glassCard, borderRadius: 20 }
+                }>
+                <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 50%, transparent)' }} />
                 {badge && (
                   <div className="absolute -top-3 right-6 text-white text-xs font-bold px-3 py-1 rounded-full"
                     style={{
-                      background: badge === 'ללא כרטיס אשראי'
-                        ? 'linear-gradient(135deg, #16a34a, #15803d)'
-                        : 'linear-gradient(135deg, #f97316, #ea580c)',
-                      boxShadow: badge === 'ללא כרטיס אשראי'
-                        ? '0 4px 12px rgba(22,163,74,0.4)'
-                        : '0 4px 12px rgba(249,115,22,0.4)',
-                    }}>
-                    {badge}
-                  </div>
+                      background: badge === 'ללא כרטיס אשראי' ? 'linear-gradient(135deg, #16a34a, #15803d)' : 'linear-gradient(135deg, #f97316, #ea580c)',
+                      boxShadow: badge === 'ללא כרטיס אשראי' ? '0 4px 12px rgba(22,163,74,0.4)' : '0 4px 12px rgba(249,115,22,0.4)',
+                    }}>{badge}</div>
                 )}
                 <div className={`text-sm font-semibold uppercase tracking-wider mb-2 ${highlight ? 'text-orange-200' : 'text-gray-400'}`}>{plan}</div>
                 <div className="flex items-end gap-1 mb-6">
                   {price === 0
                     ? <span className="text-4xl font-black text-white">חינם</span>
-                    : <>
-                      <span className="text-4xl font-black text-white">₪{price}</span>
-                      <span className={`text-sm mb-1 ${highlight ? 'text-orange-200' : 'text-gray-400'}`}>/חודש</span>
-                    </>
+                    : <><span className="text-4xl font-black text-white">₪{price}</span><span className={`text-sm mb-1 ${highlight ? 'text-orange-200' : 'text-gray-400'}`}>/חודש</span></>
                   }
                 </div>
                 <ul className="space-y-3 mb-8 flex-1">
                   {features.map((f, i) => (
                     <li key={i} className={`flex items-start gap-2 text-sm ${highlight ? 'text-orange-100' : 'text-gray-300'}`}>
-                      <Check size={16} className="mt-0.5 shrink-0 text-[#f97316]" />
-                      {f}
+                      <Check size={16} className="mt-0.5 shrink-0 text-[#f97316]" />{f}
                     </li>
                   ))}
                 </ul>
                 <Link to="/register" className="mt-auto">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     className="w-full py-3.5 rounded-xl font-bold text-sm transition-all"
                     style={highlight
                       ? { background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white', boxShadow: '0 4px 16px rgba(249,115,22,0.4)' }
-                      : { background: 'transparent', color: 'white', border: '1px solid rgba(249,115,22,0.3)' }
-                    }
-                  >
+                      : { background: 'rgba(255,255,255,0.06)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }
+                    }>
                     התחל עכשיו
                   </motion.button>
                 </Link>
@@ -760,38 +665,30 @@ export default function LandingV2() {
         </div>
       </section>
 
-      {/* ─── Final CTA ────────────────────────────────────────────────────── */}
-      <section className="py-16 md:py-28 px-4 md:px-6 relative overflow-hidden">
+      {/* ─── Final CTA ───────────────────────────────────────────────────── */}
+      <section className="py-16 md:py-28 px-4 md:px-6 relative overflow-hidden" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.07), rgba(234,88,12,0.04))' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.06), rgba(234,88,12,0.03))' }} />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.1), transparent 70%)' }} />
+            style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.08), transparent 70%)' }} />
         </div>
         <div className="relative z-10 max-w-3xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <div className="flex justify-center mb-6">
-              <Icon3D icon={Zap} size={28} boxSize={68} />
-            </div>
+            <div className="flex justify-center mb-6"><Icon3D icon={Zap} size={28} boxSize={68} /></div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-5">מוכן להפסיק לנהל תורים ידנית?</h2>
             <p className="text-gray-400 text-base md:text-xl mb-8">הצטרף לעסקים שכבר חוסכים שעות בשבוע עם טורי.</p>
             <div className="flex flex-col gap-3 max-w-xs mx-auto md:max-w-none md:flex-row md:justify-center">
               <Link to="/register" className="w-full md:w-auto">
-                <motion.button
-                  whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(249,115,22,0.45)' }}
-                  whileTap={{ scale: 0.97 }}
+                <motion.button whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(249,115,22,0.45)' }} whileTap={{ scale: 0.97 }}
                   className="w-full text-white font-bold text-lg px-10 py-4 rounded-2xl inline-flex items-center justify-center gap-2"
-                  style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 8px 24px rgba(249,115,22,0.4)' }}
-                >
-                  <Zap size={20} />
-                  התחל 30 יום חינם
+                  style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 8px 24px rgba(249,115,22,0.4)' }}>
+                  <Zap size={20} />התחל 30 יום חינם
                 </motion.button>
               </Link>
               <Link to="/login" className="w-full md:w-auto">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
+                <motion.button whileHover={{ scale: 1.02 }}
                   className="w-full text-gray-400 hover:text-white font-semibold text-lg px-8 py-4 rounded-2xl transition-all"
-                  style={{ border: '1px solid rgba(249,115,22,0.2)' }}
-                >
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }}>
                   יש לי חשבון
                 </motion.button>
               </Link>
@@ -800,8 +697,8 @@ export default function LandingV2() {
         </div>
       </section>
 
-      {/* ─── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="py-10 px-4 md:px-6" style={{ background: '#0a0602', borderTop: '1px solid rgba(249,115,22,0.1)' }}>
+      {/* ─── Footer ──────────────────────────────────────────────────────── */}
+      <footer className="py-10 px-4 md:px-6" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(10,6,2,0.9)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
@@ -821,32 +718,29 @@ export default function LandingV2() {
         </div>
       </footer>
 
-      {/* ─── Modals ───────────────────────────────────────────────────────── */}
+      {/* ─── Modals ──────────────────────────────────────────────────────── */}
       <Modal open={termsOpen} onClose={() => setTermsOpen(false)} title="תקנון ותנאי שימוש">
         <p className="text-gray-300 font-semibold">עודכן לאחרונה: אפריל 2026</p>
         <p>ברוכים הבאים לטורי. השימוש בפלטפורמה מהווה הסכמה מלאה לתנאים המפורטים להלן.</p>
-        <p><strong className="text-white">1. הגדרות</strong><br />"השירות" — פלטפורמת טורי לניהול תורים באמצעות בוט וואטסאפ מבוסס בינה מלאכותית. "המשתמש" — כל עסק או יחיד הנרשם לשירות.</p>
-        <p><strong className="text-white">2. השירות</strong><br />טורי מספקת תוכנה לניהול תורים עסקיים. הגישה לשירות מותנית בהרשמה ובתשלום חודשי לאחר תקופת ניסיון חינמית של 30 יום.</p>
-        <p><strong className="text-white">3. תקופת ניסיון ותשלומים</strong><br />המשתמש זכאי ל-30 יום חינמיים ללא מסירת פרטי תשלום. לאחר תקופת הניסיון, ייגבה תשלום חודשי בהתאם לתכנית שנבחרה.</p>
-        <p><strong className="text-white">4. ביטול</strong><br />ניתן לבטל את המנוי בכל עת דרך הגדרות החשבון. הביטול ייכנס לתוקף בסוף תקופת החיוב הנוכחית.</p>
-        <p><strong className="text-white">5. אחריות</strong><br />טורי מספקת את השירות "כפי שהוא". האחריות המקסימלית מוגבלת לסכום ששולם בחודש הקודם.</p>
-        <p><strong className="text-white">6. קניין רוחני</strong><br />כל הזכויות בשירות שייכות לטורי. אין לשכפל, להפיץ או לעשות שימוש מסחרי ללא אישור בכתב.</p>
-        <p><strong className="text-white">7. יצירת קשר</strong><br /><a href="mailto:supporttori@gmail.com" className="text-[#f97316]">supporttori@gmail.com</a></p>
+        <p><strong className="text-white">1. השירות</strong><br />טורי מספקת תוכנה לניהול תורים עסקיים. הגישה לשירות מותנית בהרשמה ובתשלום חודשי לאחר 30 יום ניסיון חינמיים.</p>
+        <p><strong className="text-white">2. תשלומים וביטול</strong><br />30 יום חינמיים ללא כרטיס אשראי. לאחר מכן תשלום חודשי לפי התכנית שנבחרה. ביטול אפשרי בכל עת.</p>
+        <p><strong className="text-white">3. אחריות</strong><br />טורי מספקת את השירות "כפי שהוא". האחריות המקסימלית מוגבלת לסכום ששולם בחודש הקודם.</p>
+        <p><strong className="text-white">4. קניין רוחני</strong><br />כל הזכויות שייכות לטורי. אין לשכפל או לעשות שימוש מסחרי ללא אישור בכתב.</p>
+        <p><strong className="text-white">5. יצירת קשר</strong><br /><a href="mailto:supporttori@gmail.com" className="text-[#f97316]">supporttori@gmail.com</a></p>
       </Modal>
 
       <Modal open={privacyOpen} onClose={() => setPrivacyOpen(false)} title="מדיניות פרטיות">
         <p className="text-gray-300 font-semibold">עודכן לאחרונה: אפריל 2026</p>
         <p>טורי מתחייבת להגן על פרטיות המשתמשים בהתאם לחוק הגנת הפרטיות ו-GDPR.</p>
-        <p><strong className="text-white">1. מידע שנאסף</strong><br />בעת ההרשמה: שם, אימייל, טלפון, שם העסק. במהלך השימוש: נתוני תורים, היסטוריית שיחות בוט לצרכי שיפור בלבד.</p>
-        <p><strong className="text-white">2. שימוש במידע</strong><br />המידע משמש להפעלת השירות, שיפורו ותמיכה טכנית. לא נשלח דיוור שיווקי ללא הסכמה.</p>
-        <p><strong className="text-white">3. אבטחת מידע</strong><br />כל הנתונים מוצפנים בהעברה (TLS) ובאחסון. גישה מוגבלת לעובדים מורשים בלבד.</p>
-        <p><strong className="text-white">4. זכויות המשתמש</strong><br />זכות לעיין, לתקן, למחוק ולניידות מידע. לממוש זכויות: <a href="mailto:supporttori@gmail.com" className="text-[#f97316]">supporttori@gmail.com</a></p>
+        <p><strong className="text-white">מידע שנאסף</strong><br />שם, אימייל, טלפון, שם העסק, נתוני תורים. היסטוריית שיחות לצרכי שיפור בלבד.</p>
+        <p><strong className="text-white">שימוש במידע</strong><br />להפעלת השירות ותמיכה טכנית בלבד. לא נשלח דיוור שיווקי ללא הסכמה.</p>
+        <p><strong className="text-white">אבטחה</strong><br />הצפנה מלאה (TLS). גישה מוגבלת לעובדים מורשים.</p>
+        <p><strong className="text-white">זכויות</strong><br />עיון, תיקון ומחיקת מידע: <a href="mailto:supporttori@gmail.com" className="text-[#f97316]">supporttori@gmail.com</a></p>
       </Modal>
 
       <Modal open={accessOpen} onClose={() => setAccessOpen(false)} title="הצהרת נגישות">
-        <p>טורי מחויבת לנגישות דיגיטלית בהתאם לתקן הישראלי 5568 ו-WCAG 2.1.</p>
-        <p><strong className="text-white">רמת תאימות:</strong> אנו שואפים לרמת AA של WCAG 2.1.</p>
-        <p><strong className="text-white">תכונות נגישות:</strong> ניווט מקלדת מלא, תמיכה בקוראי מסך, יחסי ניגוד תקניים.</p>
+        <p>טורי מחויבת לנגישות דיגיטלית בהתאם לתקן הישראלי 5568 ו-WCAG 2.1 רמת AA.</p>
+        <p><strong className="text-white">תכונות נגישות:</strong> ניווט מקלדת מלא, תמיכה בקוראי מסך, יחסי ניגוד תקניים, תמיכה בהגדלת טקסט.</p>
         <p><strong className="text-white">דיווח על בעיות:</strong> <a href="mailto:supporttori@gmail.com" className="text-[#f97316]">supporttori@gmail.com</a></p>
         <p className="text-gray-600 text-xs">עודכן לאחרונה: אפריל 2026</p>
       </Modal>
