@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
   MessageCircle, Calendar, BarChart3, Users, Bell, FileText,
-  Zap, Check, Star, Bot, ChevronLeft, X,
+  Zap, Check, Star, Bot, ChevronLeft, X, Menu,
   Smartphone, TrendingUp, Clock, ClipboardList, Link2, Cpu,
 } from 'lucide-react';
 import { WebGLShader } from '@/components/ui/web-gl-shader';
@@ -307,6 +307,120 @@ function ROICalculator() {
   );
 }
 
+// ─── Navbar ───────────────────────────────────────────────────────────────────
+const NAV_ITEMS = [
+  { label: 'פיצ׳רים',    href: '#features' },
+  { label: 'איך זה עובד', href: '#how-it-works' },
+  { label: 'עדויות',     href: '#testimonials' },
+  { label: 'מחירים',     href: '#pricing' },
+];
+
+function NavBar() {
+  const [scrolled, setScrolled]     = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <>
+      <motion.header
+        className={`fixed z-50 left-1/2 -translate-x-1/2 transition-all duration-300 ${scrolled ? 'top-2' : 'top-4'}`}
+        style={{ width: 'min(860px, calc(100vw - 32px))' }}
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className={`liquid-glass rounded-full px-2 py-2 flex items-center justify-between gap-4 transition-all duration-300`}>
+
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 px-2 shrink-0">
+            <div className="w-7 h-7 rounded-xl flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}>
+              <span className="text-xs font-black text-white">T</span>
+            </div>
+            <span className="font-black text-base text-white tracking-tight">TORI</span>
+          </Link>
+
+          {/* Desktop links */}
+          <nav className="hidden md:flex items-center gap-1">
+            {NAV_ITEMS.map(item => (
+              <a key={item.href} href={item.href}
+                className="px-3.5 py-2 text-sm text-white/70 hover:text-white transition-colors font-medium rounded-full hover:bg-white/5">
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          {/* CTA */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link to="/login" className="hidden md:block">
+              <button className="liquid-glass rounded-full px-4 py-1.5 text-sm text-white/75 hover:text-white transition-colors font-medium">
+                כניסה
+              </button>
+            </Link>
+            <Link to="/register">
+              <motion.button
+                whileHover={{ scale: 1.04, boxShadow: '0 6px 20px rgba(249,115,22,0.55)' }}
+                whileTap={{ scale: 0.97 }}
+                className="rounded-full px-4 py-2 text-sm text-white font-bold"
+                style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 3px 12px rgba(249,115,22,0.4)' }}
+              >
+                <span className="hidden sm:inline">התחל בחינם</span>
+                <span className="sm:hidden">הצטרף</span>
+              </motion.button>
+            </Link>
+            <button
+              className="md:hidden liquid-glass rounded-full w-9 h-9 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="פתח תפריט"
+            >
+              {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* Mobile full-screen menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="fixed inset-0 z-40 flex flex-col items-center justify-center"
+            style={{ background: 'rgba(13,8,5,0.97)', backdropFilter: 'blur(20px)' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+          >
+            <nav className="flex flex-col items-center gap-7">
+              {NAV_ITEMS.map((item, i) => (
+                <motion.a key={item.href} href={item.href}
+                  className="text-4xl font-black text-white/75 hover:text-white transition-colors"
+                  initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.07 }}
+                  onClick={() => setMobileOpen(false)}>
+                  {item.label}
+                </motion.a>
+              ))}
+              <Link to="/register" onClick={() => setMobileOpen(false)}>
+                <motion.button
+                  initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: NAV_ITEMS.length * 0.07 }}
+                  className="mt-4 rounded-full px-8 py-3 text-white font-bold text-lg"
+                  style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 6px 24px rgba(249,115,22,0.45)' }}
+                >
+                  התחל ניסיון חינמי
+                </motion.button>
+              </Link>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function LandingV2() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -329,78 +443,7 @@ export default function LandingV2() {
       <GlassFilter />
 
       {/* ─── Nav ─────────────────────────────────────────────────────────── */}
-      <div className="fixed top-4 left-0 right-0 z-50 px-4 flex justify-center pointer-events-none">
-        <motion.nav
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="pointer-events-auto w-full"
-          style={{ maxWidth: 780 }}
-        >
-          {/* Outer glow */}
-          <div className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ boxShadow: '0 0 0 1px rgba(249,115,22,0.08), 0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)' }} />
-
-          <div className="relative rounded-2xl overflow-hidden">
-            {/* Glass backdrop */}
-            <div className="absolute inset-0"
-              style={{
-                background: 'rgba(13,8,5,0.52)',
-                backdropFilter: 'blur(32px) saturate(180%) url("#lg-filter")',
-                WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-              }} />
-            {/* Top highlight line */}
-            <div className="absolute inset-x-0 top-0 h-px pointer-events-none"
-              style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.14) 50%, transparent 95%)' }} />
-            {/* Bottom shadow line */}
-            <div className="absolute inset-x-0 bottom-0 h-px pointer-events-none"
-              style={{ background: 'rgba(0,0,0,0.25)' }} />
-            {/* Inner border */}
-            <div className="absolute inset-0 rounded-2xl pointer-events-none"
-              style={{ border: '1px solid rgba(255,255,255,0.08)' }} />
-
-            <div className="relative z-10 px-5 h-14 flex items-center justify-between gap-4">
-
-              <Link to="/" className="flex items-center gap-1.5 shrink-0">
-                <span className="font-black text-lg tracking-tight" style={{
-                  background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>Tori</span>
-                <ToriLogo size={28} />
-              </Link>
-
-              <div className="hidden md:flex items-center gap-6">
-                {[['פיצ׳רים', '#features'], ['מחירים', '#pricing'], ['עדויות', '#testimonials']].map(([label, href]) => (
-                  <a key={href} href={href} className="text-gray-400 hover:text-white text-sm font-medium transition-colors">{label}</a>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <Link to="/login">
-                  <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                    className="text-gray-300 hover:text-white text-sm font-semibold px-3.5 py-1.5 rounded-xl transition-all"
-                    style={{
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
-                    }}>
-                    כניסה
-                  </motion.button>
-                </Link>
-                <Link to="/register">
-                  <motion.button whileHover={{ scale: 1.04, boxShadow: '0 6px 20px rgba(249,115,22,0.55)' }} whileTap={{ scale: 0.97 }}
-                    className="text-white text-sm font-bold px-4 py-2 rounded-xl"
-                    style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 3px 12px rgba(249,115,22,0.45)' }}>
-                    <span className="hidden sm:inline">התחל בחינם</span>
-                    <span className="sm:hidden">הצטרף</span>
-                  </motion.button>
-                </Link>
-              </div>
-
-            </div>
-          </div>
-        </motion.nav>
-      </div>
+      <NavBar />
 
       {/* ─── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center pt-20 pb-12 px-4 md:px-6 overflow-hidden">
