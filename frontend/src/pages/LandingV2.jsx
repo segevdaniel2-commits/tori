@@ -334,7 +334,12 @@ function NavBar() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className={`liquid-glass rounded-full px-2 py-2 flex items-center justify-between gap-4 transition-all duration-300`}>
+        <div className="liquid-glass rounded-full px-2 py-2 flex items-center justify-between gap-4 transition-all duration-300"
+          style={{
+            background: 'rgba(255,255,255,0.055)',
+            boxShadow: '0 0 0 1px rgba(255,255,255,0.13), 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 px-2 shrink-0">
