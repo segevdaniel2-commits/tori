@@ -62,8 +62,8 @@ function ToriLogo({ size = 34 }) {
       <defs>
         <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%"   stopColor="#f97316" />
-          <stop offset="60%"  stopColor="#ea580c" />
-          <stop offset="100%" stopColor="#c2410c" />
+          <stop offset="50%"  stopColor="#f43f5e" />
+          <stop offset="100%" stopColor="#06b6d4" />
         </linearGradient>
       </defs>
       <text x="50%" y="78%" textAnchor="middle" fill={`url(#${id})`}
@@ -78,7 +78,7 @@ function Icon3D({ icon: Icon, size = 22, boxSize = 56, glow = true }) {
     <div className="relative flex items-center justify-center shrink-0" style={{
       width: boxSize, height: boxSize,
       borderRadius: boxSize * 0.32,
-      background: 'linear-gradient(145deg, #fff7ed 0%, #fed7aa 35%, #f97316 70%, #ea580c 100%)',
+      background: 'linear-gradient(145deg, #fff7ed 0%, #fed7aa 25%, #f97316 55%, #f43f5e 80%, #06b6d4 100%)',
       boxShadow: glow
         ? '0 10px 30px rgba(249,115,22,0.55), 0 3px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -2px 5px rgba(154,52,18,0.2)'
         : '0 4px 14px rgba(249,115,22,0.35), inset 0 1px 0 rgba(255,255,255,0.7)',
@@ -274,7 +274,7 @@ function TestimonialCard({ t, delay }) {
       <p className="text-gray-300 text-sm leading-relaxed mb-5">"{t.text}"</p>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0"
-          style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 4px 14px rgba(249,115,22,0.4)' }}>
+          style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 4px 14px rgba(244,63,94,0.3)' }}>
           {t.name[0]}
         </div>
         <div>
@@ -316,7 +316,7 @@ function ROICalculator() {
             </div>
             <input type="range" min={10} max={300} step={5} value={appts} onChange={e => setAppts(Number(e.target.value))}
               className="w-full h-2 rounded-full appearance-none cursor-pointer outline-none"
-              style={{ background: `linear-gradient(to right, #f97316 0%, #ea580c ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)` }} />
+              style={{ background: `linear-gradient(to right, #f97316 0%, #f43f5e ${pct * 0.6}%, #06b6d4 ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)` }} />
             <div className="flex justify-between mt-2.5 text-gray-600 text-xs"><span>10</span><span>150</span><span>300</span></div>
           </div>
 
@@ -382,7 +382,7 @@ function NavBar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 px-2 shrink-0">
             <div className="w-7 h-7 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}>
+              style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)' }}>
               <span className="text-xs font-black text-white">T</span>
             </div>
             <span className="font-black text-base text-white tracking-tight">TORI</span>
@@ -410,7 +410,7 @@ function NavBar() {
                 whileHover={{ scale: 1.04, boxShadow: '0 6px 20px rgba(249,115,22,0.55)' }}
                 whileTap={{ scale: 0.97 }}
                 className="rounded-full px-4 py-2 text-sm text-white font-bold"
-                style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 3px 12px rgba(249,115,22,0.4)' }}
+                style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 3px 12px rgba(244,63,94,0.3)' }}
               >
                 <span className="hidden sm:inline">התחל בחינם</span>
                 <span className="sm:hidden">הצטרף</span>
@@ -452,7 +452,7 @@ function NavBar() {
                   initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: NAV_ITEMS.length * 0.07 }}
                   className="mt-4 rounded-full px-8 py-3 text-white font-bold text-lg"
-                  style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 6px 24px rgba(249,115,22,0.45)' }}
+                  style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 6px 24px rgba(244,63,94,0.35)' }}
                 >
                   התחל ניסיון חינמי
                 </motion.button>
@@ -527,7 +527,7 @@ export default function LandingV2() {
                   </motion.span>
                 </span>{' '}שמנהל לך
                 <br />
-                <span style={{ background: 'linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                <span style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #fb923c 38%, #22d3ee 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   את העסק
                 </span>{' '}24/7
               </motion.h1>
@@ -540,9 +540,9 @@ export default function LandingV2() {
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.26 }}
                 className="flex flex-col lg:flex-row gap-3 mb-6">
                 <Link to="/register" className="w-full lg:w-auto">
-                  <motion.button whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(249,115,22,0.45)' }} whileTap={{ scale: 0.97 }}
+                  <motion.button whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(244,63,94,0.35)' }} whileTap={{ scale: 0.97 }}
                     className="w-full text-white font-bold text-lg px-8 py-4 rounded-2xl inline-flex items-center justify-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 8px 24px rgba(249,115,22,0.45)' }}>
+                    style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 8px 24px rgba(244,63,94,0.35)' }}>
                     <Zap size={19} />
                     התחל 30 יום חינם
                   </motion.button>
@@ -747,15 +747,15 @@ export default function LandingV2() {
                 whileHover={{ y: -4 }}
                 className="relative rounded-2xl p-6 md:p-8 transition-all duration-300 flex flex-col h-full overflow-hidden"
                 style={highlight
-                  ? { background: 'linear-gradient(145deg, rgba(154,52,18,0.6), rgba(67,20,7,0.8))', border: '1px solid rgba(249,115,22,0.4)', boxShadow: '0 0 40px rgba(249,115,22,0.15), inset 0 1px 0 rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }
+                  ? { background: 'linear-gradient(145deg, #be123c, #0e7490)', border: '1px solid rgba(244,63,94,0.5)', boxShadow: '0 0 40px rgba(244,63,94,0.2), inset 0 1px 0 rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }
                   : { ...glassCard, borderRadius: 20 }
                 }>
                 <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 50%, transparent)' }} />
                 {badge && (
                   <div className="absolute -top-3 right-6 text-white text-xs font-bold px-3 py-1 rounded-full"
                     style={{
-                      background: badge === 'ללא כרטיס אשראי' ? 'linear-gradient(135deg, #16a34a, #15803d)' : 'linear-gradient(135deg, #f97316, #ea580c)',
-                      boxShadow: badge === 'ללא כרטיס אשראי' ? '0 4px 12px rgba(22,163,74,0.4)' : '0 4px 12px rgba(249,115,22,0.4)',
+                      background: badge === 'ללא כרטיס אשראי' ? 'linear-gradient(135deg, #16a34a, #15803d)' : 'linear-gradient(135deg, #f97316, #f43f5e)',
+                      boxShadow: badge === 'ללא כרטיס אשראי' ? '0 4px 12px rgba(22,163,74,0.4)' : '0 4px 12px rgba(244,63,94,0.4)',
                     }}>{badge}</div>
                 )}
                 <div className={`text-sm font-semibold uppercase tracking-wider mb-2 ${highlight ? 'text-orange-200' : 'text-gray-400'}`}>{plan}</div>
@@ -776,7 +776,7 @@ export default function LandingV2() {
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     className="w-full py-3.5 rounded-xl font-bold text-sm transition-all"
                     style={highlight
-                      ? { background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white', boxShadow: '0 4px 16px rgba(249,115,22,0.4)' }
+                      ? { background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', color: 'white', boxShadow: '0 4px 16px rgba(244,63,94,0.3)' }
                       : { background: 'rgba(255,255,255,0.06)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }
                     }>
                     התחל עכשיו
@@ -802,9 +802,9 @@ export default function LandingV2() {
             <p className="text-gray-400 text-base md:text-xl mb-8">הצטרף לעסקים שכבר חוסכים שעות בשבוע עם טורי.</p>
             <div className="flex flex-col gap-3 max-w-xs mx-auto md:max-w-none md:flex-row md:justify-center">
               <Link to="/register" className="w-full md:w-auto">
-                <motion.button whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(249,115,22,0.45)' }} whileTap={{ scale: 0.97 }}
+                <motion.button whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(244,63,94,0.35)' }} whileTap={{ scale: 0.97 }}
                   className="w-full text-white font-bold text-lg px-10 py-4 rounded-2xl inline-flex items-center justify-center gap-2"
-                  style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 8px 24px rgba(249,115,22,0.4)' }}>
+                  style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 8px 24px rgba(244,63,94,0.3)' }}>
                   <Zap size={20} />התחל 30 יום חינם
                 </motion.button>
               </Link>
