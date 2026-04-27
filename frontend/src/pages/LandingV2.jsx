@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
@@ -364,6 +364,18 @@ export default function LandingV2() {
   const [termsOpen, setTermsOpen]     = useState(false);
   const [accessOpen, setAccessOpen]   = useState(false);
   const [isMobile, setIsMobile]       = useState(false);
+  const splineContainerRef            = useRef(null);
+
+  const forwardMouseToSpline = useCallback((e) => {
+    const canvas = splineContainerRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    canvas.dispatchEvent(new MouseEvent('mousemove', {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      bubbles: true,
+      cancelable: true,
+    }));
+  }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -380,10 +392,10 @@ export default function LandingV2() {
       <NavBar />
 
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-screen overflow-hidden" style={{ background: '#f8f6f2' }}>
+      <section className="relative min-h-screen overflow-hidden" style={{ background: '#f8f6f2' }} onMouseMove={forwardMouseToSpline}>
 
         {/* Spline — right side, bottom-anchored, receives mouse events across full hero */}
-        <div className="absolute bottom-0 left-0 hidden sm:block"
+        <div ref={splineContainerRef} className="absolute bottom-0 left-0 hidden sm:block"
           style={{ width: '52%', height: '95%' }}>
           <SplineScene
             scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
