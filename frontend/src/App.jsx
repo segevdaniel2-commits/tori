@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuthStore } from './store/useStore';
+import SplashScreen from './components/SplashScreen';
 
 // Pages
 import Landing from './pages/Landing';
@@ -28,7 +29,11 @@ function PublicRoute({ children }) {
 }
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
+    <>
+      <SplashScreen onDone={() => setSplashDone(true)} />
     <BrowserRouter>
       <AnimatePresence mode="wait">
         <Routes>
@@ -68,5 +73,6 @@ export default function App() {
         </Routes>
       </AnimatePresence>
     </BrowserRouter>
+    </>
   );
 }
