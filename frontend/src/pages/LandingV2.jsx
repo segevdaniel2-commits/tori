@@ -554,48 +554,73 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Final CTA ─────────────────────────────────────────────────────── */}
-      <section className="py-16 md:py-28 px-4 md:px-6" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative', zIndex: 1 }}>
-        <div className="max-w-4xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="relative rounded-3xl p-10 md:p-16 overflow-hidden text-center"
-            style={{ background: 'linear-gradient(135deg, #1a0a00 0%, #0f172a 60%, #0e4f5e 100%)', boxShadow: '0 32px 80px rgba(0,0,0,0.18)', borderRadius: 32 }}>
+      <section className="relative overflow-hidden" style={{ background: 'transparent', position: 'relative', zIndex: 1 }}>
+        {/* full-bleed gradient fade from page into white */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(249,115,22,0.07) 0%, transparent 70%)',
+        }} />
 
-            {/* Orb decorations */}
-            <div className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none"
-              style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.2), transparent 65%)', transform: 'translate(30%,-30%)' }} />
-            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none"
-              style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.15), transparent 65%)', transform: 'translate(-30%,30%)' }} />
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-28 md:py-40 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {/* eyebrow */}
+            <p className="text-sm font-semibold tracking-widest uppercase mb-6"
+              style={{ color: '#f97316', letterSpacing: '0.18em' }}>
+              30 יום חינם · ללא כרטיס אשראי
+            </p>
 
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold mb-6"
-                style={{ background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)', color: '#fb923c' }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f97316] animate-pulse inline-block" />
-                30 יום ניסיון חינמי — ללא כרטיס אשראי
-              </div>
+            {/* headline */}
+            <h2 className="font-black leading-none mb-8"
+              style={{
+                fontFamily: 'Heebo, sans-serif',
+                fontSize: 'clamp(44px, 8vw, 96px)',
+                letterSpacing: '-0.03em',
+                color: '#18120a',
+              }}>
+              תפסיק לנהל תורים<br />
+              <span style={{
+                background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 50%, #06b6d4 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>בעצמך.</span>
+            </h2>
 
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 leading-tight">
-                מוכן להפסיק לנהל<br />תורים ידנית?
-              </h2>
-              <p className="text-gray-400 text-base md:text-lg mb-10 max-w-xl mx-auto">
-                הצטרף לעסקים שכבר חוסכים שעות בשבוע עם טורי. ההגדרה לוקחת פחות מ-2 דקות.
-              </p>
+            {/* sub */}
+            <p className="text-gray-400 mb-12 mx-auto"
+              style={{ fontSize: 'clamp(16px, 2vw, 20px)', maxWidth: 480, lineHeight: 1.65 }}>
+              טורי עושה את זה בשבילך — 24 שעות ביממה, 7 ימים בשבוע, בלי הפסקה.
+            </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link to="/register">
-                  <motion.button whileHover={{ scale: 1.03, boxShadow: '0 20px 50px rgba(244,63,94,0.4)' }} whileTap={{ scale: 0.97 }}
-                    className="text-white font-bold text-lg px-10 py-4 rounded-2xl inline-flex items-center justify-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 8px 28px rgba(244,63,94,0.35)' }}>
-                    <Zap size={20} />התחל 30 יום חינם
-                  </motion.button>
-                </Link>
-                <Link to="/login">
-                  <motion.button whileHover={{ scale: 1.02 }}
-                    className="text-gray-300 hover:text-white font-semibold text-lg px-8 py-4 rounded-2xl transition-all"
-                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
-                    יש לי חשבון
-                  </motion.button>
-                </Link>
-              </div>
+            {/* CTA */}
+            <Link to="/register">
+              <motion.button
+                whileHover={{ scale: 1.04, boxShadow: '0 28px 60px rgba(244,63,94,0.38)' }}
+                whileTap={{ scale: 0.97 }}
+                className="relative overflow-hidden text-white font-bold inline-flex items-center gap-3 px-12 py-5 rounded-2xl"
+                style={{
+                  fontSize: 18,
+                  background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 55%, #06b6d4 100%)',
+                  boxShadow: '0 12px 36px rgba(244,63,94,0.30), inset 0 1px 0 rgba(255,255,255,0.25)',
+                }}>
+                <span className="absolute inset-0 pointer-events-none"
+                  style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.14) 0%, transparent 55%)' }} />
+                <Zap size={20} className="relative z-10" />
+                <span className="relative z-10">התחל 30 יום חינם</span>
+              </motion.button>
+            </Link>
+
+            {/* trust micro-copy */}
+            <div className="flex items-center justify-center gap-6 mt-8 flex-wrap">
+              {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך 2 דקות'].map(t => (
+                <span key={t} className="flex items-center gap-1.5 text-gray-400 text-sm">
+                  <Check size={13} className="text-[#f97316]" />{t}
+                </span>
+              ))}
             </div>
           </motion.div>
         </div>
