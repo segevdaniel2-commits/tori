@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+    darkMode: ['class'],
+    content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {
@@ -47,6 +48,7 @@ export default {
         'marquee': 'marquee 30s linear infinite',
         'shimmer': 'shimmer 2s linear infinite',
         'count-up': 'countUp 2s ease-out forwards',
+        'spotlight': 'spotlight 2s ease .75s 1 forwards',
       },
       keyframes: {
         float: {
@@ -60,6 +62,10 @@ export default {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        spotlight: {
+          '0%': { opacity: 0, transform: 'translate(-72%, -62%) scale(0.5)' },
+          '100%': { opacity: 1, transform: 'translate(-50%, -40%) scale(1)' },
         },
       },
       backdropBlur: {
