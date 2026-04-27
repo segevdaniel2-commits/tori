@@ -383,8 +383,10 @@ export default function LandingV2() {
       <section className="relative min-h-screen overflow-hidden" style={{ background: '#f8f6f2' }}>
 
         {/* Spline — right side, bottom-anchored, receives mouse events across full hero */}
-        {/* Canvas spans full hero width → mouse events work everywhere */}
-        <div className="absolute inset-x-0 bottom-0 hidden sm:block" style={{ height: '105%' }}>
+        {/* Canvas extends 50% off the left edge (clipped by overflow:hidden on section).
+            Robot sits at 50% of canvas = 25% from visible left edge.
+            Canvas still covers full hero width for mouse events. */}
+        <div className="absolute bottom-0 hidden sm:block" style={{ left: '-50%', width: '150%', height: '105%' }}>
           <SplineScene
             scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
             className="w-full h-full"
