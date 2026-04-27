@@ -2,8 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
-  Calendar, BarChart3, Users, Bell, FileText,
-  Zap, Check, Star, Bot, ChevronLeft, X, Menu, Smartphone,
+  Zap, Check, Star, ChevronLeft, X, Menu,
 } from 'lucide-react';
 import { SplineScene } from '@/components/ui/splite';
 
@@ -59,26 +58,6 @@ function ToriLogo({ size = 34 }) {
   );
 }
 
-// ─── 3D Clay Icon ──────────────────────────────────────────────────────────────
-function Icon3D({ icon: Icon, size = 22, boxSize = 56, glow = true }) {
-  return (
-    <div className="relative flex items-center justify-center shrink-0" style={{
-      width: boxSize, height: boxSize,
-      borderRadius: boxSize * 0.32,
-      background: 'linear-gradient(145deg, #fff7ed 0%, #fed7aa 25%, #f97316 55%, #f43f5e 80%, #06b6d4 100%)',
-      boxShadow: glow
-        ? '0 10px 30px rgba(249,115,22,0.4), 0 3px 8px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.85)'
-        : '0 4px 14px rgba(249,115,22,0.28), inset 0 1px 0 rgba(255,255,255,0.7)',
-    }}>
-      <div className="absolute inset-0 pointer-events-none" style={{
-        borderRadius: 'inherit',
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
-      }} />
-      <Icon size={size} className="relative z-10 text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }} />
-    </div>
-  );
-}
-
 // ─── Animated counter ──────────────────────────────────────────────────────────
 function Counter({ to, suffix = '', duration = 2.2 }) {
   const ref = useRef(null);
@@ -99,7 +78,7 @@ function Counter({ to, suffix = '', duration = 2.2 }) {
 }
 
 // ─── Feature Card ──────────────────────────────────────────────────────────────
-function FeatureCard({ icon, title, desc, delay = 0 }) {
+function FeatureCard({ title, desc, delay = 0, accent = '#f97316' }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
   return (
@@ -107,18 +86,22 @@ function FeatureCard({ icon, title, desc, delay = 0 }) {
       ref={ref}
       initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
-      whileHover={{ y: -5, boxShadow: '0 16px 48px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.98)' }}
-      className="relative rounded-2xl p-7 group cursor-default transition-all duration-300"
-      style={{ ...glassCard, borderRadius: 22 }}
+      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -6, boxShadow: '0 20px 56px rgba(0,0,0,0.10), inset 0 1.5px 0 rgba(255,255,255,1)' }}
+      className="feature-card relative rounded-3xl p-8 group cursor-default overflow-hidden"
+      style={{ ...glassCard, borderRadius: 26 }}
     >
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 30% 0%, rgba(249,115,22,0.05), transparent 60%)', borderRadius: 22 }} />
-      <div className="mb-5 group-hover:scale-105 transition-transform duration-300">
-        <Icon3D icon={icon} size={22} boxSize={52} />
-      </div>
-      <h3 className="text-gray-900 font-bold text-base mb-2">{title}</h3>
-      <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+      {/* top specular accent line */}
+      <div className="absolute top-0 inset-x-6 h-px pointer-events-none"
+        style={{ background: `linear-gradient(90deg, transparent, ${accent}66, ${accent}, ${accent}66, transparent)` }} />
+      {/* shimmer sweep */}
+      <div className="feature-shimmer absolute inset-0 pointer-events-none" />
+      {/* hover glow from top */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-24 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 50% 0%, ${accent}18, transparent 70%)` }} />
+
+      <h3 className="text-gray-900 font-bold text-lg mb-3 relative z-10">{title}</h3>
+      <p className="text-gray-500 text-sm leading-relaxed relative z-10">{desc}</p>
     </motion.div>
   );
 }
@@ -434,30 +417,13 @@ export default function LandingV2() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FeatureCard icon={Bot}       delay={0}    title="בוט וואטסאפ AI"     desc="מקבל תורים, מבטל ועונה על שאלות בעברית שוטפת, 24 שעות ביממה." />
-            <FeatureCard icon={Calendar}  delay={0.07} title="יומן חכם בזמן אמת"  desc="ממשק ויזואלי נוח לניהול כל התורים. הוסף ידנית, חסום זמנים, ראה הכל במקום אחד." />
-            <FeatureCard icon={BarChart3} delay={0.14} title="אנליטיקות ודוחות"   desc="גרפים של הכנסות, שירותים פופולריים ושעות עמוסות. דוח חודשי לקבלת החלטות חכמות." />
-            <FeatureCard icon={Users}     delay={0.21} title="ריבוי עובדים"        desc="כמה עובדים עם לוחות זמנים וצבעים נפרדים. מושלם לסלון שמעסיק מספר אנשים." />
-            <FeatureCard icon={Bell}      delay={0.28} title="תזכורות אוטומטיות"  desc="הבוט שולח ללקוח תזכורת יום לפני התור. פחות ביטולי רגע אחרון ויותר כסף בכיס." />
-            <FeatureCard icon={FileText}  delay={0.35} title="חשבוניות ירוקות"    desc="אינטגרציה עם חשבוניות ירוקות לניהול חשבוניות ישירות מתוך היומן." />
+            <FeatureCard delay={0}    accent="#25D366" title="בוט וואטסאפ AI"    desc="מקבל תורים, מבטל ועונה על שאלות בעברית שוטפת, 24 שעות ביממה." />
+            <FeatureCard delay={0.07} accent="#06b6d4" title="יומן חכם בזמן אמת" desc="ממשק ויזואלי נוח לניהול כל התורים. הוסף ידנית, חסום זמנים, ראה הכל במקום אחד." />
+            <FeatureCard delay={0.14} accent="#f97316" title="אנליטיקות ודוחות"  desc="גרפים של הכנסות, שירותים פופולריים ושעות עמוסות. דוח חודשי לקבלת החלטות חכמות." />
+            <FeatureCard delay={0.21} accent="#8b5cf6" title="ריבוי עובדים"       desc="כמה עובדים עם לוחות זמנים וצבעים נפרדים. מושלם לסלון שמעסיק מספר אנשים." />
+            <FeatureCard delay={0.28} accent="#f43f5e" title="תזכורות אוטומטיות" desc="הבוט שולח ללקוח תזכורת יום לפני התור. פחות ביטולי רגע אחרון ויותר כסף בכיס." />
+            <FeatureCard delay={0.35} accent="#10b981" title="חשבוניות ירוקות"   desc="אינטגרציה עם חשבוניות ירוקות לניהול חשבוניות ישירות מתוך היומן." />
           </div>
-
-          <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
-            className="mt-5 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"
-            style={{ ...glassCard, borderRadius: 20 }}>
-            <div className="flex items-center gap-3">
-              <Icon3D icon={Smartphone} size={17} boxSize={40} glow={false} />
-              <div>
-                <div className="text-gray-900 font-semibold text-sm">אפליקציה לאייפון ואנדרואיד</div>
-                <div className="text-gray-400 text-xs">נהל את העסק שלך מהסמארטפון בכל מקום — בקרוב</div>
-              </div>
-            </div>
-            <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-[#ea6c00]"
-              style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.18)' }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#f97316] animate-pulse inline-block" />
-              בפיתוח
-            </div>
-          </motion.div>
         </div>
       </section>
 

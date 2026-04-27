@@ -454,6 +454,24 @@ input[type="range"]:focus {
   outline: none;
 }
 
+/* ─── Feature card shimmer sweep ────────────────────────────────────── */
+.feature-shimmer {
+  background: linear-gradient(
+    108deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 70%
+  );
+  background-size: 250% 100%;
+  background-position: 200% 0;
+  transition: background-position 0s;
+  border-radius: inherit;
+}
+.feature-card:hover .feature-shimmer {
+  background-position: -100% 0;
+  transition: background-position 0.65s ease;
+}
+
 /* ─── Loader-2 component styles ─────────────────────────────────────── */
 .loader {
   --path: rgba(249,115,22,0.35);
