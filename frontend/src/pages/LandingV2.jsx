@@ -328,13 +328,6 @@ export default function LandingV2() {
         <div className="relative z-10 min-h-screen flex items-center pt-20 pb-12 px-4 md:px-6 pointer-events-none">
           <div className="max-w-7xl mx-auto w-full">
             <div className="lg:w-1/2">
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold mb-6 pointer-events-auto"
-                style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)', color: '#ea6c00' }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f97316] animate-pulse inline-block" />
-                סוכן AI לעסקי שירות
-              </motion.div>
-
               <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}
                 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight mb-5 text-gray-900"
                 style={{ fontFamily: 'Heebo, sans-serif' }}>
@@ -362,15 +355,29 @@ export default function LandingV2() {
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.26 }}
                 className="flex flex-col lg:flex-row gap-3 mb-6 pointer-events-auto">
                 <Link to="/register" className="w-full lg:w-auto">
-                  <motion.button whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(244,63,94,0.3)' }} whileTap={{ scale: 0.97 }}
-                    className="w-full text-white font-bold text-lg px-8 py-4 rounded-2xl inline-flex items-center justify-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 8px 24px rgba(244,63,94,0.28)' }}>
-                    <Zap size={19} />התחל 30 יום חינם
+                  <motion.button
+                    whileHover={{ scale: 1.03, boxShadow: '0 24px 48px rgba(244,63,94,0.38)' }}
+                    whileTap={{ scale: 0.97 }}
+                    className="w-full text-white font-bold text-lg px-9 py-4 rounded-2xl inline-flex items-center justify-center gap-2 relative overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 55%, #06b6d4 100%)',
+                      boxShadow: '0 8px 28px rgba(244,63,94,0.32), inset 0 1px 0 rgba(255,255,255,0.25)',
+                    }}>
+                    <span className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 60%)' }} />
+                    <Zap size={19} className="relative z-10" />
+                    <span className="relative z-10">התחל 30 יום חינם</span>
                   </motion.button>
                 </Link>
-                <motion.a href="#features" whileHover={{ scale: 1.02 }}
-                  className="w-full lg:w-auto text-gray-600 hover:text-gray-900 font-semibold text-base px-8 py-3.5 rounded-2xl transition-all inline-flex items-center gap-2 justify-center"
-                  style={{ ...glassCard, background: 'rgba(255,255,255,0.6)' }}>
+                <motion.a href="#features"
+                  whileHover={{ scale: 1.02, boxShadow: '0 12px 36px rgba(0,0,0,0.1), inset 0 1.5px 0 rgba(255,255,255,1)' }}
+                  className="w-full lg:w-auto text-gray-700 font-semibold text-base px-8 py-4 rounded-2xl transition-all inline-flex items-center gap-2 justify-center"
+                  style={{
+                    background: 'rgba(255,255,255,0.52)',
+                    backdropFilter: 'blur(44px) saturate(200%)',
+                    WebkitBackdropFilter: 'blur(44px) saturate(200%)',
+                    border: '1.5px solid rgba(255,255,255,0.9)',
+                    boxShadow: '0 6px 24px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)',
+                  }}>
                   ראה איך זה עובד <ChevronLeft size={16} />
                 </motion.a>
               </motion.div>
@@ -384,13 +391,6 @@ export default function LandingV2() {
                 ))}
               </motion.div>
 
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}>
-                <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs text-gray-500"
-                  style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)' }}>
-                  <Smartphone size={12} className="text-[#f97316]" />
-                  אפליקציה לאייפון ואנדרואיד — בקרוב
-                </div>
-              </motion.div>
             </div>
           </div>
         </div>
