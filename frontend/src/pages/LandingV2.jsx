@@ -383,7 +383,7 @@ export default function LandingV2() {
       <section className="relative min-h-screen overflow-hidden" style={{ background: '#f8f6f2' }}>
 
         {/* Spline — right side, bottom-anchored, receives mouse events across full hero */}
-        <div className="absolute bottom-0 right-0 hidden sm:block"
+        <div className="absolute bottom-0 left-0 hidden sm:block"
           style={{ width: '52%', height: '95%' }}>
           <SplineScene
             scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
@@ -391,9 +391,9 @@ export default function LandingV2() {
           />
         </div>
 
-        {/* Gradient fade from white (left) into Spline (right) — pointer-events-none */}
+        {/* Gradient fade from white (right) into Spline (left) — pointer-events-none */}
         <div className="absolute inset-0 pointer-events-none hidden sm:block"
-          style={{ background: 'linear-gradient(to right, #f8f6f2 38%, rgba(248,246,242,0.7) 52%, transparent 68%)' }} />
+          style={{ background: 'linear-gradient(to left, #f8f6f2 38%, rgba(248,246,242,0.7) 52%, transparent 68%)' }} />
 
         {/* Mobile solid bg */}
         <div className="absolute inset-0 sm:hidden" style={{ background: '#f8f6f2' }} />
