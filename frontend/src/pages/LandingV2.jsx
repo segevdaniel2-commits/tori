@@ -677,10 +677,12 @@ export default function LandingV2() {
       </section>
 
       {/* ─── How it works ────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="py-14 md:py-28 px-4 md:px-6" style={{ background: '#0a0602', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col items-start gap-3 mb-14 md:mb-20">
-            <span className="liquid-glass rounded-full px-4 py-1.5 text-xs text-white/70 font-medium">איך זה עובד</span>
+      <section id="how-it-works" className="relative py-28 md:py-40 px-6 md:px-8" style={{ background: '#0a0602', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col items-start gap-4 mb-16">
+            <span className="liquid-glass rounded-full px-4 py-1.5 text-xs font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              איך זה עובד
+            </span>
             <h2 className="text-4xl md:text-6xl font-black text-white leading-[0.9] tracking-tight">פשוט. מהיר. עובד.</h2>
           </div>
 
@@ -696,15 +698,17 @@ export default function LandingV2() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: i * 0.14, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 className="relative px-6 md:px-10 py-10 md:py-14 flex flex-col gap-4 items-start"
-                style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none',
-                         borderInlineStart: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}
+                style={{
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  borderInlineEnd: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                }}
               >
-                <span className="font-black leading-none select-none -mb-4"
-                  style={{ fontSize: 'clamp(72px, 10vw, 130px)', color: 'rgba(249,115,22,0.2)', fontFamily: 'Heebo, sans-serif' }}>
+                <span className="leading-none select-none -mb-4 font-black"
+                  style={{ fontSize: 'clamp(72px, 10vw, 130px)', color: 'rgba(249,115,22,0.15)', fontFamily: 'Heebo, sans-serif' }}>
                   {s.step}
                 </span>
                 <h3 className="text-white font-bold text-2xl md:text-3xl">{s.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed max-w-[28ch]">{s.desc}</p>
+                <p className="text-sm leading-relaxed max-w-[28ch]" style={{ color: 'rgba(255,255,255,0.5)' }}>{s.desc}</p>
               </motion.div>
             ))}
           </div>
