@@ -677,13 +677,15 @@ export default function LandingV2() {
       </section>
 
       {/* ─── How it works ────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="relative py-28 md:py-40 px-6 md:px-8" style={{ background: '#0a0602', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col items-start gap-4 mb-16">
-            <span className="liquid-glass rounded-full px-4 py-1.5 text-xs font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>
+      <section id="how-it-works" className="relative py-28 md:py-40" style={{ background: '#0a0602', borderTop: '1px solid rgba(196,144,90,0.18)', padding: 'clamp(80px,10vw,160px) clamp(20px,4.2vw,56px)' }}>
+        <div style={{ maxWidth: 1440, margin: '0 auto' }}>
+          <div className="flex flex-col items-start gap-4" style={{ marginBottom: 64 }}>
+            <span className="liquid-glass rounded-full px-4 py-1.5 text-xs" style={{ fontFamily: "'Rubik', sans-serif", color: 'hsl(40,30%,90%,0.7)' }}>
               איך זה עובד
             </span>
-            <h2 className="text-4xl md:text-6xl font-black text-white leading-[0.9] tracking-tight">פשוט. מהיר. עובד.</h2>
+            <h2 style={{ fontFamily: "'Secular One', sans-serif", fontSize: 'clamp(36px,6vw,72px)', lineHeight: 0.9, letterSpacing: '-0.02em', color: 'hsl(40,30%,90%)', margin: 0 }}>
+              פשוט. מהיר. עובד.
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
@@ -697,18 +699,24 @@ export default function LandingV2() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: i * 0.14, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="relative px-6 md:px-10 py-10 md:py-14 flex flex-col gap-4 items-start"
+                className="relative flex flex-col gap-4 items-start"
                 style={{
-                  borderBottom: '1px solid rgba(255,255,255,0.08)',
-                  borderInlineEnd: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                  padding: 'clamp(40px,5vw,56px) clamp(24px,4vw,40px)',
+                  borderBottom: '1px solid hsla(40,30%,90%,0.18)',
+                  borderInlineEnd: i < 2 ? '1px solid hsla(40,30%,90%,0.18)' : 'none',
                 }}
               >
-                <span className="leading-none select-none -mb-4 font-black"
-                  style={{ fontSize: 'clamp(72px, 10vw, 130px)', color: 'rgba(249,115,22,0.15)', fontFamily: 'Heebo, sans-serif' }}>
+                <span className="leading-none select-none" style={{
+                  fontFamily: "'Secular One', sans-serif",
+                  fontSize: 'clamp(72px, 10vw, 130px)',
+                  color: 'hsl(32,55%,65%,0.2)',
+                  marginBottom: -16,
+                  display: 'block',
+                }}>
                   {s.step}
                 </span>
-                <h3 className="text-white font-bold text-2xl md:text-3xl">{s.title}</h3>
-                <p className="text-sm leading-relaxed max-w-[28ch]" style={{ color: 'rgba(255,255,255,0.5)' }}>{s.desc}</p>
+                <h3 style={{ fontFamily: "'Secular One', sans-serif", fontSize: 'clamp(22px,2.5vw,30px)', color: 'hsl(40,30%,90%)', margin: 0, fontWeight: 400 }}>{s.title}</h3>
+                <p style={{ fontFamily: "'Rubik', sans-serif", fontSize: 14, lineHeight: 1.7, color: 'hsla(40,30%,90%,0.6)', margin: 0, maxWidth: '28ch' }}>{s.desc}</p>
               </motion.div>
             ))}
           </div>
