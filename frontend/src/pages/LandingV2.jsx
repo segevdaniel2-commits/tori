@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
@@ -364,18 +364,6 @@ export default function LandingV2() {
   const [termsOpen, setTermsOpen]     = useState(false);
   const [accessOpen, setAccessOpen]   = useState(false);
   const [isMobile, setIsMobile]       = useState(false);
-  const splineContainerRef            = useRef(null);
-
-  const forwardMouseToSpline = useCallback((e) => {
-    const canvas = splineContainerRef.current?.querySelector('canvas');
-    if (!canvas) return;
-    canvas.dispatchEvent(new MouseEvent('mousemove', {
-      clientX: e.clientX,
-      clientY: e.clientY,
-      bubbles: true,
-      cancelable: true,
-    }));
-  }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -392,20 +380,20 @@ export default function LandingV2() {
       <NavBar />
 
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-screen overflow-hidden" style={{ background: '#f8f6f2' }} onMouseMove={forwardMouseToSpline}>
+      <section className="relative min-h-screen overflow-hidden" style={{ background: '#f8f6f2' }}>
 
         {/* Spline — right side, bottom-anchored, receives mouse events across full hero */}
-        <div ref={splineContainerRef} className="absolute bottom-0 left-0 hidden sm:block"
-          style={{ width: '52%', height: '95%' }}>
+        {/* Canvas spans full hero width → mouse events work everywhere */}
+        <div className="absolute inset-x-0 bottom-0 hidden sm:block" style={{ height: '105%' }}>
           <SplineScene
             scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
             className="w-full h-full"
           />
         </div>
 
-        {/* Gradient fade from white (right) into Spline (left) — pointer-events-none */}
+        {/* Gradient: right side white for text readability, left side shows robot */}
         <div className="absolute inset-0 pointer-events-none hidden sm:block"
-          style={{ background: 'linear-gradient(to left, #f8f6f2 38%, rgba(248,246,242,0.7) 52%, transparent 68%)' }} />
+          style={{ background: 'linear-gradient(to left, #f8f6f2 42%, rgba(248,246,242,0.6) 56%, transparent 72%)' }} />
 
         {/* Mobile solid bg */}
         <div className="absolute inset-0 sm:hidden" style={{ background: '#f8f6f2' }} />
