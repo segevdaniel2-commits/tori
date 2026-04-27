@@ -677,31 +677,34 @@ export default function LandingV2() {
       </section>
 
       {/* ─── How it works ────────────────────────────────────────────────── */}
-      <section className="py-14 md:py-24 px-4 md:px-6" style={{ background: '#0a0602', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <section id="how-it-works" className="py-14 md:py-28 px-4 md:px-6" style={{ background: '#0a0602', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3">מה התהליך?</h2>
-            <p className="text-gray-400 text-base md:text-lg">3 צעדים ואתה מוכן</p>
+          <div className="flex flex-col items-start gap-3 mb-14 md:mb-20">
+            <span className="liquid-glass rounded-full px-4 py-1.5 text-xs text-white/70 font-medium">איך זה עובד</span>
+            <h2 className="text-4xl md:text-6xl font-black text-white leading-[0.9] tracking-tight">פשוט. מהיר. עובד.</h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
             {[
-              { icon: ClipboardList, step: '01', title: 'נרשמים תוך 2 דקות', desc: 'שם העסק, שירותים, מחירים ושעות עבודה — הכל בממשק פשוט ומהיר.' },
-              { icon: Link2,         step: '02', title: 'מחברים את הוואטסאפ', desc: 'שולחים ללקוחות קישור אחד, מהרגע הזה הבוט מקבל תורים במקומך.' },
-              { icon: Cpu,           step: '03', title: 'הבוט עובד, אתה נח',  desc: 'תורים, ביטולים, תזכורות — הכל רץ לבד 24/7, גם כשאתה ישן.' },
+              { step: '01', title: 'נרשמים תוך 2 דקות', desc: 'שם העסק, שירותים, מחירים ושעות עבודה — הכל בממשק פשוט ומהיר.' },
+              { step: '02', title: 'מחברים את הוואטסאפ', desc: 'שולחים ללקוחות קישור אחד, מהרגע הזה הבוט מקבל תורים במקומך.' },
+              { step: '03', title: 'הבוט עובד, אתה נח',  desc: 'תורים, ביטולים, תזכורות — הכל רץ לבד 24/7, גם כשאתה ישן.' },
             ].map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-                transition={{ delay: i * 0.12, duration: 0.4 }}
-                className="relative rounded-2xl p-6 md:p-8 group transition-all duration-300 overflow-hidden"
-                style={{ ...glassCard, borderRadius: 20 }}>
-                <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.13) 50%, transparent)' }} />
-                <div className="absolute top-6 left-6 text-5xl font-black select-none pointer-events-none"
-                  style={{ color: 'rgba(249,115,22,0.06)', fontFamily: 'Heebo, sans-serif' }}>{s.step}</div>
-                <div className="mb-6 group-hover:scale-105 transition-transform duration-300">
-                  <Icon3D icon={s.icon} size={24} boxSize={58} />
-                </div>
-                <h3 className="text-white font-bold text-xl mb-3">{s.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{s.desc}</p>
+              <motion.div key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ delay: i * 0.14, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="relative px-6 md:px-10 py-10 md:py-14 flex flex-col gap-4 items-start"
+                style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                         borderInlineStart: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}
+              >
+                <span className="font-black leading-none select-none -mb-4"
+                  style={{ fontSize: 'clamp(72px, 10vw, 130px)', color: 'rgba(249,115,22,0.2)', fontFamily: 'Heebo, sans-serif' }}>
+                  {s.step}
+                </span>
+                <h3 className="text-white font-bold text-2xl md:text-3xl">{s.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed max-w-[28ch]">{s.desc}</p>
               </motion.div>
             ))}
           </div>
