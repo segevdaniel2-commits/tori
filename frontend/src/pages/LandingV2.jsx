@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
   Calendar, BarChart3, Users, Bell, FileText,
-  Zap, Check, Star, Bot, ChevronLeft, X, Menu, Smartphone, Quote,
+  Zap, Check, Star, Bot, ChevronLeft, X, Menu, Smartphone,
 } from 'lucide-react';
 import { SplineScene } from '@/components/ui/splite';
 
@@ -26,19 +26,19 @@ function GlassFilter() {
 
 // ─── Liquid Glass style helpers ────────────────────────────────────────────────
 const glassCard = {
-  background: 'rgba(255,255,255,0.52)',
-  backdropFilter: 'blur(28px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-  border: '1px solid rgba(255,255,255,0.82)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(0,0,0,0.03)',
+  background: 'rgba(255,255,255,0.38)',
+  backdropFilter: 'blur(44px) saturate(220%)',
+  WebkitBackdropFilter: 'blur(44px) saturate(220%)',
+  border: '1.5px solid rgba(255,255,255,0.88)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.08), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04)',
 };
 
 const glassNav = {
-  background: 'rgba(255,255,255,0.48)',
-  backdropFilter: 'blur(32px) saturate(200%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-  border: '1px solid rgba(255,255,255,0.78)',
-  boxShadow: '0 8px 40px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.98)',
+  background: 'rgba(255,255,255,0.44)',
+  backdropFilter: 'blur(48px) saturate(220%)',
+  WebkitBackdropFilter: 'blur(48px) saturate(220%)',
+  border: '1.5px solid rgba(255,255,255,0.92)',
+  boxShadow: '0 8px 40px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)',
 };
 
 // ─── Logo ──────────────────────────────────────────────────────────────────────
@@ -119,6 +119,36 @@ function FeatureCard({ icon, title, desc, delay = 0 }) {
       </div>
       <h3 className="text-gray-900 font-bold text-base mb-2">{title}</h3>
       <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+    </motion.div>
+  );
+}
+
+// ─── Testimonial Card ──────────────────────────────────────────────────────────
+function TestimonialCard({ t, delay }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }} transition={{ delay, duration: 0.4 }}
+      whileHover={{ y: -4 }}
+      className="rounded-2xl p-6 transition-all duration-300 relative overflow-hidden"
+      style={{ ...glassCard, borderRadius: 20 }}
+    >
+      <div className="absolute inset-x-0 top-0 h-px pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.9) 50%, transparent)' }} />
+      <div className="flex gap-1 mb-4">
+        {Array(5).fill(0).map((_, j) => <Star key={j} size={14} className="fill-amber-400 text-amber-400" />)}
+      </div>
+      <p className="text-gray-600 text-sm leading-relaxed mb-5">"{t.text}"</p>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0"
+          style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 4px 14px rgba(244,63,94,0.3)' }}>
+          {t.name[0]}
+        </div>
+        <div>
+          <div className="text-gray-900 font-semibold text-sm">{t.name}</div>
+          <div className="text-gray-400 text-xs">{t.role}</div>
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -275,17 +305,25 @@ export default function LandingV2() {
     <MotionConfig reducedMotion={isMobile ? 'always' : 'never'}>
     <div className="min-h-screen overflow-x-hidden" style={{ background: '#f8f6f2', color: '#18120a', direction: 'rtl' }}>
 
+      {/* ─── Global background gradient orbs ─────────────────────────── */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '-5%', right: '-8%',  width: 700, height: 700, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.10) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+        <div style={{ position: 'absolute', top: '35%', left: '-12%',  width: 650, height: 650, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.09) 0%, transparent 70%)',  filter: 'blur(50px)' }} />
+        <div style={{ position: 'absolute', bottom: '15%', right: '15%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(244,63,94,0.07) 0%, transparent 70%)',  filter: 'blur(50px)' }} />
+        <div style={{ position: 'absolute', bottom: '50%', left: '40%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)',  filter: 'blur(50px)' }} />
+      </div>
+
       <GlassFilter />
       <NavBar />
 
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-screen overflow-hidden" style={{ background: '#f8f6f2' }}>
+      <section className="relative min-h-screen overflow-hidden" style={{ background: 'transparent', zIndex: 1 }}>
         <div className="absolute bottom-0 hidden sm:block" style={{ left: '-50%', width: '150%', height: '105%' }}>
           <SplineScene scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode" className="w-full h-full" />
         </div>
         <div className="absolute inset-0 pointer-events-none hidden sm:block"
-          style={{ background: 'linear-gradient(to left, #f8f6f2 42%, rgba(248,246,242,0.6) 56%, transparent 72%)' }} />
-        <div className="absolute inset-0 sm:hidden" style={{ background: '#f8f6f2' }} />
+          style={{ background: 'linear-gradient(to left, #f8f6f2 42%, rgba(248,246,242,0.6) 56%, transparent 72%)', zIndex: 1 }} />
+        <div className="absolute inset-0 sm:hidden" style={{ background: '#f8f6f2', zIndex: 1 }} />
 
         <div className="relative z-10 min-h-screen flex items-center pt-20 pb-12 px-4 md:px-6 pointer-events-none">
           <div className="max-w-7xl mx-auto w-full">
@@ -362,7 +400,7 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Stats ─────────────────────────────────────────────────────────── */}
-      <section className="pt-0 pb-12 md:pb-16 px-4 md:px-6">
+      <section className="pt-0 pb-12 md:pb-16 px-4 md:px-6" style={{ position: 'relative', zIndex: 1 }}>
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
             {[
@@ -386,7 +424,7 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Features ──────────────────────────────────────────────────────── */}
-      <section id="features" className="py-14 md:py-20 px-4 md:px-6">
+      <section id="features" className="py-14 md:py-20 px-4 md:px-6" style={{ position: 'relative', zIndex: 1 }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
             <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -424,7 +462,7 @@ export default function LandingV2() {
       </section>
 
       {/* ─── How it works ──────────────────────────────────────────────────── */}
-      <section id="how-it-works" style={{ background: '#f2efe8', borderTop: '1px solid rgba(0,0,0,0.06)', padding: 'clamp(80px,10vw,160px) clamp(20px,4.2vw,56px)' }}>
+      <section id="how-it-works" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', padding: 'clamp(80px,10vw,160px) clamp(20px,4.2vw,56px)', position: 'relative', zIndex: 1 }}>
         <div style={{ maxWidth: 1440, margin: '0 auto' }}>
           <div className="flex flex-col items-start gap-4" style={{ marginBottom: 64 }}>
             <span className="rounded-full px-4 py-1.5 text-xs font-medium"
@@ -468,79 +506,24 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Testimonials ──────────────────────────────────────────────────── */}
-      <section id="testimonials" className="py-16 md:py-24 px-4 md:px-6" style={{ background: '#f8f6f2', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+      <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-              className="text-sm font-semibold tracking-widest uppercase text-[#f97316] mb-3">ביקורות לקוחות</motion.p>
+          <div className="text-center mb-10 md:mb-16">
             <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900">מה אומרים עלינו</motion.h2>
           </div>
-
-          {/* Featured large quote */}
-          <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="relative rounded-3xl p-8 md:p-12 mb-5 overflow-hidden"
-            style={{ ...glassCard, borderRadius: 28 }}>
-            <div className="absolute top-6 right-8 opacity-10" style={{ fontSize: 180, lineHeight: 1, fontFamily: 'serif', color: '#f97316', userSelect: 'none' }}>"</div>
-            <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
-              <div className="flex-1">
-                <div className="flex gap-1 mb-5">
-                  {Array(5).fill(0).map((_, j) => <Star key={j} size={18} className="fill-amber-400 text-amber-400" />)}
-                </div>
-                <p className="text-gray-700 text-lg md:text-xl leading-relaxed mb-6 font-medium">
-                  "הלקוחות קובעות תורים בלילה כשאני ישנה, ואני מגיעה בבוקר עם לוח מלא. שלושה שבועות אחרי שהתחלתי — ההכנסות עלו בעשרים אחוז. טורי שינה לי את העסק."
-                </p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
-                    style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 4px 14px rgba(244,63,94,0.3)' }}>נ</div>
-                  <div>
-                    <div className="text-gray-900 font-bold">ניצן מ.</div>
-                    <div className="text-gray-400 text-sm">סלון ציפורניים, תל אביב</div>
-                  </div>
-                </div>
-              </div>
-              <div className="hidden md:flex flex-col justify-center items-center gap-2 shrink-0"
-                style={{ width: 160, height: 160, borderRadius: 24, background: 'linear-gradient(135deg, rgba(249,115,22,0.08), rgba(6,182,212,0.08))', border: '1px solid rgba(249,115,22,0.15)' }}>
-                <div className="text-3xl font-black text-[#f97316]">+20%</div>
-                <div className="text-gray-500 text-xs text-center">הכנסות חודשיות</div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Two smaller quotes */}
-          <div className="grid md:grid-cols-2 gap-5">
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6">
             {[
-              { name: 'שירלי ב.', initial: 'ש', role: 'סלון ריסים, תל אביב', text: 'לפני טורי הייתי מפסידה תורים כי לא תמיד עניתי לטלפון. עכשיו הבוט עונה בשבילי גם בשתיים בלילה. לא מבינה איך עבדתי בלעדיו.', color: '#06b6d4' },
-              { name: 'רועי ח.',  initial: 'ר', role: 'ספר, ירושלים',          text: 'יש לי שתי עובדות וחשבתי שיהיה מסובך לנהל שני לוחות זמנים. טורי מסדר הכל לבד — אני כמעט לא צריך לגעת ביומן.', color: '#f97316' },
-            ].map((t, i) => (
-              <motion.div key={i}
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.12, duration: 0.4 }}
-                whileHover={{ y: -4 }}
-                className="relative rounded-2xl p-7 transition-all duration-300"
-                style={{ ...glassCard, borderRadius: 22 }}>
-                <div className="flex gap-1 mb-4">
-                  {Array(5).fill(0).map((_, j) => <Star key={j} size={14} className="fill-amber-400 text-amber-400" />)}
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-6">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0"
-                    style={{ background: `linear-gradient(135deg, ${t.color}, #f43f5e)`, boxShadow: '0 4px 12px rgba(244,63,94,0.25)' }}>
-                    {t.initial}
-                  </div>
-                  <div>
-                    <div className="text-gray-900 font-semibold text-sm">{t.name}</div>
-                    <div className="text-gray-400 text-xs">{t.role}</div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+              { name: 'שירלי ב.', role: 'סלון ריסים, תל אביב',     text: 'לפני טורי הייתי מפסידה תורים כי לא תמיד עניתי לטלפון. עכשיו הבוט עונה בשבילי גם בשתיים בלילה. לא מבינה איך עבדתי בלעדיו.' },
+              { name: 'ניצן מ.', role: 'סלון ציפורניים, תל אביב', text: 'הלקוחות קובעות תורים בלילה כשאני ישנה, ואני מגיעה בבוקר עם לוח מלא. שלושה שבועות אחרי — ההכנסות עלו בעשרים אחוז.' },
+              { name: 'רועי ח.', role: 'ספר, ירושלים',             text: 'יש לי שתי עובדות וחשבתי שיהיה מסובך לנהל שני לוחות זמנים, אבל טורי מסדר הכל לבד, אני כמעט לא צריך לגעת ביומן.' },
+            ].map((t, i) => <TestimonialCard key={i} t={t} delay={i * 0.1} />)}
           </div>
         </div>
       </section>
 
       {/* ─── Pricing ───────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-14 md:py-24 px-4 md:px-6" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', background: '#f2efe8' }}>
+      <section id="pricing" className="py-14 md:py-24 px-4 md:px-6" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', background: 'transparent', position: 'relative', zIndex: 1 }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10 md:mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-3">מחירים פשוטים ושקופים</h2>
@@ -605,7 +588,7 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Final CTA ─────────────────────────────────────────────────────── */}
-      <section className="py-16 md:py-28 px-4 md:px-6" style={{ background: '#f8f6f2', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+      <section className="py-16 md:py-28 px-4 md:px-6" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative', zIndex: 1 }}>
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="relative rounded-3xl p-10 md:p-16 overflow-hidden text-center"
@@ -653,7 +636,7 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="py-10 px-4 md:px-6" style={{ borderTop: '1px solid rgba(0,0,0,0.07)', background: '#f0ede6' }}>
+      <footer className="py-10 px-4 md:px-6" style={{ borderTop: '1px solid rgba(0,0,0,0.07)', background: 'rgba(240,237,230,0.7)', position: 'relative', zIndex: 1 }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
