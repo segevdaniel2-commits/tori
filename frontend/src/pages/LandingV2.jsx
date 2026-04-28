@@ -578,7 +578,7 @@ export default function LandingV2() {
         }} />
 
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-24 md:py-36 relative z-10">
-          <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-12 lg:gap-6">
+          <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-16 lg:gap-24">
 
             {/* text + button */}
             <motion.div
@@ -658,12 +658,12 @@ export default function LandingV2() {
                   width: '100%',
                   height: '100%',
                   objectFit: 'contain',
-                  objectPosition: 'bottom',
+                  objectPosition: 'center',
                   transform: 'rotate(6deg) translateX(-12px)',
                   mixBlendMode: 'multiply',
-                  maskImage: 'linear-gradient(to bottom, black 55%, transparent 95%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 95%)',
-                  filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.15))',
+                  maskImage: 'radial-gradient(ellipse 78% 75% at 50% 46%, black 35%, rgba(0,0,0,0.6) 58%, transparent 80%)',
+                  WebkitMaskImage: 'radial-gradient(ellipse 78% 75% at 50% 46%, black 35%, rgba(0,0,0,0.6) 58%, transparent 80%)',
+                  filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.12))',
                 }}
               />
             </motion.div>
