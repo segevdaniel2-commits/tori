@@ -13,12 +13,10 @@ function getTime() {
 
 function BotAvatar() {
   return (
-    <div style={{
+    <img src="/favicon.png" alt="TORI" style={{
       width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-      background: 'linear-gradient(135deg, #25D366, #128C7E)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 13, color: 'white', fontWeight: 800,
-    }}>T</div>
+      objectFit: 'cover',
+    }} />
   );
 }
 
@@ -169,14 +167,11 @@ export default function WhatsAppDemo() {
         display: 'flex', alignItems: 'center', gap: 10,
         direction: 'rtl',
       }}>
-        <div style={{
-          width: 42, height: 42, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #25D366, #128C7E)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 18, color: 'white', fontWeight: 900, flexShrink: 0,
-        }}>T</div>
+        <img src="/favicon.png" alt="TORI" style={{
+          width: 42, height: 42, borderRadius: '50%', flexShrink: 0, objectFit: 'cover',
+        }} />
         <div style={{ flex: 1 }}>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>סלון יפעת 💇‍♀️</div>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>סלון יפעת</div>
           <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12 }}>מופעל על ידי TORI AI</div>
         </div>
         <div style={{ display: 'flex', gap: 16, color: 'rgba(255,255,255,0.85)' }}>
