@@ -575,17 +575,18 @@ export default function LandingV2() {
         }} />
 
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-24 md:py-36 relative z-10">
-          <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-16 lg:gap-24">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-24">
 
-            {/* text + button */}
+            {/* text + button — first child in RTL flex-row = rightmost */}
             <motion.div
-              className="text-center lg:text-right flex-1"
+              className="flex-1 w-full"
+              style={{ textAlign: 'right' }}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              <p className="text-sm font-semibold tracking-widest uppercase mb-5"
+              <p className="text-sm font-semibold mb-5"
                 style={{ color: '#f97316', letterSpacing: '0.18em' }}>
                 30 יום חינם · ללא כרטיס אשראי
               </p>
@@ -607,11 +608,11 @@ export default function LandingV2() {
               </h2>
 
               <p className="text-gray-400 mb-10"
-                style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', maxWidth: 420, lineHeight: 1.7, margin: '0 0 2.5rem auto' }}>
+                style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', maxWidth: 420, lineHeight: 1.7, marginRight: 0 }}>
                 טורי עושה את זה בשבילך — 24 שעות ביממה, 7 ימים בשבוע, בלי הפסקה.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-4 mb-8">
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 28 }}>
                 <Link to="/register">
                   <motion.button
                     whileHover={{ scale: 1.04, boxShadow: '0 28px 60px rgba(244,63,94,0.38)' }}
@@ -630,7 +631,7 @@ export default function LandingV2() {
                 </Link>
               </div>
 
-              <div className="flex items-center justify-center lg:justify-end gap-5 flex-wrap">
+              <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
                 {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך 2 דקות'].map(t => (
                   <span key={t} className="flex items-center gap-1.5 text-gray-400 text-sm">
                     <Check size={12} className="text-[#f97316]" />{t}
