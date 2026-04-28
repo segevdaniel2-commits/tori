@@ -378,12 +378,12 @@ export default function LandingV2() {
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 h-32 pointer-events-none z-10"
-          style={{ background: 'linear-gradient(to bottom, transparent, #f8f6f2)' }} />
+        <div className="absolute inset-x-0 bottom-0 h-56 pointer-events-none z-10"
+          style={{ background: 'linear-gradient(to bottom, transparent 0%, #f8f6f2 75%)' }} />
       </section>
 
       {/* ─── Stats ─────────────────────────────────────────────────────────── */}
-      <section className="pt-0 pb-12 md:pb-16 px-4 md:px-6" style={{ position: 'relative', zIndex: 1 }}>
+      <section className="pb-12 md:pb-16 px-4 md:px-6 -mt-10" style={{ position: 'relative', zIndex: 1 }}>
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
             {[
@@ -489,60 +489,77 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Pricing ───────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-14 md:py-24 px-4 md:px-6" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', background: 'transparent', position: 'relative', zIndex: 1 }}>
+      <section id="pricing" className="py-14 md:py-24 px-4 md:px-6" style={{ background: 'transparent', position: 'relative', zIndex: 1 }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-3">מחירים פשוטים ושקופים</h2>
-            <p className="text-gray-500 text-base md:text-lg">ללא הפתעות. ביטול בכל עת.</p>
+            <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="font-black text-gray-900 mb-3"
+              style={{ fontSize: 'clamp(28px,5vw,48px)', letterSpacing: '-0.02em' }}>
+              מחירים פשוטים ושקופים
+            </motion.h2>
+            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+              className="text-gray-400">ללא הפתעות. ביטול בכל עת.</motion.p>
           </div>
-          <div className="grid md:grid-cols-3 gap-4 md:gap-6 items-stretch">
+
+          <div className="grid md:grid-cols-3 gap-4 md:gap-5 items-stretch">
             {[
-              { plan: 'ניסיון חינמי', price: 0,   highlight: false, badge: 'ללא כרטיס אשראי', badgeColor: 'linear-gradient(135deg,#16a34a,#15803d)', badgeShadow: 'rgba(22,163,74,0.3)', delay: 0,   features: ['30 יום מלאים חינם','בוט וואטסאפ פעיל','יומן וניהול לקוחות','ללא כרטיס אשראי','עובד אחד'] },
-              { plan: 'Basic',        price: 99,  highlight: true,  badge: 'הכי פופולרי',     badgeColor: 'linear-gradient(135deg,#f97316,#f43f5e)', badgeShadow: 'rgba(244,63,94,0.3)',  delay: 0.1, features: ['עובד אחד','תורים ללא הגבלה','בוט AI 24 שעות','יומן ואנליטיקות','תמיכה טכנית'] },
-              { plan: 'Business',     price: 250, highlight: false, badge: null,               badgeColor: null,                                     badgeShadow: null,                  delay: 0.2, features: ['עד 4 עובדים','תורים ללא הגבלה','בוט AI 24 שעות','דוחות מתקדמים','תזכורות אוטומטיות','גוגל קלנדר','חשבוניות ירוקות'] },
-            ].map(({ plan, price, highlight, badge, badgeColor, badgeShadow, delay, features }) => (
+              { plan: 'ניסיון חינמי', price: 0,   popular: false, delay: 0,   features: ['30 יום מלאים חינם','בוט וואטסאפ פעיל','יומן וניהול לקוחות','ללא כרטיס אשראי','עובד אחד'] },
+              { plan: 'Basic',        price: 99,  popular: true,  delay: 0.1, features: ['עובד אחד','תורים ללא הגבלה','בוט AI 24 שעות','יומן ואנליטיקות','תמיכה טכנית'] },
+              { plan: 'Business',     price: 250, popular: false, delay: 0.2, features: ['עד 4 עובדים','תורים ללא הגבלה','בוט AI 24 שעות','דוחות מתקדמים','תזכורות אוטומטיות','גוגל קלנדר','חשבוניות ירוקות'] },
+            ].map(({ plan, price, popular, delay, features }) => (
               <motion.div key={plan}
                 initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.35, delay, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ y: -5 }}
-                className="relative rounded-2xl p-6 md:p-8 transition-all duration-300 flex flex-col"
-                style={highlight
-                  ? { background: 'linear-gradient(160deg, #c2185b 0%, #0e7490 100%)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 20px 60px rgba(194,24,91,0.25), inset 0 1px 0 rgba(255,255,255,0.15)', borderRadius: 22 }
-                  : { ...glassCard, borderRadius: 22 }
-                }>
+                transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -4, boxShadow: '0 20px 56px rgba(0,0,0,0.09), inset 0 1.5px 0 rgba(255,255,255,1)' }}
+                className="relative rounded-3xl p-7 md:p-9 flex flex-col overflow-hidden"
+                style={{ ...glassCard, borderRadius: 26 }}>
 
-                {/* Badge inside card */}
-                {badge && (
-                  <div className="mb-4">
-                    <span className="inline-flex items-center text-white text-xs font-bold px-3 py-1 rounded-full"
-                      style={{ background: badgeColor, boxShadow: `0 4px 12px ${badgeShadow}` }}>
-                      {badge}
-                    </span>
-                  </div>
+                {/* accent top line for popular */}
+                {popular && (
+                  <div className="absolute top-0 inset-x-8 h-px pointer-events-none"
+                    style={{ background: 'linear-gradient(90deg, transparent, #f97316, #f43f5e, transparent)' }} />
                 )}
-                {!badge && <div className="mb-4 h-6" />}
 
-                <div className={`text-xs font-bold uppercase tracking-widest mb-3 ${highlight ? 'text-pink-200' : 'text-gray-400'}`}>{plan}</div>
-                <div className="flex items-end gap-1 mb-6">
+                {/* header row */}
+                <div className="flex items-center justify-between mb-8">
+                  <span className="text-xs tracking-widest uppercase text-gray-400 font-medium">{plan}</span>
+                  {popular && (
+                    <span className="text-xs font-medium px-2.5 py-0.5 rounded-full"
+                      style={{ background: 'rgba(249,115,22,0.08)', color: '#f97316', border: '1px solid rgba(249,115,22,0.18)' }}>
+                      מומלץ
+                    </span>
+                  )}
+                </div>
+
+                {/* price */}
+                <div className="mb-8">
                   {price === 0
-                    ? <span className={`text-4xl font-black ${highlight ? 'text-white' : 'text-gray-900'}`}>חינם</span>
-                    : <><span className={`text-4xl font-black ${highlight ? 'text-white' : 'text-gray-900'}`}>₪{price}</span><span className={`text-sm mb-1.5 mr-1 ${highlight ? 'text-pink-200' : 'text-gray-400'}`}>/חודש</span></>
+                    ? <span className="text-5xl font-semibold text-gray-900" style={{ letterSpacing: '-0.02em' }}>חינם</span>
+                    : <span className="text-gray-900" style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.03em' }}>
+                        ₪{price}<span className="text-gray-400 text-sm font-normal" style={{ letterSpacing: 0 }}> /חודש</span>
+                      </span>
                   }
                 </div>
+
+                {/* divider */}
+                <div className="mb-6 h-px" style={{ background: 'rgba(0,0,0,0.06)' }} />
+
+                {/* features */}
                 <ul className="space-y-3 mb-8 flex-1">
                   {features.map((f, i) => (
-                    <li key={i} className={`flex items-center gap-2 text-sm ${highlight ? 'text-pink-50' : 'text-gray-600'}`}>
-                      <Check size={15} className={`shrink-0 ${highlight ? 'text-pink-200' : 'text-[#f97316]'}`} />{f}
+                    <li key={i} className="flex items-center gap-2.5 text-sm text-gray-500">
+                      <Check size={13} className="shrink-0 text-[#f97316]" />{f}
                     </li>
                   ))}
                 </ul>
+
                 <Link to="/register" className="mt-auto">
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    className="w-full py-3.5 rounded-xl font-bold text-sm transition-all"
-                    style={highlight
-                      ? { background: 'rgba(255,255,255,0.18)', color: 'white', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(8px)' }
-                      : { background: 'rgba(0,0,0,0.05)', color: '#18120a', border: '1px solid rgba(0,0,0,0.09)' }
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                    className="w-full py-3.5 rounded-xl text-sm font-medium transition-all"
+                    style={popular
+                      ? { background: 'linear-gradient(135deg, #f97316, #f43f5e)', color: 'white', boxShadow: '0 4px 18px rgba(244,63,94,0.28)', border: 'none' }
+                      : { background: 'rgba(0,0,0,0.04)', color: '#374151', border: '1px solid rgba(0,0,0,0.08)' }
                     }>
                     התחל עכשיו
                   </motion.button>
@@ -555,74 +572,100 @@ export default function LandingV2() {
 
       {/* ─── Final CTA ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ background: 'transparent', position: 'relative', zIndex: 1 }}>
-        {/* full-bleed gradient fade from page into white */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(249,115,22,0.07) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 70% 50% at 50% 110%, rgba(249,115,22,0.08) 0%, transparent 70%)',
         }} />
 
-        <div className="max-w-4xl mx-auto px-4 md:px-6 py-28 md:py-40 text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {/* eyebrow */}
-            <p className="text-sm font-semibold tracking-widest uppercase mb-6"
-              style={{ color: '#f97316', letterSpacing: '0.18em' }}>
-              30 יום חינם · ללא כרטיס אשראי
-            </p>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-24 md:py-36 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-6">
 
-            {/* headline */}
-            <h2 className="font-black leading-none mb-8"
-              style={{
-                fontFamily: 'Heebo, sans-serif',
-                fontSize: 'clamp(44px, 8vw, 96px)',
-                letterSpacing: '-0.03em',
-                color: '#18120a',
-              }}>
-              תפסיק לנהל תורים<br />
-              <span style={{
-                background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 50%, #06b6d4 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>בעצמך.</span>
-            </h2>
+            {/* text + button */}
+            <motion.div
+              className="text-center lg:text-right flex-1"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p className="text-sm font-semibold tracking-widest uppercase mb-5"
+                style={{ color: '#f97316', letterSpacing: '0.18em' }}>
+                30 יום חינם · ללא כרטיס אשראי
+              </p>
 
-            {/* sub */}
-            <p className="text-gray-400 mb-12 mx-auto"
-              style={{ fontSize: 'clamp(16px, 2vw, 20px)', maxWidth: 480, lineHeight: 1.65 }}>
-              טורי עושה את זה בשבילך — 24 שעות ביממה, 7 ימים בשבוע, בלי הפסקה.
-            </p>
-
-            {/* CTA */}
-            <Link to="/register">
-              <motion.button
-                whileHover={{ scale: 1.04, boxShadow: '0 28px 60px rgba(244,63,94,0.38)' }}
-                whileTap={{ scale: 0.97 }}
-                className="relative overflow-hidden text-white font-bold inline-flex items-center gap-3 px-12 py-5 rounded-2xl"
+              <h2 className="font-black leading-none mb-7"
                 style={{
-                  fontSize: 18,
-                  background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 55%, #06b6d4 100%)',
-                  boxShadow: '0 12px 36px rgba(244,63,94,0.30), inset 0 1px 0 rgba(255,255,255,0.25)',
+                  fontFamily: 'Heebo, sans-serif',
+                  fontSize: 'clamp(40px, 7vw, 80px)',
+                  letterSpacing: '-0.03em',
+                  color: '#18120a',
                 }}>
-                <span className="absolute inset-0 pointer-events-none"
-                  style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.14) 0%, transparent 55%)' }} />
-                <Zap size={20} className="relative z-10" />
-                <span className="relative z-10">התחל 30 יום חינם</span>
-              </motion.button>
-            </Link>
+                תפסיק לנהל תורים<br />
+                <span style={{
+                  background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 50%, #06b6d4 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>בעצמך.</span>
+              </h2>
 
-            {/* trust micro-copy */}
-            <div className="flex items-center justify-center gap-6 mt-8 flex-wrap">
-              {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך 2 דקות'].map(t => (
-                <span key={t} className="flex items-center gap-1.5 text-gray-400 text-sm">
-                  <Check size={13} className="text-[#f97316]" />{t}
-                </span>
-              ))}
-            </div>
-          </motion.div>
+              <p className="text-gray-400 mb-10"
+                style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', maxWidth: 420, lineHeight: 1.7, margin: '0 auto 2.5rem' }}>
+                טורי עושה את זה בשבילך — 24 שעות ביממה, 7 ימים בשבוע, בלי הפסקה.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-8">
+                <Link to="/register">
+                  <motion.button
+                    whileHover={{ scale: 1.04, boxShadow: '0 28px 60px rgba(244,63,94,0.38)' }}
+                    whileTap={{ scale: 0.97 }}
+                    className="relative overflow-hidden text-white font-bold inline-flex items-center gap-3 px-10 py-4 rounded-2xl"
+                    style={{
+                      fontSize: 17,
+                      background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 55%, #06b6d4 100%)',
+                      boxShadow: '0 12px 36px rgba(244,63,94,0.28), inset 0 1px 0 rgba(255,255,255,0.22)',
+                    }}>
+                    <span className="absolute inset-0 pointer-events-none"
+                      style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.13) 0%, transparent 55%)' }} />
+                    <Zap size={18} className="relative z-10" />
+                    <span className="relative z-10">התחל 30 יום חינם</span>
+                  </motion.button>
+                </Link>
+              </div>
+
+              <div className="flex items-center justify-center lg:justify-start gap-5 flex-wrap">
+                {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך 2 דקות'].map(t => (
+                  <span key={t} className="flex items-center gap-1.5 text-gray-400 text-sm">
+                    <Check size={12} className="text-[#f97316]" />{t}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* robot image */}
+            <motion.div
+              className="hidden lg:flex items-end justify-center shrink-0"
+              style={{ width: 320, height: 380 }}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <img
+                src="/robot-wave.png"
+                alt="טורי - סוכן AI"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  objectPosition: 'bottom',
+                  maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
+                  filter: 'drop-shadow(0 20px 60px rgba(0,0,0,0.12))',
+                }}
+              />
+            </motion.div>
+
+          </div>
         </div>
       </section>
 
