@@ -392,12 +392,12 @@ export default function LandingV2() {
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 h-56 pointer-events-none z-10"
-          style={{ background: 'linear-gradient(to bottom, transparent 0%, #f8f6f2 75%)' }} />
+        <div className="absolute inset-x-0 bottom-0 h-80 pointer-events-none z-10"
+          style={{ background: 'linear-gradient(to bottom, transparent 0%, #f8f6f2 65%)' }} />
       </section>
 
       {/* ─── Stats ─────────────────────────────────────────────────────────── */}
-      <section className="pb-12 md:pb-16 px-4 md:px-6 -mt-10" style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(to bottom, #f8f6f2 0%, #f8f6f2 60%, transparent 100%)' }}>
+      <section className="pb-12 md:pb-16 px-4 md:px-6 mt-4" style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(to bottom, #f8f6f2 0%, #f8f6f2 60%, transparent 100%)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
             {[
