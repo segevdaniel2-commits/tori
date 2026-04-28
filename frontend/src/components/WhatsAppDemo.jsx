@@ -103,10 +103,13 @@ export default function WhatsAppDemo() {
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const chatRef = useRef(null);
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = chatRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, loading]);
 
   async function sendMessage(text) {
@@ -183,7 +186,7 @@ export default function WhatsAppDemo() {
       </div>
 
       {/* Chat area */}
-      <div style={{
+      <div ref={chatRef} style={{
         flex: 1,
         height: 400,
         overflowY: 'auto',
