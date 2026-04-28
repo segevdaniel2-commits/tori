@@ -578,7 +578,7 @@ export default function LandingV2() {
         }} />
 
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-24 md:py-36 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-6">
+          <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-12 lg:gap-6">
 
             {/* text + button */}
             <motion.div
@@ -610,11 +610,11 @@ export default function LandingV2() {
               </h2>
 
               <p className="text-gray-400 mb-10"
-                style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', maxWidth: 420, lineHeight: 1.7, margin: '0 auto 2.5rem' }}>
+                style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', maxWidth: 420, lineHeight: 1.7, margin: '0 0 2.5rem auto' }}>
                 טורי עושה את זה בשבילך — 24 שעות ביממה, 7 ימים בשבוע, בלי הפסקה.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-4 mb-8">
                 <Link to="/register">
                   <motion.button
                     whileHover={{ scale: 1.04, boxShadow: '0 28px 60px rgba(244,63,94,0.38)' }}
@@ -633,7 +633,7 @@ export default function LandingV2() {
                 </Link>
               </div>
 
-              <div className="flex items-center justify-center lg:justify-start gap-5 flex-wrap">
+              <div className="flex items-center justify-center lg:justify-end gap-5 flex-wrap">
                 {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך 2 דקות'].map(t => (
                   <span key={t} className="flex items-center gap-1.5 text-gray-400 text-sm">
                     <Check size={12} className="text-[#f97316]" />{t}
@@ -645,8 +645,8 @@ export default function LandingV2() {
             {/* robot image */}
             <motion.div
               className="hidden lg:flex items-end justify-center shrink-0"
-              style={{ width: 320, height: 380 }}
-              initial={{ opacity: 0, x: -30 }}
+              style={{ width: 420, height: 460 }}
+              initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
@@ -659,9 +659,11 @@ export default function LandingV2() {
                   height: '100%',
                   objectFit: 'contain',
                   objectPosition: 'bottom',
-                  maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
-                  filter: 'drop-shadow(0 20px 60px rgba(0,0,0,0.12))',
+                  transform: 'rotate(6deg) translateX(-12px)',
+                  mixBlendMode: 'multiply',
+                  maskImage: 'linear-gradient(to bottom, black 55%, transparent 95%)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 95%)',
+                  filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.15))',
                 }}
               />
             </motion.div>
