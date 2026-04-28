@@ -674,7 +674,7 @@ export default function LandingV2() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
               <img src="/favicon.png" alt="TORI" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
-              <span className="font-black text-xl text-gray-900">Tori</span>
+              <span className="font-black text-xl text-gray-900">TORI</span>
             </div>
             <div className="flex flex-wrap gap-4 text-gray-500 text-sm justify-center">
               <button onClick={() => setTermsOpen(true)} className="hover:text-gray-900 transition-colors">תקנון ותנאי שימוש</button>
