@@ -673,15 +673,13 @@ export default function LandingV2() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
+              <img src="/favicon.png" alt="TORI" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
               <span className="font-black text-xl text-gray-900">Tori</span>
-              <ToriLogo size={26} />
             </div>
             <div className="flex flex-wrap gap-4 text-gray-500 text-sm justify-center">
               <button onClick={() => setTermsOpen(true)} className="hover:text-gray-900 transition-colors">תקנון ותנאי שימוש</button>
               <button onClick={() => setPrivacyOpen(true)} className="hover:text-gray-900 transition-colors">מדיניות פרטיות</button>
               <button onClick={() => setAccessOpen(true)} className="hover:text-gray-900 transition-colors">הצהרת נגישות</button>
-              <a href="https://wa.me/972584532944" className="hover:text-green-600 transition-colors">תמיכה: מרדכי 058-453-2944</a>
-              <a href="https://wa.me/972509603671" className="hover:text-green-600 transition-colors">עומרי 050-960-3671</a>
               <a href="mailto:supporttori@gmail.com" className="hover:text-[#f97316] transition-colors">supporttori@gmail.com</a>
             </div>
             <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Tori</p>
