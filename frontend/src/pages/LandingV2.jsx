@@ -653,13 +653,13 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Final CTA ─────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ background: 'transparent', position: 'relative', zIndex: 1 }}>
+      <section className="relative" style={{ background: 'transparent', position: 'relative', zIndex: 1, overflow: 'visible' }}>
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'radial-gradient(ellipse 70% 50% at 50% 110%, rgba(249,115,22,0.08) 0%, transparent 70%)',
         }} />
 
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-24 md:py-36 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-24">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-0">
 
             {/* text + button — first child in RTL flex-row = rightmost */}
             <motion.div
@@ -725,27 +725,26 @@ export default function LandingV2() {
               </div>
             </motion.div>
 
-            {/* robot image */}
+            {/* robot image — breaks out of section */}
             <motion.div
-              className="hidden lg:flex items-center justify-center shrink-0"
-              style={{ width: 420, height: 480 }}
-              initial={{ opacity: 0, x: 30 }}
+              className="hidden lg:block shrink-0 relative"
+              style={{ width: 560, marginBottom: '-120px', marginTop: '-120px' }}
+              initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
             >
               <img
                 src={robotWaveImg}
-                alt="טורי - סוכן AI"
+                alt="TORI"
                 style={{
                   width: '100%',
-                  height: '100%',
+                  height: 'auto',
                   objectFit: 'contain',
-                  objectPosition: 'center',
                   mixBlendMode: 'multiply',
-                  maskImage: 'radial-gradient(ellipse 88% 85% at 50% 50%, black 55%, rgba(0,0,0,0.4) 72%, transparent 88%)',
-                  WebkitMaskImage: 'radial-gradient(ellipse 88% 85% at 50% 50%, black 55%, rgba(0,0,0,0.4) 72%, transparent 88%)',
-                  filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.15))',
+                  maskImage: 'linear-gradient(to bottom, black 60%, rgba(0,0,0,0.5) 80%, transparent 96%)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 60%, rgba(0,0,0,0.5) 80%, transparent 96%)',
+                  filter: 'drop-shadow(0 40px 60px rgba(0,0,0,0.18))',
                 }}
               />
             </motion.div>
