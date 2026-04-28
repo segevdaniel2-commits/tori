@@ -651,11 +651,12 @@ export default function LandingV2() {
               <h2 className="font-black leading-none mb-7"
                 style={{
                   fontFamily: 'Heebo, sans-serif',
-                  fontSize: 'clamp(40px, 7vw, 80px)',
+                  fontSize: 'clamp(52px, 8vw, 96px)',
                   letterSpacing: '-0.03em',
                   color: '#18120a',
                 }}>
-                תפסיק לנהל תורים<br />
+                תפסיק לנהל תורים
+                <br />
                 <span style={{
                   background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 50%, #06b6d4 100%)',
                   WebkitBackgroundClip: 'text',
@@ -666,7 +667,7 @@ export default function LandingV2() {
 
               <p className="text-gray-400 mb-10"
                 style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', maxWidth: 420, lineHeight: 1.7, marginRight: 0 }}>
-                טורי עושה את זה בשבילך — 24 שעות ביממה, 7 ימים בשבוע, בלי הפסקה.
+                טורי עושה את זה בשבילך. 24 שעות ביממה, 7 ימים בשבוע, בלי הפסקה.
               </p>
 
               <div style={{ marginBottom: 28 }}>
