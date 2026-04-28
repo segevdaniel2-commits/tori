@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { SplineScene } from '@/components/ui/splite';
 import robotWaveImg from '../assets/robot-wave.png';
+import WhatsAppDemo from '../components/WhatsAppDemo';
 
 // ─── Global SVG Glass Filter ───────────────────────────────────────────────────
 function GlassFilter() {
@@ -465,6 +466,66 @@ export default function LandingV2() {
                 <p style={{ fontFamily: "'Rubik', sans-serif", fontSize: 14, lineHeight: 1.7, color: '#6b6055', margin: 0, maxWidth: '28ch' }}>{s.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Try It Live ───────────────────────────────────────────────────── */}
+      <section id="try-it" className="py-16 md:py-28 px-4 md:px-6" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative', zIndex: 1 }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-14 lg:gap-20">
+
+            {/* text — right side in RTL */}
+            <motion.div
+              className="flex-1 text-right"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="inline-block text-xs font-semibold tracking-widest uppercase mb-5 px-3 py-1 rounded-full"
+                style={{ background: 'rgba(37,211,102,0.1)', color: '#128C7E', border: '1px solid rgba(37,211,102,0.2)' }}>
+                נסה בעצמך
+              </span>
+              <h2 className="font-black leading-tight mb-5"
+                style={{ fontFamily: 'Heebo, sans-serif', fontSize: 'clamp(34px, 6vw, 68px)', letterSpacing: '-0.03em', color: '#18120a' }}>
+                דבר עם טורי
+                <br />
+                <span style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  עכשיו, בחינם.
+                </span>
+              </h2>
+              <p className="text-gray-500 leading-relaxed mb-6" style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', maxWidth: 420 }}>
+                זו לא הדגמה מוקלטת — זה הבוט האמיתי.
+                <br />
+                שאל על שירותים, קבע תור, בדוק מחירים.
+                <br />
+                תרגיש בדיוק מה הלקוחות שלך יחוו.
+              </p>
+              <div className="flex flex-col gap-3 text-sm text-gray-400" style={{ textAlign: 'right' }}>
+                {[
+                  '💬 "כמה עולה תספורת?"',
+                  '📅 "אפשר לקבוע תור לחמישי בצהריים?"',
+                  '⏰ "מה השעות שלכם?"',
+                ].map(hint => (
+                  <div key={hint} className="flex items-center justify-end gap-2">
+                    <span style={{ background: 'rgba(0,0,0,0.04)', padding: '6px 12px', borderRadius: 20, fontStyle: 'italic' }}>{hint}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* WhatsApp chat — left side */}
+            <motion.div
+              className="w-full lg:w-auto flex justify-center"
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <WhatsAppDemo />
+            </motion.div>
+
           </div>
         </div>
       </section>
