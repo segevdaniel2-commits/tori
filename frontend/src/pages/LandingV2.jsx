@@ -644,26 +644,35 @@ export default function LandingV2() {
 
             {/* robot image */}
             <motion.div
-              className="hidden lg:flex items-end justify-center shrink-0"
-              style={{ width: 420, height: 460 }}
+              className="hidden lg:block shrink-0 relative"
+              style={{ width: 400, height: 460 }}
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
+              {/* white background eraser — same cream as page, covers the rect box */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                borderRadius: '50%',
+                background: 'radial-gradient(ellipse 80% 80% at 50% 50%, #f8f6f2 38%, transparent 72%)',
+                zIndex: 1,
+                pointerEvents: 'none',
+              }} />
               <img
                 src={robotWaveImg}
                 alt="טורי - סוכן AI"
                 style={{
+                  position: 'relative', zIndex: 0,
                   width: '100%',
                   height: '100%',
                   objectFit: 'contain',
                   objectPosition: 'center',
-                  transform: 'rotate(6deg) translateX(-12px)',
+                  transform: 'rotate(5deg) translateX(-8px)',
                   mixBlendMode: 'multiply',
-                  maskImage: 'radial-gradient(ellipse 78% 75% at 50% 46%, black 35%, rgba(0,0,0,0.6) 58%, transparent 80%)',
-                  WebkitMaskImage: 'radial-gradient(ellipse 78% 75% at 50% 46%, black 35%, rgba(0,0,0,0.6) 58%, transparent 80%)',
-                  filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.12))',
+                  maskImage: 'radial-gradient(ellipse 72% 68% at 50% 48%, black 28%, rgba(0,0,0,0.7) 52%, transparent 74%)',
+                  WebkitMaskImage: 'radial-gradient(ellipse 72% 68% at 50% 48%, black 28%, rgba(0,0,0,0.7) 52%, transparent 74%)',
+                  filter: 'drop-shadow(0 20px 44px rgba(0,0,0,0.13)) contrast(1.05)',
                 }}
               />
             </motion.div>
