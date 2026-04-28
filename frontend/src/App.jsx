@@ -28,8 +28,12 @@ function PublicRoute({ children }) {
   return children;
 }
 
+window.history.scrollRestoration = 'manual';
+
 export default function App() {
   const [splashDone, setSplashDone] = useState(false);
+
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
     <>
