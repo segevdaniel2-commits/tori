@@ -612,7 +612,7 @@ export default function LandingV2() {
                 טורי עושה את זה בשבילך — 24 שעות ביממה, 7 ימים בשבוע, בלי הפסקה.
               </p>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 28 }}>
+              <div style={{ marginBottom: 28 }}>
                 <Link to="/register">
                   <motion.button
                     whileHover={{ scale: 1.04, boxShadow: '0 28px 60px rgba(244,63,94,0.38)' }}
@@ -631,7 +631,7 @@ export default function LandingV2() {
                 </Link>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', direction: 'rtl', gap: 20, flexWrap: 'wrap' }}>
                 {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך 2 דקות'].map(t => (
                   <span key={t} className="flex items-center gap-1.5 text-gray-400 text-sm">
                     <Check size={12} className="text-[#f97316]" />{t}
