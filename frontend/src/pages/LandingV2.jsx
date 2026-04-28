@@ -192,10 +192,7 @@ function NavBar() {
           <div className="rounded-full px-2 py-1.5 flex items-center justify-between gap-4 transition-all duration-300"
             style={glassNav}>
             <Link to="/" className="flex items-center gap-2 px-2 shrink-0">
-              <div className="w-7 h-7 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)' }}>
-                <span className="text-xs font-black text-white">T</span>
-              </div>
+              <img src="/favicon.png" alt="TORI" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
               <span className="font-black text-base text-gray-900 tracking-tight">TORI</span>
             </Link>
 
