@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const INITIAL_MESSAGES = [
-  { id: 1, role: 'assistant', text: 'שלום! 👋 אני TORI, הבוט של סלון יפעת.\nאשמח לקבוע לך תור, לענות על שאלות על השירותים שלנו ועוד.\nאיך אוכל לעזור? 😊', time: '10:32' },
+  { id: 1, role: 'assistant', text: 'היי, סלון יפעת. רוצה לקבוע תור או שיש משהו שאתה רוצה לדעת?', time: '10:32' },
 ];
 
 function getTime() {
