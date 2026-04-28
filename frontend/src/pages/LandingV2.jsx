@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
@@ -49,9 +49,9 @@ function ToriLogo({ size = 34 }) {
     <svg width={size * 0.85} height={size * 0.85} viewBox="0 0 40 40" style={{ display: 'inline-block', overflow: 'visible' }}>
       <defs>
         <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stopColor="#f97316" />
-          <stop offset="50%"  stopColor="#f43f5e" />
-          <stop offset="100%" stopColor="#06b6d4" />
+          <stop offset="0%"   stopColor="#22c55e" />
+          <stop offset="50%"  stopColor="#16a34a" />
+          <stop offset="100%" stopColor="#065f46" />
         </linearGradient>
       </defs>
       <text x="50%" y="78%" textAnchor="middle" fill={`url(#${id})`}
@@ -80,7 +80,7 @@ function Counter({ to, suffix = '', duration = 2.2 }) {
 }
 
 // ─── Feature Card ──────────────────────────────────────────────────────────────
-function FeatureCard({ title, desc, delay = 0, accent = '#f97316' }) {
+function FeatureCard({ title, desc, delay = 0, accent = '#16a34a' }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
   const [hovered, setHovered] = useState(false);
@@ -141,7 +141,7 @@ function TestimonialCard({ t, delay }) {
       <p className="text-gray-600 text-sm leading-relaxed mb-5">"{t.text}"</p>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0"
-          style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 4px 14px rgba(244,63,94,0.3)' }}>
+          style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a, #065f46)', boxShadow: '0 4px 14px rgba(22,163,74,0.3)' }}>
           {t.name[0]}
         </div>
         <div>
@@ -230,10 +230,10 @@ function NavBar() {
               </Link>
               <Link to="/register">
                 <motion.button
-                  whileHover={{ scale: 1.04, boxShadow: '0 6px 22px rgba(249,115,22,0.4)' }}
+                  whileHover={{ scale: 1.04, boxShadow: '0 6px 22px rgba(22,163,74,0.4)' }}
                   whileTap={{ scale: 0.97 }}
                   className="rounded-full px-5 py-2 text-sm text-white font-bold"
-                  style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)', boxShadow: '0 3px 14px rgba(244,63,94,0.28)' }}
+                  style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a, #065f46)', boxShadow: '0 3px 14px rgba(22,163,74,0.28)' }}
                 >
                   <span className="hidden sm:inline">התחל בחינם</span>
                   <span className="sm:hidden">הצטרף</span>
@@ -273,7 +273,7 @@ function NavBar() {
                   initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: NAV_ITEMS.length * 0.07 }}
                   className="mt-4 rounded-full px-8 py-3 text-white font-bold text-lg"
-                  style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e, #06b6d4)' }}
+                  style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a, #065f46)' }}
                 >התחל ניסיון חינמי</motion.button>
               </Link>
             </nav>
@@ -304,7 +304,7 @@ export default function LandingV2() {
 
       {/* ─── Global background gradient orbs ─────────────────────────── */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div style={{ position: 'absolute', top: '-5%', right: '-8%',  width: 700, height: 700, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.10) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+        <div style={{ position: 'absolute', top: '-5%', right: '-8%',  width: 700, height: 700, borderRadius: '50%', background: 'radial-gradient(circle, rgba(22,163,74,0.10) 0%, transparent 70%)', filter: 'blur(50px)' }} />
         <div style={{ position: 'absolute', top: '35%', left: '-12%',  width: 650, height: 650, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.09) 0%, transparent 70%)',  filter: 'blur(50px)' }} />
         <div style={{ position: 'absolute', bottom: '15%', right: '15%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(244,63,94,0.07) 0%, transparent 70%)',  filter: 'blur(50px)' }} />
         <div style={{ position: 'absolute', bottom: '50%', left: '40%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)',  filter: 'blur(50px)' }} />
@@ -339,7 +339,7 @@ export default function LandingV2() {
                   </motion.span>
                 </span>{' '}שמנהל לך
                 <br />
-                <span style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #fb923c 38%, #22d3ee 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                <span style={{ background: 'linear-gradient(135deg, #4ade80 0%, #16a34a 50%, #065f46 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   את העסק
                 </span>{' '}24/7
               </motion.h1>
@@ -353,12 +353,12 @@ export default function LandingV2() {
                 className="flex flex-col lg:flex-row gap-3 mb-6 pointer-events-auto">
                 <Link to="/register" className="w-full lg:w-auto">
                   <motion.button
-                    whileHover={{ scale: 1.03, boxShadow: '0 24px 48px rgba(244,63,94,0.38)' }}
+                    whileHover={{ scale: 1.03, boxShadow: '0 24px 48px rgba(22,163,74,0.38)' }}
                     whileTap={{ scale: 0.97 }}
                     className="w-full text-white font-bold text-lg px-9 py-4 rounded-2xl inline-flex items-center justify-center gap-2 relative overflow-hidden"
                     style={{
-                      background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 55%, #06b6d4 100%)',
-                      boxShadow: '0 8px 28px rgba(244,63,94,0.32), inset 0 1px 0 rgba(255,255,255,0.25)',
+                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 55%, #065f46 100%)',
+                      boxShadow: '0 8px 28px rgba(22,163,74,0.32), inset 0 1px 0 rgba(255,255,255,0.25)',
                     }}>
                     <span className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 60%)' }} />
                     <Zap size={19} className="relative z-10" />
@@ -383,7 +383,7 @@ export default function LandingV2() {
                 className="flex flex-wrap gap-4 items-center mb-5">
                 {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך דקה'].map(t => (
                   <div key={t} className="flex items-center gap-1.5 text-gray-400 text-sm">
-                    <Check size={13} className="text-[#f97316]" />{t}
+                    <Check size={13} className="text-[#16a34a]" />{t}
                   </div>
                 ))}
               </motion.div>
@@ -433,7 +433,7 @@ export default function LandingV2() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             <FeatureCard delay={0}    accent="#25D366" title="בוט וואטסאפ AI"    desc="מקבל תורים, מבטל ועונה על שאלות בעברית שוטפת, 24 שעות ביממה." />
             <FeatureCard delay={0.07} accent="#06b6d4" title="יומן חכם בזמן אמת" desc="ממשק ויזואלי נוח לניהול כל התורים. הוסף ידנית, חסום זמנים, ראה הכל במקום אחד." />
-            <FeatureCard delay={0.14} accent="#f97316" title="אנליטיקות ודוחות"  desc="גרפים של הכנסות, שירותים פופולריים ושעות עמוסות. דוח חודשי לקבלת החלטות חכמות." />
+            <FeatureCard delay={0.14} accent="#16a34a" title="אנליטיקות ודוחות"  desc="גרפים של הכנסות, שירותים פופולריים ושעות עמוסות. דוח חודשי לקבלת החלטות חכמות." />
             <FeatureCard delay={0.21} accent="#8b5cf6" title="ריבוי עובדים"       desc="כמה עובדים עם לוחות זמנים וצבעים נפרדים. מושלם לסלון שמעסיק מספר אנשים." />
             <FeatureCard delay={0.28} accent="#f43f5e" title="תזכורות אוטומטיות" desc="הבוט שולח ללקוח תזכורת יום לפני התור. פחות ביטולי רגע אחרון ויותר כסף בכיס." />
             <FeatureCard delay={0.35} accent="#10b981" title="חשבוניות ירוקות"   desc="אינטגרציה עם חשבוניות ירוקות לניהול חשבוניות ישירות מתוך היומן." />
@@ -600,7 +600,7 @@ export default function LandingV2() {
                 {/* accent top line for popular */}
                 {popular && (
                   <div className="absolute top-0 inset-x-8 h-px pointer-events-none"
-                    style={{ background: 'linear-gradient(90deg, transparent, #f97316, #f43f5e, transparent)' }} />
+                    style={{ background: 'linear-gradient(90deg, transparent, #22c55e, #16a34a, transparent)' }} />
                 )}
 
                 {/* header row */}
@@ -608,7 +608,7 @@ export default function LandingV2() {
                   <span className="text-xs tracking-widest uppercase text-gray-400 font-medium">{plan}</span>
                   {popular && (
                     <span className="text-xs font-medium px-2.5 py-0.5 rounded-full"
-                      style={{ background: 'rgba(249,115,22,0.08)', color: '#f97316', border: '1px solid rgba(249,115,22,0.18)' }}>
+                      style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.18)' }}>
                       מומלץ
                     </span>
                   )}
@@ -631,7 +631,7 @@ export default function LandingV2() {
                 <ul className="space-y-3 mb-8 flex-1">
                   {features.map((f, i) => (
                     <li key={i} className="flex items-center gap-2.5 text-sm text-gray-500">
-                      <Check size={13} className="shrink-0 text-[#f97316]" />{f}
+                      <Check size={13} className="shrink-0 text-[#16a34a]" />{f}
                     </li>
                   ))}
                 </ul>
@@ -640,7 +640,7 @@ export default function LandingV2() {
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="w-full py-3.5 rounded-xl text-sm font-medium transition-all"
                     style={popular
-                      ? { background: 'linear-gradient(135deg, #f97316, #f43f5e)', color: 'white', boxShadow: '0 4px 18px rgba(244,63,94,0.28)', border: 'none' }
+                      ? { background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', boxShadow: '0 4px 18px rgba(22,163,74,0.28)', border: 'none' }
                       : { background: 'rgba(0,0,0,0.04)', color: '#374151', border: '1px solid rgba(0,0,0,0.08)' }
                     }>
                     התחל עכשיו
@@ -655,7 +655,7 @@ export default function LandingV2() {
       {/* ─── Final CTA ─────────────────────────────────────────────────────── */}
       <section className="relative" style={{ background: 'transparent', position: 'relative', zIndex: 1, overflow: 'visible' }}>
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 70% 50% at 50% 110%, rgba(249,115,22,0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 70% 50% at 50% 110%, rgba(22,163,74,0.08) 0%, transparent 70%)',
         }} />
 
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-24 md:py-36 relative z-10">
@@ -671,7 +671,7 @@ export default function LandingV2() {
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
               <p className="text-sm font-semibold mb-5"
-                style={{ color: '#f97316', letterSpacing: '0.18em' }}>
+                style={{ color: '#16a34a', letterSpacing: '0.18em' }}>
                 30 יום חינם · ללא כרטיס אשראי
               </p>
 
@@ -685,7 +685,7 @@ export default function LandingV2() {
                 <span style={{ display: 'block', whiteSpace: 'nowrap' }}>תפסיק לנהל תורים</span>
                 <span style={{
                   display: 'block',
-                  background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 50%, #06b6d4 100%)',
+                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #065f46 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -700,13 +700,13 @@ export default function LandingV2() {
               <div style={{ marginBottom: 28 }}>
                 <Link to="/register">
                   <motion.button
-                    whileHover={{ scale: 1.04, boxShadow: '0 28px 60px rgba(244,63,94,0.38)' }}
+                    whileHover={{ scale: 1.04, boxShadow: '0 28px 60px rgba(22,163,74,0.38)' }}
                     whileTap={{ scale: 0.97 }}
                     className="relative overflow-hidden text-white font-bold inline-flex items-center gap-3 px-10 py-4 rounded-2xl"
                     style={{
                       fontSize: 17,
-                      background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 55%, #06b6d4 100%)',
-                      boxShadow: '0 12px 36px rgba(244,63,94,0.28), inset 0 1px 0 rgba(255,255,255,0.22)',
+                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 55%, #065f46 100%)',
+                      boxShadow: '0 12px 36px rgba(22,163,74,0.28), inset 0 1px 0 rgba(255,255,255,0.22)',
                     }}>
                     <span className="absolute inset-0 pointer-events-none"
                       style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.13) 0%, transparent 55%)' }} />
@@ -719,7 +719,7 @@ export default function LandingV2() {
               <div style={{ display: 'flex', direction: 'rtl', gap: 20, flexWrap: 'wrap' }}>
                 {['ללא כרטיס אשראי', 'ביטול בכל עת', 'הגדרה תוך 2 דקות'].map(t => (
                   <span key={t} className="flex items-center gap-1.5 text-gray-400 text-sm">
-                    <Check size={12} className="text-[#f97316]" />{t}
+                    <Check size={12} className="text-[#16a34a]" />{t}
                   </span>
                 ))}
               </div>
@@ -765,7 +765,7 @@ export default function LandingV2() {
               <button onClick={() => setTermsOpen(true)} className="hover:text-gray-900 transition-colors">תקנון ותנאי שימוש</button>
               <button onClick={() => setPrivacyOpen(true)} className="hover:text-gray-900 transition-colors">מדיניות פרטיות</button>
               <button onClick={() => setAccessOpen(true)} className="hover:text-gray-900 transition-colors">הצהרת נגישות</button>
-              <a href="mailto:supporttori@gmail.com" className="hover:text-[#f97316] transition-colors">supporttori@gmail.com</a>
+              <a href="mailto:supporttori@gmail.com" className="hover:text-[#16a34a] transition-colors">supporttori@gmail.com</a>
             </div>
             <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Tori</p>
           </div>
@@ -780,7 +780,7 @@ export default function LandingV2() {
         <p><strong className="text-gray-900">2. תשלומים וביטול</strong><br />30 יום חינמיים ללא כרטיס אשראי. לאחר מכן תשלום חודשי לפי התכנית שנבחרה. ביטול אפשרי בכל עת.</p>
         <p><strong className="text-gray-900">3. אחריות</strong><br />טורי מספקת את השירות "כפי שהוא". האחריות המקסימלית מוגבלת לסכום ששולם בחודש הקודם.</p>
         <p><strong className="text-gray-900">4. קניין רוחני</strong><br />כל הזכויות שייכות לטורי. אין לשכפל או לעשות שימוש מסחרי ללא אישור בכתב.</p>
-        <p><strong className="text-gray-900">5. יצירת קשר</strong><br /><a href="mailto:supporttori@gmail.com" className="text-[#f97316]">supporttori@gmail.com</a></p>
+        <p><strong className="text-gray-900">5. יצירת קשר</strong><br /><a href="mailto:supporttori@gmail.com" className="text-[#16a34a]">supporttori@gmail.com</a></p>
       </Modal>
       <Modal open={privacyOpen} onClose={() => setPrivacyOpen(false)} title="מדיניות פרטיות">
         <p className="text-gray-700 font-semibold">עודכן לאחרונה: אפריל 2026</p>
@@ -788,12 +788,12 @@ export default function LandingV2() {
         <p><strong className="text-gray-900">מידע שנאסף</strong><br />שם, אימייל, טלפון, שם העסק, נתוני תורים. היסטוריית שיחות לצרכי שיפור בלבד.</p>
         <p><strong className="text-gray-900">שימוש במידע</strong><br />להפעלת השירות ותמיכה טכנית בלבד. לא נשלח דיוור שיווקי ללא הסכמה.</p>
         <p><strong className="text-gray-900">אבטחה</strong><br />הצפנה מלאה (TLS). גישה מוגבלת לעובדים מורשים.</p>
-        <p><strong className="text-gray-900">זכויות</strong><br />עיון, תיקון ומחיקת מידע: <a href="mailto:supporttori@gmail.com" className="text-[#f97316]">supporttori@gmail.com</a></p>
+        <p><strong className="text-gray-900">זכויות</strong><br />עיון, תיקון ומחיקת מידע: <a href="mailto:supporttori@gmail.com" className="text-[#16a34a]">supporttori@gmail.com</a></p>
       </Modal>
       <Modal open={accessOpen} onClose={() => setAccessOpen(false)} title="הצהרת נגישות">
         <p>טורי מחויבת לנגישות דיגיטלית בהתאם לתקן הישראלי 5568 ו-WCAG 2.1 רמת AA.</p>
         <p><strong className="text-gray-900">תכונות נגישות:</strong> ניווט מקלדת מלא, תמיכה בקוראי מסך, יחסי ניגוד תקניים, תמיכה בהגדלת טקסט.</p>
-        <p><strong className="text-gray-900">דיווח על בעיות:</strong> <a href="mailto:supporttori@gmail.com" className="text-[#f97316]">supporttori@gmail.com</a></p>
+        <p><strong className="text-gray-900">דיווח על בעיות:</strong> <a href="mailto:supporttori@gmail.com" className="text-[#16a34a]">supporttori@gmail.com</a></p>
         <p className="text-gray-400 text-xs">עודכן לאחרונה: אפריל 2026</p>
       </Modal>
 
