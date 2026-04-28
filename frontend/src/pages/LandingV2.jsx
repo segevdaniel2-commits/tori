@@ -500,13 +500,25 @@ export default function LandingV2() {
                 שאל על שירותים, קבע תור, בדוק מחירים ושעות.
                 תרגיש בדיוק מה הלקוחות שלך יחוו כשתפעיל את הבוט בעסק שלך.
               </p>
-              <div className="flex flex-col gap-3 text-sm text-gray-400" style={{ textAlign: 'right', alignItems: 'flex-start' }}>
+              <div className="flex flex-col gap-2" style={{ alignItems: 'flex-start' }}>
                 {[
-                  '💬 "כמה עולה תספורת?"',
-                  '📅 "אפשר לקבוע תור לחמישי בצהריים?"',
-                  '⏰ "מה השעות שלכם?"',
+                  'כמה עולה תספורת?',
+                  'אפשר לקבוע תור לחמישי בצהריים?',
+                  'מה השעות שלכם?',
                 ].map(hint => (
-                  <span key={hint} style={{ background: 'rgba(0,0,0,0.05)', padding: '7px 14px', borderRadius: 20, fontStyle: 'italic', display: 'inline-block' }}>{hint}</span>
+                  <span key={hint} style={{
+                    display: 'inline-block',
+                    padding: '8px 18px',
+                    borderRadius: 999,
+                    fontSize: 14,
+                    color: '#6b7280',
+                    background: 'rgba(255,255,255,0.7)',
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+                    letterSpacing: '0.01em',
+                  }}>"{hint}"</span>
                 ))}
               </div>
             </motion.div>
