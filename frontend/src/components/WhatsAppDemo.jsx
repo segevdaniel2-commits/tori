@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://tori-production.up.railway.app';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const INITIAL_MESSAGES = [
-  { id: 1, role: 'assistant', text: 'שלום! 👋 אני טורי, הבוט של סלון יפעת.\nאשמח לקבוע לך תור, לענות על שאלות על השירותים שלנו ועוד.\nאיך אוכל לעזור? 😊', time: '10:32' },
+  { id: 1, role: 'assistant', text: 'שלום! 👋 אני TORI, הבוט של סלון יפעת.\nאשמח לקבוע לך תור, לענות על שאלות על השירותים שלנו ועוד.\nאיך אוכל לעזור? 😊', time: '10:32' },
 ];
 
 function getTime() {
@@ -14,21 +14,21 @@ function getTime() {
 function BotAvatar() {
   return (
     <div style={{
-      width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+      width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
       background: 'linear-gradient(135deg, #25D366, #128C7E)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 14, color: 'white', fontWeight: 700,
-    }}>ט</div>
+      fontSize: 13, color: 'white', fontWeight: 800,
+    }}>T</div>
   );
 }
 
 function TypingIndicator() {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginBottom: 4 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginBottom: 4, direction: 'ltr' }}>
       <BotAvatar />
       <div style={{
         background: '#fff',
-        borderRadius: '8px 18px 18px 2px',
+        borderRadius: '2px 18px 18px 18px',
         padding: '10px 14px',
         boxShadow: '0 1px 2px rgba(0,0,0,0.13)',
         display: 'flex', alignItems: 'center', gap: 4,
@@ -49,25 +49,25 @@ function Message({ msg }) {
   const isBot = msg.role === 'assistant';
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22 }}
       style={{
         display: 'flex',
         flexDirection: isBot ? 'row' : 'row-reverse',
         alignItems: 'flex-end',
         gap: 6,
-        marginBottom: 4,
+        marginBottom: 6,
+        direction: 'ltr',
       }}
     >
       {isBot && <BotAvatar />}
       <div style={{
         maxWidth: '72%',
         background: isBot ? '#fff' : '#dcf8c6',
-        borderRadius: isBot ? '8px 18px 18px 2px' : '18px 8px 2px 18px',
-        padding: '8px 12px 6px',
+        borderRadius: isBot ? '2px 18px 18px 18px' : '18px 2px 18px 18px',
+        padding: '8px 12px 5px',
         boxShadow: '0 1px 2px rgba(0,0,0,0.13)',
-        position: 'relative',
       }}>
         <p style={{
           margin: 0,
@@ -81,16 +81,16 @@ function Message({ msg }) {
         }}>{msg.text}</p>
         <div style={{
           display: 'flex',
-          justifyContent: 'flex-end',
+          justifyContent: isBot ? 'flex-start' : 'flex-end',
           alignItems: 'center',
           gap: 3,
           marginTop: 2,
         }}>
-          <span style={{ fontSize: 11, color: '#667781', lineHeight: 1 }}>{msg.time}</span>
+          <span style={{ fontSize: 11, color: '#667781' }}>{msg.time}</span>
           {!isBot && (
-            <svg width="15" height="11" viewBox="0 0 15 11" fill="none">
-              <path d="M1 5.5L4.5 9L14 1" stroke="#53bdeb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M5 5.5L8.5 9" stroke="#53bdeb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
+              <path d="M1 5.5L5 9.5L15 1.5" stroke="#53bdeb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5.5 5.5L9.5 9.5" stroke="#53bdeb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           )}
         </div>
@@ -104,28 +104,28 @@ export default function WhatsAppDemo() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
-  const inputRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  async function sendMessage() {
-    const text = input.trim();
-    if (!text || loading) return;
+  async function sendMessage(text) {
+    const msg = (text || input).trim();
+    if (!msg || loading) return;
     setInput('');
 
-    const userMsg = { id: Date.now(), role: 'user', text, time: getTime() };
+    const userMsg = { id: Date.now(), role: 'user', text: msg, time: getTime() };
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
 
     try {
       const history = messages.map(m => ({ role: m.role, content: m.text }));
-      const res = await fetch(`${API_BASE}/api/demo-chat`, {
+      const res = await fetch(`${API_BASE}/demo-chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history }),
+        body: JSON.stringify({ message: msg, history }),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
@@ -133,7 +133,8 @@ export default function WhatsAppDemo() {
         text: data.reply || 'אופס, נסה שוב 🙏',
         time: getTime(),
       }]);
-    } catch {
+    } catch (err) {
+      console.error('[WhatsAppDemo]', err);
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         role: 'assistant',
@@ -151,83 +152,69 @@ export default function WhatsAppDemo() {
 
   return (
     <div style={{
-      width: '100%', maxWidth: 380,
-      borderRadius: 20,
+      width: '100%', maxWidth: 390,
+      borderRadius: 22,
       overflow: 'hidden',
-      boxShadow: '0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.1)',
+      boxShadow: '0 28px 72px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.1)',
       display: 'flex', flexDirection: 'column',
       fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-      direction: 'rtl',
-      userSelect: 'none',
     }}>
-      {/* WhatsApp header */}
+      {/* Header */}
       <div style={{
         background: '#075e54',
-        padding: '10px 16px',
+        padding: '10px 14px',
         display: 'flex', alignItems: 'center', gap: 10,
+        direction: 'rtl',
       }}>
         <div style={{
-          width: 40, height: 40, borderRadius: '50%',
+          width: 42, height: 42, borderRadius: '50%',
           background: 'linear-gradient(135deg, #25D366, #128C7E)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 18, color: 'white', fontWeight: 800, flexShrink: 0,
-        }}>ט</div>
+          fontSize: 18, color: 'white', fontWeight: 900, flexShrink: 0,
+        }}>T</div>
         <div style={{ flex: 1 }}>
-          <div style={{ color: '#fff', fontWeight: 600, fontSize: 15, lineHeight: 1.2 }}>סלון יפעת 💇‍♀️</div>
-          <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12 }}>מופעל על ידי TORI AI</div>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>סלון יפעת 💇‍♀️</div>
+          <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12 }}>מופעל על ידי TORI AI</div>
         </div>
-        <div style={{ display: 'flex', gap: 18, color: 'rgba(255,255,255,0.85)' }}>
+        <div style={{ display: 'flex', gap: 16, color: 'rgba(255,255,255,0.85)' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.47 11.47 0 003.58.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.47 11.47 0 00.57 3.58 1 1 0 01-.25 1.01l-2.2 2.2z"/></svg>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
         </div>
       </div>
 
-      {/* Chat background */}
+      {/* Chat area */}
       <div style={{
         flex: 1,
-        minHeight: 380,
-        maxHeight: 380,
+        height: 400,
         overflowY: 'auto',
         padding: '12px 10px',
-        background: '#efeae2',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M0 0h80v80H0z' fill='%23e5ddd5'/%3E%3Ccircle cx='20' cy='20' r='2' fill='%23d4ccc4' opacity='.4'/%3E%3Ccircle cx='60' cy='20' r='2' fill='%23d4ccc4' opacity='.4'/%3E%3Ccircle cx='20' cy='60' r='2' fill='%23d4ccc4' opacity='.4'/%3E%3Ccircle cx='60' cy='60' r='2' fill='%23d4ccc4' opacity='.4'/%3E%3Ccircle cx='40' cy='40' r='2' fill='%23d4ccc4' opacity='.4'/%3E%3C/svg%3E")`,
-        direction: 'rtl',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23e5ddd5'/%3E%3Ccircle cx='25' cy='25' r='2.5' fill='%23d4ccc4' opacity='.5'/%3E%3Ccircle cx='75' cy='25' r='2.5' fill='%23d4ccc4' opacity='.5'/%3E%3Ccircle cx='25' cy='75' r='2.5' fill='%23d4ccc4' opacity='.5'/%3E%3Ccircle cx='75' cy='75' r='2.5' fill='%23d4ccc4' opacity='.5'/%3E%3Ccircle cx='50' cy='50' r='2.5' fill='%23d4ccc4' opacity='.5'/%3E%3C/svg%3E")`,
+        direction: 'ltr',
       }}>
-        <div style={{
-          display: 'flex', justifyContent: 'center', marginBottom: 12,
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
           <span style={{
-            background: 'rgba(11,20,26,0.55)', color: '#fff',
-            fontSize: 11.5, padding: '4px 10px', borderRadius: 8, backdropFilter: 'blur(4px)',
+            background: 'rgba(11,20,26,0.5)', color: '#fff',
+            fontSize: 11.5, padding: '4px 10px', borderRadius: 7,
           }}>היום</span>
         </div>
-
         {messages.map(msg => <Message key={msg.id} msg={msg} />)}
         {loading && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input bar */}
+      {/* Input */}
       <div style={{
         background: '#f0f2f5',
         padding: '8px 10px',
         display: 'flex', alignItems: 'center', gap: 8,
+        direction: 'ltr',
       }}>
-        <button style={{
-          width: 38, height: 38, borderRadius: '50%', border: 'none',
-          background: 'none', cursor: 'pointer', color: '#54656f',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 100 10A5 5 0 0012 2zm0 8a3 3 0 110-6 3 3 0 010 6zm9 11a1 1 0 01-1 1H4a1 1 0 010-2 8 8 0 0116 0 1 1 0 011 1z"/></svg>
-        </button>
-
         <div style={{
           flex: 1, background: '#fff', borderRadius: 24,
-          display: 'flex', alignItems: 'center', padding: '6px 14px',
+          display: 'flex', alignItems: 'center', padding: '7px 14px',
           boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
         }}>
           <textarea
-            ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={onKey}
@@ -241,13 +228,12 @@ export default function WhatsAppDemo() {
             }}
           />
         </div>
-
         <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={sendMessage}
+          whileTap={{ scale: 0.88 }}
+          onClick={() => sendMessage()}
           disabled={!input.trim() || loading}
           style={{
-            width: 42, height: 42, borderRadius: '50%', border: 'none',
+            width: 44, height: 44, borderRadius: '50%', border: 'none',
             background: input.trim() && !loading ? '#25D366' : '#b0bec5',
             cursor: input.trim() && !loading ? 'pointer' : 'default',
             display: 'flex', alignItems: 'center', justifyContent: 'center',

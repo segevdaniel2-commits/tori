@@ -489,28 +489,24 @@ export default function LandingV2() {
               </span>
               <h2 className="font-black leading-tight mb-5"
                 style={{ fontFamily: 'Heebo, sans-serif', fontSize: 'clamp(34px, 6vw, 68px)', letterSpacing: '-0.03em', color: '#18120a' }}>
-                דבר עם טורי
+                דבר עם TORI
                 <br />
                 <span style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   עכשיו, בחינם.
                 </span>
               </h2>
-              <p className="text-gray-500 leading-relaxed mb-6" style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', maxWidth: 420 }}>
-                זו לא הדגמה מוקלטת — זה הבוט האמיתי.
-                <br />
-                שאל על שירותים, קבע תור, בדוק מחירים.
-                <br />
-                תרגיש בדיוק מה הלקוחות שלך יחוו.
+              <p className="text-gray-500 leading-relaxed mb-8" style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', maxWidth: 460 }}>
+                זו לא הדגמה מוקלטת. זה הבוט האמיתי של TORI בפעולה.
+                שאל על שירותים, קבע תור, בדוק מחירים ושעות.
+                תרגיש בדיוק מה הלקוחות שלך יחוו כשתפעיל את הבוט בעסק שלך.
               </p>
-              <div className="flex flex-col gap-3 text-sm text-gray-400" style={{ textAlign: 'right' }}>
+              <div className="flex flex-col gap-3 text-sm text-gray-400" style={{ textAlign: 'right', alignItems: 'flex-start' }}>
                 {[
                   '💬 "כמה עולה תספורת?"',
                   '📅 "אפשר לקבוע תור לחמישי בצהריים?"',
                   '⏰ "מה השעות שלכם?"',
                 ].map(hint => (
-                  <div key={hint} className="flex items-center justify-end gap-2">
-                    <span style={{ background: 'rgba(0,0,0,0.04)', padding: '6px 12px', borderRadius: 20, fontStyle: 'italic' }}>{hint}</span>
-                  </div>
+                  <span key={hint} style={{ background: 'rgba(0,0,0,0.05)', padding: '7px 14px', borderRadius: 20, fontStyle: 'italic', display: 'inline-block' }}>{hint}</span>
                 ))}
               </div>
             </motion.div>
