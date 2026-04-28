@@ -5,6 +5,7 @@ import {
   Zap, Check, Star, ChevronLeft, X, Menu,
 } from 'lucide-react';
 import { SplineScene } from '@/components/ui/splite';
+import robotWaveImg from '../assets/robot-wave.png';
 
 // ─── Global SVG Glass Filter ───────────────────────────────────────────────────
 function GlassFilter() {
@@ -651,7 +652,7 @@ export default function LandingV2() {
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
               <img
-                src="/robot-wave.png"
+                src={robotWaveImg}
                 alt="טורי - סוכן AI"
                 style={{
                   width: '100%',
