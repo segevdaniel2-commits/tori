@@ -83,6 +83,8 @@ function Counter({ to, suffix = '', duration = 2.2 }) {
 function FeatureCard({ title, desc, delay = 0, accent = '#f97316' }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
+  const [hovered, setHovered] = useState(false);
+
   return (
     <motion.div
       ref={ref}
@@ -90,17 +92,30 @@ function FeatureCard({ title, desc, delay = 0, accent = '#f97316' }) {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -6, boxShadow: '0 20px 56px rgba(0,0,0,0.10), inset 0 1.5px 0 rgba(255,255,255,1)' }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
       className="feature-card relative rounded-3xl p-8 group cursor-default overflow-hidden"
       style={{ ...glassCard, borderRadius: 26 }}
     >
-      {/* top specular accent line */}
-      <div className="absolute top-0 inset-x-6 h-px pointer-events-none"
-        style={{ background: `linear-gradient(90deg, transparent, ${accent}66, ${accent}, ${accent}66, transparent)` }} />
+      {/* animated top accent line */}
+      <motion.div
+        className="absolute top-0 left-1/2 -translate-x-1/2 h-px pointer-events-none"
+        animate={hovered
+          ? { width: '90%', opacity: 1, y: 0 }
+          : { width: '55%', opacity: 0.6, y: 0 }
+        }
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        style={{ background: `linear-gradient(90deg, transparent, ${accent}88, ${accent}, ${accent}88, transparent)` }}
+      />
       {/* shimmer sweep */}
       <div className="feature-shimmer absolute inset-0 pointer-events-none" />
       {/* hover glow from top */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-24 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: `radial-gradient(ellipse at 50% 0%, ${accent}18, transparent 70%)` }} />
+      <motion.div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-24 pointer-events-none"
+        animate={{ opacity: hovered ? 1 : 0 }}
+        transition={{ duration: 0.4 }}
+        style={{ background: `radial-gradient(ellipse at 50% 0%, ${accent}22, transparent 70%)` }}
+      />
 
       <h3 className="text-gray-900 font-bold text-lg mb-3 relative z-10">{title}</h3>
       <p className="text-gray-500 text-sm leading-relaxed relative z-10">{desc}</p>
