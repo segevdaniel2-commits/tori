@@ -579,9 +579,8 @@ export default function LandingV2() {
               width: '100%',
               height: 'auto',
               mixBlendMode: 'multiply',
-              maskImage: 'radial-gradient(ellipse 80% 80% at 40% 50%, black 40%, rgba(0,0,0,0.6) 62%, transparent 80%)',
-              WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 40% 50%, black 40%, rgba(0,0,0,0.6) 62%, transparent 80%)',
-              filter: 'drop-shadow(0 30px 50px rgba(0,0,0,0.2))',
+              maskImage: 'radial-gradient(ellipse 62% 62% at 42% 48%, black 25%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.2) 62%, transparent 72%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 62% 62% at 42% 48%, black 25%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.2) 62%, transparent 72%)',
             }}
           />
         </motion.div>
