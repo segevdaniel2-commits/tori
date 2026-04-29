@@ -183,9 +183,21 @@ function CustomSelect({ value, onChange, options, isNight }) {
 function Section({ title, children }) {
   const isNight = useContext(NightCtx);
   return (
-    <div className={`rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.10]' : 'border-gray-200 shadow-sm'}`}>
+    <div
+      className="rounded-2xl overflow-hidden border"
+      style={{
+        background: isNight ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.82)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        borderColor: isNight ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.7)',
+        boxShadow: isNight ? 'none' : '0 4px 20px rgba(0,0,0,0.06)',
+      }}
+    >
       {title && (
-        <div className={`px-4 py-2.5 border-b ${isNight ? 'bg-white/[0.04] border-white/[0.08]' : 'bg-gray-50 border-gray-200'}`}>
+        <div
+          className="px-4 py-2.5 border-b"
+          style={{ borderColor: isNight ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.5)', background: isNight ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.5)' }}
+        >
           <p className={`text-[11px] font-extrabold uppercase tracking-widest ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>{title}</p>
         </div>
       )}
@@ -2087,7 +2099,16 @@ export default function SettingsPage() {
         <div className="sm:flex gap-5">
           {/* Desktop sidebar */}
           <div className="hidden sm:block w-44 shrink-0">
-            <div className={`border rounded-2xl p-2 flex flex-col ${isNight ? 'bg-white/[0.03] border-white/[0.07]' : 'bg-white border-gray-200 shadow-sm'}`}>
+            <div
+              className="border rounded-2xl p-2 flex flex-col"
+              style={{
+                background: isNight ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.82)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                borderColor: isNight ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.7)',
+                boxShadow: isNight ? 'none' : '0 4px 20px rgba(0,0,0,0.06)',
+              }}
+            >
               <div className="space-y-0.5 flex-1">
                 {TABS.map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)}

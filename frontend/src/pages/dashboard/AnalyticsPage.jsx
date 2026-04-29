@@ -144,7 +144,14 @@ function StatCard({ title, value, subtitle, icon: Icon, color = 'orange', loadin
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm"
+      className="rounded-2xl p-3.5 border shadow-sm"
+      style={{
+        background: isNight ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.82)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        borderColor: isNight ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.7)',
+        boxShadow: isNight ? 'none' : '0 4px 20px rgba(0,0,0,0.06)',
+      }}
     >
       <div className="flex items-center justify-between mb-1.5">
         <span className={`text-xs font-semibold uppercase tracking-wide ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{title}</span>
@@ -448,7 +455,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Daily revenue chart */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
+      <div className="rounded-2xl border shadow-sm p-4 sm:p-5" style={{ background: isNight ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)", borderColor: isNight ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)", boxShadow: isNight ? "none" : "0 4px 20px rgba(0,0,0,0.06)" }}>
         <div className="flex items-center justify-between mb-3">
           <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>הכנסות יומיות</h3>
           <div className="flex gap-1">
@@ -501,7 +508,7 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 items-start">
 
             {/* Appointment status */}
-            <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-2 self-start ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
+            <div className="rounded-2xl border shadow-sm p-4 lg:col-span-2 self-start" style={{ background: isNight ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)", borderColor: isNight ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)", boxShadow: isNight ? "none" : "0 4px 20px rgba(0,0,0,0.06)" }}>
               <div className="flex items-baseline justify-between mb-3">
                 <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>סטטוס תורים</h3>
                 <span className={`text-xs ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{MONTH_NAMES[parseInt(month.split('-')[1]) - 1]} {month.split('-')[0]}</span>
@@ -544,7 +551,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Insights card */}
-            <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-1 self-start space-y-3 ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
+            <div className="rounded-2xl border shadow-sm p-4 lg:col-span-1 self-start space-y-3" style={{ background: isNight ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)", borderColor: isNight ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)", boxShadow: isNight ? "none" : "0 4px 20px rgba(0,0,0,0.06)" }}>
               <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>תובנות</h3>
 
               <div className={`rounded-xl p-3 ${isNight ? 'bg-white/[0.04]' : 'bg-gray-50'}`}>
@@ -575,7 +582,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Peak hours */}
-            <div className={`rounded-2xl border shadow-sm p-4 lg:col-span-2 ${isNight ? 'bg-[#0d1117] border-white/[0.07]' : 'bg-white border-gray-100'}`}>
+            <div className="rounded-2xl border shadow-sm p-4 lg:col-span-2" style={{ background: isNight ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)", borderColor: isNight ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)", boxShadow: isNight ? "none" : "0 4px 20px rgba(0,0,0,0.06)" }}>
               <h3 className={`font-bold text-sm mb-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
               {hoursData.length === 0 ? (
                 <div className={`text-center py-8 text-sm ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>אין נתונים עדיין</div>

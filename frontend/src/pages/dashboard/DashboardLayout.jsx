@@ -110,27 +110,29 @@ export default function DashboardLayout() {
   const theme = isNight
     ? {
         outerBg: '#08080F',
-        surface: '#0d1117',
-        border: 'rgba(255,255,255,0.07)',
-        sidebarBg: '#0d1117',
-        sidebarBorder: 'rgba(34,197,94,0.15)',
+        surface: 'rgba(13,17,23,0.85)',
+        border: 'rgba(255,255,255,0.08)',
+        sidebarBg: 'rgba(13,17,23,0.75)',
+        sidebarBorder: 'rgba(34,197,94,0.18)',
         titleColor: '#ffffff',
         mutedColor: 'rgba(255,255,255,0.45)',
-        hoverBg: 'rgba(255,255,255,0.06)',
+        hoverBg: 'rgba(34,197,94,0.07)',
         activeBg: 'rgba(34,197,94,0.18)',
         activeText: '#22c55e',
+        glass: 'blur(24px) saturate(160%)',
       }
     : {
-        outerBg: '#f0f2f5',
-        surface: '#ffffff',
-        border: '#e2e5ea',
-        sidebarBg: '#ffffff',
-        sidebarBorder: '#e2e5ea',
+        outerBg: 'linear-gradient(135deg, #f0fdf4 0%, #e8f5f0 50%, #f0f2f5 100%)',
+        surface: 'rgba(255,255,255,0.82)',
+        border: 'rgba(255,255,255,0.6)',
+        sidebarBg: 'rgba(255,255,255,0.72)',
+        sidebarBorder: 'rgba(255,255,255,0.55)',
         titleColor: '#111827',
         mutedColor: '#6b7280',
-        hoverBg: '#f0fdf4',
-        activeBg: '#f0fdf4',
+        hoverBg: 'rgba(22,163,74,0.07)',
+        activeBg: 'rgba(22,163,74,0.10)',
         activeText: '#16a34a',
+        glass: 'blur(44px) saturate(220%)',
       };
 
   // Socket
@@ -332,7 +334,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" dir="rtl" data-night={isNight} style={{ background: theme.outerBg }}>
+    <div className="flex h-screen overflow-hidden" dir="rtl" data-night={isNight} style={{ background: theme.outerBg, backgroundAttachment: 'fixed' }}>
 
       {/* Mobile overlay */}
       <AnimatePresence>
@@ -436,7 +438,10 @@ export default function DashboardLayout() {
         style={{
           width: sidebarExpanded ? 240 : 60,
           background: theme.sidebarBg,
+          backdropFilter: theme.glass,
+          WebkitBackdropFilter: theme.glass,
           borderLeft: `1px solid ${theme.sidebarBorder}`,
+          boxShadow: isNight ? 'none' : '2px 0 24px rgba(0,0,0,0.06)',
         }}
         onMouseEnter={() => setSidebarExpanded(true)}
         onMouseLeave={() => setSidebarExpanded(false)}
@@ -449,7 +454,14 @@ export default function DashboardLayout() {
         {/* Topbar */}
         <header
           className="px-4 sm:px-6 py-3 flex items-center justify-between shrink-0 border-b"
-          style={{ background: theme.surface, borderColor: theme.border, minHeight: 60 }}
+          style={{
+            background: theme.surface,
+            backdropFilter: theme.glass,
+            WebkitBackdropFilter: theme.glass,
+            borderColor: theme.border,
+            minHeight: 60,
+            boxShadow: isNight ? 'none' : '0 2px 20px rgba(0,0,0,0.05)',
+          }}
         >
           <div className="flex items-center gap-3">
             <button

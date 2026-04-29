@@ -1448,7 +1448,7 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
   const textareaRef = useRef(null);
   const isEmpty = messages.length === 0;
 
-  const surface  = isNight ? '#0d1117' : '#ffffff';
+  const surface  = isNight ? 'rgba(13,17,23,0.85)' : 'rgba(255,255,255,0.82)';
   const border   = isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb';
   const subtle   = isNight ? 'rgba(255,255,255,0.05)' : '#f3f4f6';
   const muted    = isNight ? 'rgba(255,255,255,0.38)' : '#9ca3af';
