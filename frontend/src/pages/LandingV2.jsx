@@ -365,7 +365,7 @@ export default function LandingV2() {
                     <span className="relative z-10">התחל 30 יום חינם</span>
                   </motion.button>
                 </Link>
-                <motion.a href="#features"
+                <motion.a href="#try-it"
                   whileHover={{ scale: 1.02, boxShadow: '0 12px 36px rgba(0,0,0,0.1), inset 0 1.5px 0 rgba(255,255,255,1)' }}
                   className="w-full lg:w-auto text-gray-700 font-semibold text-base px-8 py-4 rounded-2xl transition-all inline-flex items-center gap-2 justify-center"
                   style={{
