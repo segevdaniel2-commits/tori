@@ -560,12 +560,12 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Testimonials ──────────────────────────────────────────────────── */}
-      <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6 overflow-hidden" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative' }}>
+      <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative', overflow: 'visible' }}>
 
         {/* barber robot — breaks out from right edge */}
         <motion.div
           className="hidden lg:block absolute pointer-events-none"
-          style={{ bottom: -60, right: -60, width: 480, zIndex: 0 }}
+          style={{ bottom: -40, right: -40, width: 520, zIndex: 0 }}
           initial={{ opacity: 0, x: 60, rotate: -45 }}
           whileInView={{ opacity: 1, x: 0, rotate: -45 }}
           viewport={{ once: true }}
