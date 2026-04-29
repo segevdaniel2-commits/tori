@@ -136,7 +136,7 @@ function StepDots({ step, total }) {
           key={i}
           animate={{ width: i + 1 === step ? 20 : 8, opacity: i + 1 <= step ? 1 : 0.25 }}
           transition={{ duration: 0.3 }}
-          className="h-1.5 rounded-full bg-violet-500"
+          className="h-1.5 rounded-full bg-[#16a34a]"
         />
       ))}
     </div>
@@ -204,15 +204,15 @@ function AddressInput({ value, onChange }) {
         {open && (
           <motion.div
             initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-            className="absolute z-50 w-full mt-1 bg-[#16162a] border border-white/10 rounded-xl shadow-2xl overflow-hidden"
+            className="absolute z-50 w-full mt-1 bg-white/95 border border-gray-100 rounded-xl shadow-2xl overflow-hidden"
           >
             {suggestions.map(item => (
               <button
                 key={item}
                 onMouseDown={() => pick(item)}
-                className="w-full text-right px-4 py-3 text-sm text-gray-200 hover:bg-white/8 transition-colors flex items-center gap-2"
+                className="w-full text-right px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
-                <span className="text-violet-400 text-xs shrink-0">{mode === 'city' ? '🏙️' : '📍'}</span>
+                <span className="text-[#16a34a] text-xs shrink-0">{mode === 'city' ? '🏙️' : '📍'}</span>
                 {item}
               </button>
             ))}
@@ -266,7 +266,7 @@ function BusinessNameInput({ value, onChange, onPlaceSelect }) {
 }
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
-const inputCls = "w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-violet-500 transition-all text-sm";
+const inputCls = "w-full px-4 py-3 rounded-xl bg-white/60 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#16a34a]/60 focus:bg-white transition-all text-sm shadow-sm";
 
 // ─── Legal modal ──────────────────────────────────────────────────────────────
 function LegalModal({ type, onClose }) {
@@ -283,57 +283,57 @@ function LegalModal({ type, onClose }) {
             initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={e => e.stopPropagation()}
-            className="bg-[#13131f] border border-white/10 rounded-3xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl"
+            className="rounded-3xl" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(44px)", WebkitBackdropFilter: "blur(44px)", border: "1px solid rgba(255,255,255,0.6)", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }} w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07] shrink-0">
-              <h3 className="text-white font-black text-lg">{isTerms ? 'תנאי שימוש' : 'מדיניות פרטיות'}</h3>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 text-gray-400 hover:text-white flex items-center justify-center transition-all">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+              <h3 className="text-gray-900 font-black text-lg">{isTerms ? 'תנאי שימוש' : 'מדיניות פרטיות'}</h3>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 flex items-center justify-center transition-all">
                 <X size={16} />
               </button>
             </div>
             {/* Content */}
-            <div className="overflow-y-auto px-6 py-5 text-sm text-gray-400 leading-relaxed space-y-4">
+            <div className="overflow-y-auto px-6 py-5 text-sm text-gray-600 leading-relaxed space-y-4">
               {isTerms ? (
                 <>
-                  <p><strong className="text-gray-200">1. קבלת התנאים</strong><br />
+                  <p><strong className="text-gray-900">1. קבלת התנאים</strong><br />
                   שימוש בשירות Tori מהווה הסכמה לתנאים אלו. אם אינך מסכים, אנא הפסק את השימוש.</p>
-                  <p><strong className="text-gray-200">2. השירות</strong><br />
+                  <p><strong className="text-gray-900">2. השירות</strong><br />
                   Tori מספקת מערכת ניהול תורים חכמה מבוססת WhatsApp לעסקים. אנו שומרים על הזכות לשנות, להשעות או להפסיק כל חלק מהשירות בכל עת.</p>
-                  <p><strong className="text-gray-200">3. חשבון משתמש</strong><br />
+                  <p><strong className="text-gray-900">3. חשבון משתמש</strong><br />
                   אתה אחראי לשמירה על סודיות פרטי הגישה לחשבונך ולכל הפעילות המתרחשת תחתיו.</p>
-                  <p><strong className="text-gray-200">4. תשלום</strong><br />
+                  <p><strong className="text-gray-900">4. תשלום</strong><br />
                   השירות כולל תקופת ניסיון חינמית של 30 יום. לאחר מכן יחויב חשבונך בהתאם לתוכנית שנבחרה. ניתן לבטל בכל עת.</p>
-                  <p><strong className="text-gray-200">5. שימוש הוגן</strong><br />
+                  <p><strong className="text-gray-900">5. שימוש הוגן</strong><br />
                   אין להשתמש בשירות לצורך שליחת ספאם, הפרת חוקי פרטיות, או כל שימוש שאינו חוקי.</p>
-                  <p><strong className="text-gray-200">6. אחריות</strong><br />
+                  <p><strong className="text-gray-900">6. אחריות</strong><br />
                   Tori אינה אחראית לנזקים עקיפים הנובעים משימוש בשירות. השירות ניתן "כמות שהוא".</p>
-                  <p><strong className="text-gray-200">7. שינויים בתנאים</strong><br />
+                  <p><strong className="text-gray-900">7. שינויים בתנאים</strong><br />
                   נודיע על שינויים מהותיים בתנאים באמצעות דוא"ל. המשך שימוש לאחר ההודעה מהווה הסכמה לתנאים החדשים.</p>
                 </>
               ) : (
                 <>
-                  <p><strong className="text-gray-200">1. מידע שאנו אוספים</strong><br />
+                  <p><strong className="text-gray-900">1. מידע שאנו אוספים</strong><br />
                   אנו אוספים מידע שאתה מספק (שם עסק, כתובת, שירותים) ומידע על השימוש בשירות (תורים, לקוחות, שעות).</p>
-                  <p><strong className="text-gray-200">2. שימוש במידע</strong><br />
+                  <p><strong className="text-gray-900">2. שימוש במידע</strong><br />
                   המידע משמש להפעלת השירות, שיפורו ושליחת עדכונים רלוונטיים. לא נמכור את המידע שלך לצדדים שלישיים.</p>
-                  <p><strong className="text-gray-200">3. שמירת מידע</strong><br />
+                  <p><strong className="text-gray-900">3. שמירת מידע</strong><br />
                   המידע מאוחסן בשרתים מאובטחים בישראל. נשמור על המידע כל עוד חשבונך פעיל.</p>
-                  <p><strong className="text-gray-200">4. שיתוף מידע</strong><br />
+                  <p><strong className="text-gray-900">4. שיתוף מידע</strong><br />
                   המידע משותף רק עם ספקי שירות הכרחיים (אחסון, שליחת הודעות) ובהתאם לדרישות החוק.</p>
-                  <p><strong className="text-gray-200">5. WhatsApp</strong><br />
+                  <p><strong className="text-gray-900">5. WhatsApp</strong><br />
                   השירות משתמש ב-WhatsApp Business API. שיחות עם לקוחותיך עוברות דרך שרתי Meta בהתאם למדיניות הפרטיות שלהם.</p>
-                  <p><strong className="text-gray-200">6. זכויותיך</strong><br />
+                  <p><strong className="text-gray-900">6. זכויותיך</strong><br />
                   יש לך הזכות לעיין, לתקן ולמחוק את המידע שלך. לפנייה: privacy@tori.ai</p>
-                  <p><strong className="text-gray-200">7. עוגיות</strong><br />
+                  <p><strong className="text-gray-900">7. עוגיות</strong><br />
                   אנו משתמשים בעוגיות לצורך שמירת הגדרות וניתוח שימוש. ניתן להגדיר את הדפדפן לחסום עוגיות.</p>
                 </>
               )}
             </div>
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-white/[0.07] shrink-0">
+            <div className="px-6 py-4 border-t border-gray-100 shrink-0">
               <button onClick={onClose}
-                className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3 rounded-xl text-sm transition-colors">
+                className="w-full bg-[#16a34a] hover:bg-[#22c55e] text-white font-bold py-3 rounded-xl text-sm transition-colors">
                 הבנתי, סגור
               </button>
             </div>
@@ -353,7 +353,7 @@ function Stepper({ label, onDecrement, onIncrement }) {
         onClick={onDecrement}
         className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 text-white flex items-center justify-center transition-all font-bold text-lg leading-none"
       >-</button>
-      <span className="text-gray-300 text-xs font-medium text-center" style={{ minWidth: 52 }}>{label}</span>
+      <span className="text-gray-600 text-xs font-medium text-center" style={{ minWidth: 52 }}>{label}</span>
       <button
         type="button"
         onClick={onIncrement}
@@ -375,7 +375,7 @@ function Toggle({ value, onChange }) {
   return (
     <button
       onClick={() => onChange(!value)}
-      className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${value ? 'bg-violet-600' : 'bg-gray-700'}`}
+      className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${value ? 'bg-[#16a34a]' : 'bg-gray-300'}`}
     >
       <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${value ? 'right-0.5' : 'left-0.5'}`} />
     </button>
@@ -428,16 +428,16 @@ function SuccessScreen({ onDone, businessType }) {
 
   if (phase === 'done') {
     return (
-      <div className="min-h-screen bg-[#08080F] flex items-center justify-center px-4" dir="rtl">
+      <div className="min-h-screen flex items-center justify-center px-4" dir="rtl" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #e8f5f0 50%, #f0f2f5 100%)" }}>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-sm w-full text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
             <Check size={36} className="text-white" />
           </div>
           <h2 className="text-2xl font-black text-white mb-3">
             {importResult?.imported > 0 ? `${importResult.imported} תורים ייובאו!` : 'ייבוא הושלם'}
           </h2>
           <p className="text-gray-400 mb-8 text-sm">{importResult?.message || 'כל התורים זמינים ביומן שלך.'}</p>
-          <button onClick={onDone} className="w-full bg-gradient-to-r from-violet-600 to-violet-500 text-white font-bold px-8 py-4 rounded-xl shadow-lg">
+          <button onClick={onDone} className="w-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white font-bold px-8 py-4 rounded-xl shadow-lg">
             כניסה לדשבורד
           </button>
         </motion.div>
@@ -447,11 +447,11 @@ function SuccessScreen({ onDone, businessType }) {
 
   if (phase === 'gcal') {
     return (
-      <div className="min-h-screen bg-[#08080F] flex items-center justify-center px-4" dir="rtl">
+      <div className="min-h-screen flex items-center justify-center px-4" dir="rtl" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #e8f5f0 50%, #f0f2f5 100%)" }}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-sm w-full">
           <div className="text-center mb-6">
             <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
-              <Calendar size={24} className="text-blue-400" />
+              <Calendar size={24} className="text-[#16a34a]" />
             </div>
             <h2 className="text-xl font-black text-white mb-1">ייבוא מגוגל קלנדר</h2>
             <p className="text-gray-400 text-sm">הבוט יייבא את כל התורים הקיימים</p>
@@ -459,12 +459,12 @@ function SuccessScreen({ onDone, businessType }) {
           <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5 mb-4">
             <p className="text-gray-300 font-semibold text-sm mb-3">איך מקבלים את הקישור?</p>
             <ol className="text-gray-400 text-xs space-y-1.5 list-decimal list-inside leading-relaxed">
-              <li>פתח <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Google Calendar</a> במחשב</li>
+              <li>פתח <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" className="text-[#16a34a] underline">Google Calendar</a> במחשב</li>
               <li>⚙️ הגדרות ← שם היומן ← "שילוב יומן"</li>
               <li>העתק "כתובת ציבורית בפורמט iCal"</li>
             </ol>
             <a href="https://calendar.google.com/calendar/r/settings" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 mt-3 text-blue-400 text-xs hover:underline">
+              className="inline-flex items-center gap-1 mt-3 text-[#16a34a] text-xs hover:underline">
               <ExternalLink size={11} /> פתח הגדרות גוגל קלנדר
             </a>
           </div>
@@ -480,7 +480,7 @@ function SuccessScreen({ onDone, businessType }) {
               חזרה
             </button>
             <button onClick={handleImport} disabled={importing || !icalUrl.trim()}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
+              className="flex-1 bg-[#16a34a] hover:bg-[#15803d] disabled:opacity-50 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
               {importing ? <Loader2 size={15} className="animate-spin" /> : <Calendar size={15} />}
               {importing ? 'מייבא...' : 'ייבא תורים'}
             </button>
@@ -495,7 +495,7 @@ function SuccessScreen({ onDone, businessType }) {
 
   // phase === 'success'
   return (
-    <div className="min-h-screen bg-[#08080F] flex items-center justify-center px-4" dir="rtl">
+    <div className="min-h-screen flex items-center justify-center px-4" dir="rtl" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #e8f5f0 50%, #f0f2f5 100%)" }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.93 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -507,12 +507,12 @@ function SuccessScreen({ onDone, businessType }) {
           <motion.div
             initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ delay: 0.1, type: 'spring', stiffness: 300 }}
-            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-[#f43f5e]/30"
-            style={{ background: 'linear-gradient(135deg,#f97316,#f43f5e,#06b6d4)' }}
+            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-[#16a34a]/30"
+            style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a,#065f46)' }}
           >
             <Check size={36} className="text-white" />
           </motion.div>
-          <h1 className="text-3xl font-black text-white mb-2">העסק שלך מוכן!</h1>
+          <h1 className="text-3xl font-black text-gray-900 mb-2">העסק שלך מוכן!</h1>
           <p className="text-gray-400 text-sm">ברוך הבא לטורי. הכל מוגדר ומוכן.</p>
         </div>
 
@@ -520,12 +520,12 @@ function SuccessScreen({ onDone, businessType }) {
         {showTerms && (
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="border border-white/[0.08] rounded-2xl bg-white/[0.03] p-6 mb-4"
+            className="rounded-2xl p-6 border border-white/60" style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)" }} mb-4"
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 text-lg">📋</div>
+              <div className="w-10 h-10 rounded-xl bg-[#22c55e]/10 border border-[#16a34a]/20 flex items-center justify-center shrink-0 text-lg">📋</div>
               <div>
-                <p className="text-white font-bold text-sm">תקנון העסק שלך</p>
+                <p className="text-gray-900 font-bold text-sm">תקנון העסק שלך</p>
                 <p className="text-gray-500 text-xs">יישלח ללקוחות בהודעה הראשונה בוואטסאפ</p>
               </div>
             </div>
@@ -539,7 +539,7 @@ function SuccessScreen({ onDone, businessType }) {
             <button
               onClick={handleSaveTerms}
               disabled={termsSaving}
-              className="mt-3 w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm transition-colors disabled:opacity-50"
+              className="mt-3 w-full py-2.5 rounded-xl bg-[#16a34a] hover:bg-[#22c55e] text-white font-bold text-sm transition-colors disabled:opacity-50"
             >
               {termsSaving ? 'שומר...' : termsText.trim() ? 'שמור תקנון' : 'דלג'}
             </button>
@@ -551,19 +551,19 @@ function SuccessScreen({ onDone, businessType }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="border border-white/[0.08] rounded-2xl bg-white/[0.03] p-6 mb-4"
+          className="rounded-2xl p-6 border border-white/60" style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)" }} mb-4"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-11 h-11 rounded-xl bg-[#06b6d4]/10 border border-[#06b6d4]/20 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-[#16a34a]/10 border border-[#16a34a]/20 flex items-center justify-center shrink-0">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="4" width="18" height="17" rx="2" stroke="#06b6d4" strokeWidth="1.5"/>
-                <path d="M3 9h18" stroke="#06b6d4" strokeWidth="1.5"/>
-                <path d="M8 2v4M16 2v4" stroke="#06b6d4" strokeWidth="1.5" strokeLinecap="round"/>
-                <rect x="7" y="13" width="4" height="3" rx="0.5" fill="#06b6d4" opacity="0.7"/>
+                <rect x="3" y="4" width="18" height="17" rx="2" stroke="#16a34a" strokeWidth="1.5"/>
+                <path d="M3 9h18" stroke="#16a34a" strokeWidth="1.5"/>
+                <path d="M8 2v4M16 2v4" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round"/>
+                <rect x="7" y="13" width="4" height="3" rx="0.5" fill="#16a34a" opacity="0.7"/>
               </svg>
             </div>
             <div>
-              <p className="text-white font-bold text-base">בואו נעביר את הנתונים בקלות</p>
+              <p className="text-gray-900 font-bold text-base">בואו נעביר את הנתונים בקלות</p>
               <p className="text-gray-500 text-sm">ייבא תורים ולקוחות מ-Google Calendar ישירות לטורי</p>
             </div>
           </div>
@@ -575,8 +575,8 @@ function SuccessScreen({ onDone, businessType }) {
               'מ-3 חודשים אחורה עד חודש קדימה',
             ].map((item, i) => (
               <li key={i} className="flex items-center gap-2.5 text-sm text-gray-400">
-                <div className="w-4 h-4 rounded-full bg-[#06b6d4]/15 flex items-center justify-center shrink-0">
-                  <Check size={10} className="text-[#06b6d4]" />
+                <div className="w-4 h-4 rounded-full bg-[#16a34a]/15 flex items-center justify-center shrink-0">
+                  <Check size={10} className="text-[#16a34a]" />
                 </div>
                 {item}
               </li>
@@ -586,7 +586,7 @@ function SuccessScreen({ onDone, businessType }) {
           <button
             onClick={handleGoogleConnect}
             disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-semibold text-sm transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border border-gray-200 bg-white/70 hover:bg-white/10 text-white font-semibold text-sm transition-all disabled:opacity-50"
           >
             {googleLoading ? <Loader2 size={16} className="animate-spin" /> : (
               <svg width="18" height="18" viewBox="0 0 24 24">
@@ -605,7 +605,7 @@ function SuccessScreen({ onDone, businessType }) {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
           onClick={onDone}
           className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all"
-          style={{ background: 'linear-gradient(to right,#f97316,#f43f5e,#06b6d4)' }}
+          style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a,#065f46)' }}
         >
           כניסה לדשבורד
         </motion.button>
@@ -726,12 +726,12 @@ export default function OnboardingFlow() {
 
   return (
     <MotionConfig reducedMotion={isMobile ? 'always' : 'never'}>
-    <div className="min-h-screen bg-[#08080F] flex flex-col items-center justify-center px-4 py-6 md:py-10" dir="rtl">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6 md:py-10" dir="rtl" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #e8f5f0 50%, #f0f2f5 100%)" }}>
       {/* Ambient orbs — hidden on mobile for performance */}
       {!isMobile && (
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 right-1/3 w-80 h-80 bg-violet-600/8 rounded-full blur-[100px]" />
-          <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-green-500/5 rounded-full blur-[90px]" />
+          <div className="absolute top-1/4 right-1/3 w-80 h-80 bg-[#16a34a]/8 rounded-full blur-[100px]" />
+          <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-[#16a34a]/8 rounded-full blur-[90px]" />
         </div>
       )}
 
@@ -740,14 +740,14 @@ export default function OnboardingFlow() {
         <div className="text-center mb-6">
           <Link to="/v2"><ToriLogo /></Link>
           <StepDots step={step} total={TOTAL_STEPS} />
-          <p className="text-gray-600 text-xs mt-2">{STEP_LABELS[step - 1]}</p>
+          <p className="text-gray-400 text-xs mt-2">{STEP_LABELS[step - 1]}</p>
         </div>
 
         {/* Card — no backdrop-blur on mobile (very slow) */}
-        <div className="border border-white/[0.07] rounded-3xl p-5 md:p-8 shadow-xl" style={{ background: '#0d1117' }}>
+        <div className="rounded-3xl p-5 md:p-8 shadow-xl" style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(44px) saturate(220%)", WebkitBackdropFilter: "blur(44px) saturate(220%)", border: "1px solid rgba(255,255,255,0.6)", boxShadow: "0 8px 48px rgba(0,0,0,0.12)" }}>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/25 text-red-400 text-sm px-4 py-3 rounded-xl mb-5">
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-5">
               {error}
             </div>
           )}
@@ -757,7 +757,7 @@ export default function OnboardingFlow() {
             {/* ── Step 1: Business type ─────────────────────────────────── */}
             {step === 1 && (
               <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <h2 className="text-2xl font-black text-white mb-1 text-center">מה סוג העסק שלך?</h2>
+                <h2 className="text-2xl font-black text-gray-900 mb-1 text-center">מה סוג העסק שלך?</h2>
                 <p className="text-gray-500 text-sm text-center mb-6">בחר כדי שנכין לך שירותים מותאמים</p>
                 <div className="grid grid-cols-2 gap-2.5">
                   {BUSINESS_TYPES.map(bt => (
@@ -771,16 +771,16 @@ export default function OnboardingFlow() {
                       }}
                       className={`px-4 py-3 rounded-2xl border text-right transition-all duration-200 flex items-center justify-between gap-2 ${
                         businessType === bt.id
-                          ? 'bg-violet-600/20 border-violet-500/60 shadow-lg shadow-violet-500/10'
+                          ? 'bg-[#16a34a]/10 border-[#16a34a]/50 shadow-lg shadow-[#16a34a]/10'
                           : 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.07]'
                       }`}
                     >
                       <div>
-                        <div className={`text-sm font-bold ${businessType === bt.id ? 'text-white' : 'text-gray-200'}`}>{bt.label}</div>
+                        <div className={`text-sm font-bold ${businessType === bt.id ? "text-gray-900" : "text-gray-700"}`}>{bt.label}</div>
                         <div className="text-gray-500 text-xs mt-0.5 leading-tight">{bt.desc}</div>
                       </div>
                       {businessType === bt.id && (
-                        <div className="w-4 h-4 rounded-full bg-violet-500 flex items-center justify-center shrink-0">
+                        <div className="w-4 h-4 rounded-full bg-[#22c55e] flex items-center justify-center shrink-0">
                           <Check size={10} className="text-white" />
                         </div>
                       )}
@@ -794,11 +794,11 @@ export default function OnboardingFlow() {
             {step === 2 && (
               <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-black text-white mb-1">פרטי העסק</h2>
+                  <h2 className="text-2xl font-black text-gray-900 mb-1">פרטי העסק</h2>
                   <p className="text-gray-500 text-sm mb-5">הלקוחות יראו את השם הזה בשיחת הוואטסאפ</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">שם העסק *</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1.5">שם העסק *</label>
                   <BusinessNameInput
                     value={businessName}
                     onChange={setBusinessName}
@@ -806,11 +806,11 @@ export default function OnboardingFlow() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">כתובת <span className="text-gray-600">(אופציונלי)</span></label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1.5">כתובת <span className="text-gray-600">(אופציונלי)</span></label>
                   <AddressInput value={address} onChange={setAddress} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">טלפון עסק <span className="text-gray-600">(אופציונלי)</span></label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1.5">טלפון עסק <span className="text-gray-600">(אופציונלי)</span></label>
                   <input value={phone} onChange={e => setPhone(e.target.value)}
                     className={inputCls} placeholder="050-1234567" dir="ltr" type="tel" />
                 </div>
@@ -820,17 +820,17 @@ export default function OnboardingFlow() {
             {/* ── Step 3: Services ──────────────────────────────────────── */}
             {step === 3 && (
               <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <h2 className="text-2xl font-black text-white mb-1">השירותים שלך</h2>
+                <h2 className="text-2xl font-black text-gray-900 mb-1">השירותים שלך</h2>
                 <p className="text-gray-500 text-sm mb-5">כל השירותים נבחרו — הסר מה שאינך מציע ועדכן מחירים</p>
 
                 {/* Service list - all in one line style */}
                 <div className="space-y-2">
                   {/* Select-all row — same style as service rows */}
-                  <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] px-3 py-2.5 bg-white/[0.02]">
+                  <div className="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-2.5 bg-white/60">
                     <button
                       onClick={toggleAll}
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0 ${
-                        allSelected ? 'bg-violet-600 border-violet-600' : 'border-gray-600 hover:border-violet-500'
+                        allSelected ? 'bg-[#16a34a] border-[#16a34a]' : 'border-gray-300 hover:border-[#16a34a]'
                       }`}
                     >
                       {allSelected && <Check size={11} className="text-white" />}
@@ -842,14 +842,14 @@ export default function OnboardingFlow() {
                     const sel = selectedServices.find(s => s.name === svc.name);
                     return (
                       <div key={svc.name} className={`rounded-xl border px-3 py-2.5 transition-all ${
-                        sel ? 'border-violet-500/30 bg-violet-600/5' : 'border-white/[0.06] bg-white/[0.02] opacity-50'
+                        sel ? 'border-[#16a34a]/30 bg-[#16a34a]/5' : 'border-gray-200 bg-white/40 opacity-50'
                       }`}>
                         {/* Top row: checkbox + name + steppers (desktop) */}
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => toggleService(svc)}
                             className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all shrink-0 ${
-                              sel ? 'bg-violet-600 border-violet-600' : 'border-gray-600 hover:border-violet-500'
+                              sel ? 'bg-[#16a34a] border-[#16a34a]' : 'border-gray-300 hover:border-[#16a34a]'
                             }`}
                           >
                             {sel && <Check size={11} className="text-white" />}
@@ -891,14 +891,14 @@ export default function OnboardingFlow() {
                   })}
                 </div>
 
-                <p className="text-gray-600 text-xs mt-3">ניתן לשנות ולהוסיף שירותים בכל עת מהדשבורד</p>
+                <p className="text-gray-400 text-xs mt-3">ניתן לשנות ולהוסיף שירותים בכל עת מהדשבורד</p>
               </motion.div>
             )}
 
             {/* ── Step 4: Settings (staff + hours + buffer) ─────────────── */}
             {step === 4 && (
               <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <h2 className="text-2xl font-black text-white mb-1">הגדרות</h2>
+                <h2 className="text-2xl font-black text-gray-900 mb-1">הגדרות</h2>
                 <p className="text-gray-500 text-sm mb-6">כל ההגדרות ניתנות לשינוי בכל עת</p>
 
                 {/* Staff count */}
@@ -912,23 +912,23 @@ export default function OnboardingFlow() {
                       <button key={v} onClick={() => setStaffCount(v)}
                         className={`py-4 rounded-2xl font-bold text-center transition-all ${
                           (v === 1 && staffCount === 1) || (v === 2 && staffCount >= 2)
-                            ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
-                            : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/8'
+                            ? 'bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white shadow-lg shadow-[#16a34a]/20'
+                            : 'bg-white/70 border border-gray-200 text-gray-600 hover:bg-white'
                         }`}
                       >
-                        <div className="text-sm font-black">{label}</div>
+                        <div className="text-sm font-black text-inherit">{label}</div>
                         <div className="text-xs opacity-70 mt-0.5">{plan}</div>
                       </button>
                     ))}
                   </div>
-                  <p className="text-gray-600 text-xs mt-2 text-center">30 יום ניסיון חינמי לכל התוכניות</p>
+                  <p className="text-gray-400 text-xs mt-2 text-center">30 יום ניסיון חינמי לכל התוכניות</p>
                 </div>
 
                 {/* Hours */}
-                <div className="border-t border-white/5 pt-5 mb-5">
+                <div className="border-t border-gray-100 pt-5 mb-5">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-sm font-semibold text-gray-300">שעות פעילות</p>
-                    <button onClick={() => setHours(DEFAULT_HOURS)} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                    <button onClick={() => setHours(DEFAULT_HOURS)} className="text-xs text-[#16a34a] hover:text-[#15803d] transition-colors">
                       אפס לברירת מחדל
                     </button>
                   </div>
@@ -937,11 +937,11 @@ export default function OnboardingFlow() {
                     {(() => {
                       const h = hours[0];
                       return (
-                        <div className={`p-3 rounded-xl border ${h.is_open ? 'border-white/10 bg-white/5' : 'border-white/5 opacity-50'}`}>
+                        <div className={`p-3 rounded-xl border ${h.is_open ? 'border-gray-200 bg-white/70' : 'border-gray-100 opacity-50'}`}>
                           <div className="flex items-center gap-3">
                             <Toggle value={h.is_open} onChange={v => [0,1,2,3,4].forEach(i => setDayOpen(i, v))} />
-                            <span className="text-white text-sm font-medium">א׳–ה׳</span>
-                            {!h.is_open && <span className="text-gray-600 text-sm mr-auto">סגור</span>}
+                            <span className="text-gray-800 text-sm font-medium">א׳–ה׳</span>
+                            {!h.is_open && <span className="text-gray-400 text-sm mr-auto"">סגור</span>}
                           </div>
                           {h.is_open && (
                             <div className="flex items-center gap-2 mt-2 pr-13">
@@ -950,7 +950,7 @@ export default function OnboardingFlow() {
                                 onDecrement={() => stepWeekdayTime('open_time', -30)}
                                 onIncrement={() => stepWeekdayTime('open_time', +30)}
                               />
-                              <span className="text-gray-600 text-xs">–</span>
+                              <span className="text-gray-400 text-xs">–</span>
                               <Stepper
                                 label={h.close_time}
                                 onDecrement={() => stepWeekdayTime('close_time', -30)}
@@ -966,11 +966,11 @@ export default function OnboardingFlow() {
                     {(() => {
                       const h = hours[5];
                       return (
-                        <div className={`p-3 rounded-xl border ${h.is_open ? 'border-white/10 bg-white/5' : 'border-white/5 opacity-50'}`}>
+                        <div className={`p-3 rounded-xl border ${h.is_open ? 'border-gray-200 bg-white/70' : 'border-gray-100 opacity-50'}`}>
                           <div className="flex items-center gap-3">
                             <Toggle value={h.is_open} onChange={v => setDayOpen(5, v)} />
-                            <span className="text-white text-sm font-medium">שישי</span>
-                            {!h.is_open && <span className="text-gray-600 text-sm mr-auto">סגור</span>}
+                            <span className="text-gray-800 text-sm font-medium">שישי</span>
+                            {!h.is_open && <span className="text-gray-400 text-sm mr-auto"">סגור</span>}
                           </div>
                           {h.is_open && (
                             <div className="flex items-center gap-2 mt-2 pr-13">
@@ -979,7 +979,7 @@ export default function OnboardingFlow() {
                                 onDecrement={() => stepDayTime(5, 'open_time', -30)}
                                 onIncrement={() => stepDayTime(5, 'open_time', +30)}
                               />
-                              <span className="text-gray-600 text-xs">–</span>
+                              <span className="text-gray-400 text-xs">–</span>
                               <Stepper
                                 label={h.close_time}
                                 onDecrement={() => stepDayTime(5, 'close_time', -30)}
@@ -992,25 +992,25 @@ export default function OnboardingFlow() {
                     })()}
 
                     {/* Saturday — fixed closed */}
-                    <div className="flex items-center gap-3 p-3 rounded-xl border border-white/5 opacity-40">
-                      <div className="w-10 h-6 rounded-full bg-gray-700 relative shrink-0">
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 opacity-40">
+                      <div className="w-10 h-6 rounded-full bg-gray-300 relative shrink-0">
                         <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow" />
                       </div>
                       <span className="text-gray-400 text-sm font-medium w-24 shrink-0">שבת</span>
-                      <span className="text-gray-600 text-sm mr-auto">סגור</span>
+                      <span className="text-gray-400 text-sm mr-auto"">סגור</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Buffer */}
-                <div className="border-t border-white/5 pt-5">
+                <div className="border-t border-gray-100 pt-5">
                   <p className="text-sm font-semibold text-gray-300 mb-3">הפסקה בין תורים</p>
                   <Stepper
                     label={bufferMinutes === 0 ? 'ללא' : `${bufferMinutes} דק׳`}
                     onDecrement={() => setBufferMinutes(m => Math.max(0, m - 5))}
                     onIncrement={() => setBufferMinutes(m => Math.min(60, m + 5))}
                   />
-                  <p className="text-gray-600 text-xs mt-3">זמן ניקיון והכנה בין תור לתור</p>
+                  <p className="text-gray-400 text-xs mt-3">זמן ניקיון והכנה בין תור לתור</p>
                 </div>
               </motion.div>
             )}
@@ -1018,21 +1018,21 @@ export default function OnboardingFlow() {
             {/* ── Step 5: Account ───────────────────────────────────────── */}
             {step === 5 && (
               <motion.div key="s5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <h2 className="text-2xl font-black text-white mb-1">פרטי כניסה</h2>
+                <h2 className="text-2xl font-black text-gray-900 mb-1">פרטי כניסה</h2>
                 <p className="text-gray-500 text-sm mb-6">אלה הפרטים שלך לכניסה לדשבורד</p>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1.5">שמך המלא *</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1.5">שמך המלא *</label>
                     <input value={ownerName} onChange={e => setOwnerName(e.target.value)}
                       className={inputCls} placeholder="אבי כהן" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1.5">אימייל *</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1.5">אימייל *</label>
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                       className={inputCls} placeholder="avi@example.com" dir="ltr" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1.5">סיסמה * <span className="text-gray-600 font-normal">(לפחות 8 תווים)</span></label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1.5">סיסמה * <span className="text-gray-600 font-normal">(לפחות 8 תווים)</span></label>
                     <div className="relative">
                       <input type={showPass ? 'text' : 'password'} value={password}
                         onChange={e => setPassword(e.target.value)}
@@ -1045,7 +1045,7 @@ export default function OnboardingFlow() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1.5">אישור סיסמה *</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1.5">אישור סיסמה *</label>
                     <div className="relative">
                       <input type={showConfirmPass ? 'text' : 'password'} value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
@@ -1067,15 +1067,15 @@ export default function OnboardingFlow() {
                   <div className="flex items-start gap-3 pt-1">
                     <button type="button" onClick={() => setTermsAccepted(!termsAccepted)}
                       className={`mt-0.5 w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-all ${
-                        termsAccepted ? 'bg-violet-600 border-violet-600' : 'border-gray-600 hover:border-violet-500'
+                        termsAccepted ? 'bg-[#16a34a] border-[#16a34a]' : 'border-gray-300 hover:border-[#16a34a]'
                       }`}>
                       {termsAccepted && <Check size={11} className="text-white" />}
                     </button>
-                    <span className="text-gray-400 text-sm leading-relaxed">
+                    <span className="text-gray-600 text-sm leading-relaxed">
                       אני מסכים ל
-                      <button type="button" onClick={() => setLegalModal('terms')} className="text-violet-400 hover:underline mx-1">תנאי השימוש</button>
+                      <button type="button" onClick={() => setLegalModal('terms')} className="text-[#16a34a] hover:underline mx-1">תנאי השימוש</button>
                       ו
-                      <button type="button" onClick={() => setLegalModal('privacy')} className="text-violet-400 hover:underline mx-1">מדיניות הפרטיות</button>
+                      <button type="button" onClick={() => setLegalModal('privacy')} className="text-[#16a34a] hover:underline mx-1">מדיניות הפרטיות</button>
                       של Tori
                     </span>
                   </div>
@@ -1086,22 +1086,22 @@ export default function OnboardingFlow() {
           </AnimatePresence>
 
           {/* Navigation */}
-          <div className="flex justify-between items-center mt-7 pt-5 border-t border-white/5">
+          <div className="flex justify-between items-center mt-7 pt-5 border-t border-gray-100">
             <button onClick={prev}
-              className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors font-medium text-sm py-2 px-1">
+              className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 transition-colors font-medium text-sm py-2 px-1">
               <ChevronRight size={17} />
               {step === 1 ? 'חזרה לאתר' : 'חזרה'}
             </button>
 
             {step < TOTAL_STEPS ? (
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={next}
-                className="bg-gradient-to-r from-violet-600 to-violet-500 text-white font-bold px-7 py-3 rounded-xl shadow-lg shadow-violet-500/20 text-sm">
+                className="bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white font-bold px-7 py-3 rounded-xl shadow-lg shadow-[#16a34a]/20 text-sm">
                 המשך
               </motion.button>
             ) : (
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={handleSubmit} disabled={loading}
-                className="bg-gradient-to-r from-violet-600 to-green-500 text-white font-bold px-7 py-3 rounded-xl shadow-lg flex items-center gap-2 disabled:opacity-50 text-sm">
+                className="bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white font-bold px-7 py-3 rounded-xl shadow-lg flex items-center gap-2 disabled:opacity-50 text-sm">
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
                 {loading ? 'יוצר חשבון...' : 'צור חשבון חינם'}
               </motion.button>
@@ -1110,9 +1110,9 @@ export default function OnboardingFlow() {
         </div>
 
         {/* Already have account */}
-        <p className="text-center text-gray-600 text-sm mt-5">
+        <p className="text-center text-gray-500 text-sm mt-5">
           יש לך חשבון?{' '}
-          <Link to="/login" className="text-violet-400 hover:text-violet-300 transition-colors font-medium">
+          <Link to="/login" className="text-[#16a34a] hover:text-[#15803d] transition-colors font-medium">
             כניסה
           </Link>
         </p>
