@@ -1,39 +1,37 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Loader2, Zap, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../store/useStore';
 import api from '../hooks/useApi';
 
-function ToriLogo() {
-  const id = 'login-logo-grad';
+function useNightMode() {
+  const [isNight, setIsNight] = useState(() => { const h = new Date().getHours(); return h >= 20 || h < 6; });
+  useEffect(() => {
+    const id = setInterval(() => { const h = new Date().getHours(); setIsNight(h >= 20 || h < 6); }, 60000);
+    return () => clearInterval(id);
+  }, []);
+  return isNight;
+}
+
+function ToriLogo({ isNight }) {
   return (
-    <Link to="/v2" className="inline-flex items-center gap-1.5">
-      <svg width={28} height={28} viewBox="0 0 40 40" style={{ overflow: 'visible' }}>
-        <defs>
-          <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%"   stopColor="#22c55e" />
-            <stop offset="50%"  stopColor="#16a34a" />
-            <stop offset="100%" stopColor="#06b6d4" />
-          </linearGradient>
-        </defs>
-        <text x="50%" y="78%" textAnchor="middle" fill={`url(#${id})`}
-          style={{ fontFamily: "'Inter','Heebo',sans-serif", fontWeight: 900, fontSize: 38, letterSpacing: '-2px' }}>T</text>
-      </svg>
-      <span className="font-black text-xl tracking-tight bg-gradient-to-r from-[#22c55e] via-[#16a34a] to-[#065f46] bg-clip-text text-transparent">Tori</span>
+    <Link to="/v2" className="inline-flex items-center gap-2">
+      <img src="/favicon.png" alt="TORI" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
+      <span className={`font-black text-xl tracking-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>TORI</span>
     </Link>
   );
 }
 
 export default function Login() {
-  const [loginMode, setLoginMode] = useState('email'); // 'email' | 'phone'
+  const isNight = useNightMode();
+  const [loginMode, setLoginMode] = useState('email');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // 2FA state
-  const [step, setStep] = useState('credentials'); // 'credentials' | '2fa'
+  const [step, setStep] = useState('credentials');
   const [tempToken, setTempToken] = useState('');
   const [totpCode, setTotpCode] = useState('');
   const totpRef = useRef(null);
@@ -79,11 +77,20 @@ export default function Login() {
     }
   }
 
+  const inputCls = isNight
+    ? "w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-[#22c55e]/50 transition-all"
+    : "w-full px-4 py-3 rounded-xl bg-white/70 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#16a34a]/60 focus:bg-white transition-all shadow-sm";
+
   return (
-    <div className="min-h-screen bg-[#08080F] flex items-center justify-center px-4" dir="rtl">
+    <div
+      className="min-h-screen flex items-center justify-center px-4"
+      dir="rtl"
+      style={{ background: isNight ? '#08080F' : 'linear-gradient(135deg, #f0fdf4 0%, #e8f5f0 50%, #f0f2f5 100%)' }}
+    >
+      {/* Ambient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 right-1/3 w-96 h-96 bg-[#16a34a]/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-[#06b6d4]/8 rounded-full blur-[100px]" />
+        <div className={`absolute top-1/4 right-1/3 w-96 h-96 rounded-full blur-[120px] ${isNight ? 'bg-[#16a34a]/12' : 'bg-[#16a34a]/8'}`} />
+        <div className={`absolute bottom-1/4 left-1/3 w-64 h-64 rounded-full blur-[100px] ${isNight ? 'bg-[#16a34a]/10' : 'bg-[#16a34a]/6'}`} />
       </div>
 
       <motion.div
@@ -92,11 +99,18 @@ export default function Login() {
         className="relative z-10 w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <ToriLogo />
+          <ToriLogo isNight={isNight} />
         </div>
 
-        <div className="bg-[#0d1117] border border-gray-800 rounded-2xl p-8">
-          <h1 className="text-2xl font-black text-white mb-6">
+        {/* Card */}
+        <div
+          className="rounded-2xl p-8"
+          style={isNight
+            ? { background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 8px 48px rgba(0,0,0,0.5)' }
+            : { background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(44px) saturate(220%)', WebkitBackdropFilter: 'blur(44px) saturate(220%)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 8px 48px rgba(0,0,0,0.10)' }
+          }
+        >
+          <h1 className={`text-2xl font-black mb-6 ${isNight ? 'text-white' : 'text-gray-900'}`}>
             {step === '2fa' ? 'אימות דו-שלבי' : 'ברוך הבא חזרה'}
           </h1>
 
@@ -113,7 +127,7 @@ export default function Login() {
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center">
                   <ShieldCheck size={26} className="text-white" />
                 </div>
-                <p className="text-gray-400 text-sm text-center">
+                <p className={`text-sm text-center ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>
                   הכנס את הקוד מ-Google Authenticator
                 </p>
               </div>
@@ -124,7 +138,7 @@ export default function Login() {
                 maxLength={6}
                 value={totpCode}
                 onChange={e => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-[#16a34a]/60 text-center text-2xl tracking-[0.5em] font-mono"
+                className={`${inputCls} text-center text-2xl tracking-[0.5em] font-mono`}
                 placeholder="000000"
                 dir="ltr"
                 required
@@ -140,7 +154,7 @@ export default function Login() {
                 {loading ? 'מאמת...' : 'אמת'}
               </motion.button>
               <button type="button" onClick={() => { setStep('credentials'); setError(''); setTotpCode(''); }}
-                className="w-full text-gray-500 text-sm hover:text-gray-300 transition-colors">
+                className={`w-full text-sm transition-colors ${isNight ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
                 ← חזור
               </button>
             </form>
@@ -149,27 +163,27 @@ export default function Login() {
           {/* ── Credentials step ─────────────────────────────────────────── */}
           {step === 'credentials' && <>
           {/* Toggle email/phone */}
-          <div className="flex rounded-xl overflow-hidden border border-white/10 mb-4">
+          <div className={`flex rounded-xl overflow-hidden border mb-4 ${isNight ? 'border-white/10' : 'border-gray-200'}`}>
             <button type="button" onClick={() => { setLoginMode('email'); setIdentifier(''); }}
-              className={`flex-1 py-2 text-sm font-semibold transition-all ${loginMode === 'email' ? 'bg-[#16a34a] text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+              className={`flex-1 py-2 text-sm font-semibold transition-all ${loginMode === 'email' ? 'bg-[#16a34a] text-white' : isNight ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-800'}`}>
               אימייל
             </button>
             <button type="button" onClick={() => { setLoginMode('phone'); setIdentifier(''); }}
-              className={`flex-1 py-2 text-sm font-semibold transition-all ${loginMode === 'phone' ? 'bg-[#16a34a] text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+              className={`flex-1 py-2 text-sm font-semibold transition-all ${loginMode === 'phone' ? 'bg-[#16a34a] text-white' : isNight ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-800'}`}>
               טלפון
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-400 mb-1.5">
+              <label className={`block text-sm font-semibold mb-1.5 ${isNight ? 'text-gray-400' : 'text-gray-600'}`}>
                 {loginMode === 'email' ? 'אימייל' : 'מספר טלפון'}
               </label>
               <input
                 type={loginMode === 'email' ? 'email' : 'tel'}
                 value={identifier}
                 onChange={e => setIdentifier(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-[#16a34a]/60 transition-all"
+                className={inputCls}
                 placeholder={loginMode === 'email' ? 'you@example.com' : '050-0000000'}
                 dir="ltr"
                 required
@@ -177,13 +191,13 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-400 mb-1.5">סיסמה</label>
+              <label className={`block text-sm font-semibold mb-1.5 ${isNight ? 'text-gray-400' : 'text-gray-600'}`}>סיסמה</label>
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-[#16a34a]/60 transition-all pl-12"
+                  className={`${inputCls} pl-12`}
                   placeholder="••••••••"
                   dir="ltr"
                   required
@@ -191,7 +205,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute left-0 top-0 h-full w-12 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+                  className={`absolute left-0 top-0 h-full w-12 flex items-center justify-center transition-colors ${isNight ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                   tabIndex={-1}
                 >
                   {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -202,7 +216,7 @@ export default function Login() {
             <motion.button
               type="submit"
               disabled={loading}
-              whileHover={{ scale: 1.01, boxShadow: '0 12px 28px rgba(244,63,94,0.3)' }}
+              whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               className="w-full bg-gradient-to-r from-[#22c55e] via-[#16a34a] to-[#065f46] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-[#16a34a]/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
             >
@@ -212,9 +226,9 @@ export default function Login() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-500 text-sm">
+            <p className={`text-sm ${isNight ? 'text-gray-500' : 'text-gray-500'}`}>
               אין לך חשבון?{' '}
-              <Link to="/register" className="bg-gradient-to-r from-[#22c55e] via-[#16a34a] to-[#065f46] bg-clip-text text-transparent font-semibold hover:opacity-80 transition-opacity">
+              <Link to="/register" className="text-[#16a34a] hover:text-[#15803d] font-semibold transition-colors">
                 הצטרף חינם
               </Link>
             </p>

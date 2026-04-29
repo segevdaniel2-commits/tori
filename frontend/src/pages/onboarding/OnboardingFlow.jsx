@@ -1,4 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext, createContext } from 'react';
+
+const NightCtx = createContext(false);
+function useNightMode() {
+  const [isNight, setIsNight] = useState(() => { const h = new Date().getHours(); return h >= 20 || h < 6; });
+  useEffect(() => {
+    const id = setInterval(() => { const h = new Date().getHours(); setIsNight(h >= 20 || h < 6); }, 60000);
+    return () => clearInterval(id);
+  }, []);
+  return isNight;
+}
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
@@ -119,10 +129,11 @@ const ISRAELI_STREETS = [
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 function ToriLogo() {
+  const isNight = useContext(NightCtx);
   return (
-    <div className="inline-flex items-center gap-1.5">
-      <span style={{ fontSize: 26, fontFamily: "'Inter','Heebo',sans-serif", fontWeight: 900, color: '#4ade80', lineHeight: 1, letterSpacing: '-0.05em' }}>T</span>
-      <span className="font-black text-lg text-white tracking-tight">Tori</span>
+    <div className="inline-flex items-center gap-2">
+      <img src="/favicon.png" alt="TORI" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
+      <span className={`font-black text-lg tracking-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>TORI</span>
     </div>
   );
 }
@@ -145,6 +156,7 @@ function StepDots({ step, total }) {
 
 // ─── Address autocomplete ─────────────────────────────────────────────────────
 function AddressInput({ value, onChange }) {
+  const isNight = useContext(NightCtx);
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState('city'); // 'city' | 'street'
@@ -197,20 +209,20 @@ function AddressInput({ value, onChange }) {
         value={value}
         onChange={e => handleChange(e.target.value)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        className={inputCls}
+        className={getInputCls(isNight)}
         placeholder="תל אביב, הרצל 12"
       />
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-            className="absolute z-50 w-full mt-1 bg-white/95 border border-gray-100 rounded-xl shadow-2xl overflow-hidden"
+            className={`absolute z-50 w-full mt-1 rounded-xl shadow-2xl overflow-hidden border ${isNight ? 'bg-[#0d1117] border-white/10' : 'bg-white/95 border-gray-100'}`}
           >
             {suggestions.map(item => (
               <button
                 key={item}
                 onMouseDown={() => pick(item)}
-                className="w-full text-right px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className={`w-full text-right px-4 py-3 text-sm transition-colors flex items-center gap-2 ${isNight ? 'text-gray-200 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'}`}
               >
                 <span className="text-[#16a34a] text-xs shrink-0">{mode === 'city' ? '🏙️' : '📍'}</span>
                 {item}
@@ -225,6 +237,7 @@ function AddressInput({ value, onChange }) {
 
 // ─── Google Places business name input ───────────────────────────────────────
 function BusinessNameInput({ value, onChange, onPlaceSelect }) {
+  const isNight = useContext(NightCtx);
   const inputRef = useRef(null);
   const apiKey = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_GOOGLE_PLACES_API_KEY : null;
 
@@ -259,14 +272,19 @@ function BusinessNameInput({ value, onChange, onPlaceSelect }) {
       ref={inputRef}
       value={value}
       onChange={e => onChange(e.target.value)}
-      className={inputCls}
+      className={getInputCls(isNight)}
       placeholder="למשל: סלון יופי ריבה, אבי הספר..."
     />
   );
 }
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
-const inputCls = "w-full px-4 py-3 rounded-xl bg-white/60 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#16a34a]/60 focus:bg-white transition-all text-sm shadow-sm";
+function getInputCls(isNight) {
+  return isNight
+    ? "w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-[#22c55e]/50 transition-all text-sm"
+    : "w-full px-4 py-3 rounded-xl bg-white/70 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#16a34a]/60 focus:bg-white transition-all text-sm shadow-sm";
+}
+const inputCls = "w-full px-4 py-3 rounded-xl bg-white/70 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#16a34a]/60 focus:bg-white transition-all text-sm shadow-sm";
 
 // ─── Legal modal ──────────────────────────────────────────────────────────────
 function LegalModal({ type, onClose }) {
@@ -346,18 +364,19 @@ function LegalModal({ type, onClose }) {
 
 // ─── Stepper ──────────────────────────────────────────────────────────────────
 function Stepper({ label, onDecrement, onIncrement }) {
+  const isNight = useContext(NightCtx);
   return (
     <div className="flex items-center gap-2 shrink-0">
       <button
         type="button"
         onClick={onDecrement}
-        className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 text-white flex items-center justify-center transition-all font-bold text-lg leading-none"
+        className={`w-8 h-8 rounded-full active:scale-90 flex items-center justify-center transition-all font-bold text-lg leading-none ${isNight ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
       >-</button>
-      <span className="text-gray-600 text-xs font-medium text-center" style={{ minWidth: 52 }}>{label}</span>
+      <span className={`text-xs font-medium text-center ${isNight ? 'text-gray-300' : 'text-gray-600'}`} style={{ minWidth: 52 }}>{label}</span>
       <button
         type="button"
         onClick={onIncrement}
-        className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 text-white flex items-center justify-center transition-all font-bold text-lg leading-none"
+        className={`w-8 h-8 rounded-full active:scale-90 flex items-center justify-center transition-all font-bold text-lg leading-none ${isNight ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
       >+</button>
     </div>
   );
@@ -622,6 +641,7 @@ function SuccessScreen({ onDone, businessType }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function OnboardingFlow() {
+  const isNight = useNightMode();
   const [isMobile] = useState(() => window.innerWidth < 768);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -725,13 +745,14 @@ export default function OnboardingFlow() {
   const STEP_LABELS = ['סוג עסק', 'פרטי עסק', 'שירותים', 'הגדרות', 'חשבון'];
 
   return (
+    <NightCtx.Provider value={isNight}>
     <MotionConfig reducedMotion={isMobile ? 'always' : 'never'}>
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6 md:py-10" dir="rtl" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #e8f5f0 50%, #f0f2f5 100%)" }}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6 md:py-10" dir="rtl" style={{ background: isNight ? '#08080F' : 'linear-gradient(135deg, #f0fdf4 0%, #e8f5f0 50%, #f0f2f5 100%)' }}>
       {/* Ambient orbs — hidden on mobile for performance */}
       {!isMobile && (
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 right-1/3 w-80 h-80 bg-[#16a34a]/8 rounded-full blur-[100px]" />
-          <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-[#16a34a]/8 rounded-full blur-[90px]" />
+          <div className={`absolute top-1/4 right-1/3 w-80 h-80 rounded-full blur-[100px] ${isNight ? 'bg-[#16a34a]/12' : 'bg-[#16a34a]/8'}`} />
+          <div className={`absolute bottom-1/4 left-1/3 w-64 h-64 rounded-full blur-[90px] ${isNight ? 'bg-[#16a34a]/10' : 'bg-[#16a34a]/8'}`} />
         </div>
       )}
 
@@ -740,11 +761,11 @@ export default function OnboardingFlow() {
         <div className="text-center mb-6">
           <Link to="/v2"><ToriLogo /></Link>
           <StepDots step={step} total={TOTAL_STEPS} />
-          <p className="text-gray-400 text-xs mt-2">{STEP_LABELS[step - 1]}</p>
+          <p className={`text-xs mt-2 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{STEP_LABELS[step - 1]}</p>
         </div>
 
-        {/* Card — no backdrop-blur on mobile (very slow) */}
-        <div className="rounded-3xl p-5 md:p-8 shadow-xl" style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(44px) saturate(220%)", WebkitBackdropFilter: "blur(44px) saturate(220%)", border: "1px solid rgba(255,255,255,0.6)", boxShadow: "0 8px 48px rgba(0,0,0,0.12)" }}>
+        {/* Card */}
+        <div className="rounded-3xl p-5 md:p-8 shadow-xl" style={isNight ? { background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 8px 48px rgba(0,0,0,0.5)' } : { background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(44px) saturate(220%)', WebkitBackdropFilter: 'blur(44px) saturate(220%)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 8px 48px rgba(0,0,0,0.12)' }}>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-5">
@@ -757,8 +778,8 @@ export default function OnboardingFlow() {
             {/* ── Step 1: Business type ─────────────────────────────────── */}
             {step === 1 && (
               <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <h2 className="text-2xl font-black text-gray-900 mb-1 text-center">מה סוג העסק שלך?</h2>
-                <p className="text-gray-500 text-sm text-center mb-6">בחר כדי שנכין לך שירותים מותאמים</p>
+                <h2 className={`text-2xl font-black mb-1 text-center ${isNight ? 'text-white' : 'text-gray-900'}`}>מה סוג העסק שלך?</h2>
+                <p className={`text-sm text-center mb-6 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>בחר כדי שנכין לך שירותים מותאמים</p>
                 <div className="grid grid-cols-2 gap-2.5">
                   {BUSINESS_TYPES.map(bt => (
                     <motion.button
@@ -772,12 +793,12 @@ export default function OnboardingFlow() {
                       className={`px-4 py-3 rounded-2xl border text-right transition-all duration-200 flex items-center justify-between gap-2 ${
                         businessType === bt.id
                           ? 'bg-[#16a34a]/10 border-[#16a34a]/50 shadow-lg shadow-[#16a34a]/10'
-                          : 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.07]'
+                          : isNight ? 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.07]' : 'bg-white/50 border-gray-200 hover:bg-white/80'
                       }`}
                     >
                       <div>
-                        <div className={`text-sm font-bold ${businessType === bt.id ? "text-gray-900" : "text-gray-700"}`}>{bt.label}</div>
-                        <div className="text-gray-500 text-xs mt-0.5 leading-tight">{bt.desc}</div>
+                        <div className={`text-sm font-bold ${businessType === bt.id ? (isNight ? 'text-white' : 'text-gray-900') : (isNight ? 'text-gray-300' : 'text-gray-700')}`}>{bt.label}</div>
+                        <div className={`text-xs mt-0.5 leading-tight ${isNight ? 'text-gray-500' : 'text-gray-500'}`}>{bt.desc}</div>
                       </div>
                       {businessType === bt.id && (
                         <div className="w-4 h-4 rounded-full bg-[#22c55e] flex items-center justify-center shrink-0">
@@ -794,11 +815,11 @@ export default function OnboardingFlow() {
             {step === 2 && (
               <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-black text-gray-900 mb-1">פרטי העסק</h2>
-                  <p className="text-gray-500 text-sm mb-5">הלקוחות יראו את השם הזה בשיחת הוואטסאפ</p>
+                  <h2 className={`text-2xl font-black mb-1 ${isNight ? 'text-white' : 'text-gray-900'}`}>פרטי העסק</h2>
+                  <p className={`text-sm mb-5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>הלקוחות יראו את השם הזה בשיחת הוואטסאפ</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1.5">שם העסק *</label>
+                  <label className={`block text-sm font-medium mb-1.5 ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>שם העסק *</label>
                   <BusinessNameInput
                     value={businessName}
                     onChange={setBusinessName}
@@ -806,13 +827,13 @@ export default function OnboardingFlow() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1.5">כתובת <span className="text-gray-600">(אופציונלי)</span></label>
+                  <label className={`block text-sm font-medium mb-1.5 ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>כתובת <span className={isNight ? 'text-gray-500' : 'text-gray-400'}>(אופציונלי)</span></label>
                   <AddressInput value={address} onChange={setAddress} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1.5">טלפון עסק <span className="text-gray-600">(אופציונלי)</span></label>
+                  <label className={`block text-sm font-medium mb-1.5 ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>טלפון עסק <span className={isNight ? 'text-gray-500' : 'text-gray-400'}>(אופציונלי)</span></label>
                   <input value={phone} onChange={e => setPhone(e.target.value)}
-                    className={inputCls} placeholder="050-1234567" dir="ltr" type="tel" />
+                    className={getInputCls(isNight)} placeholder="050-1234567" dir="ltr" type="tel" />
                 </div>
               </motion.div>
             )}
@@ -820,13 +841,13 @@ export default function OnboardingFlow() {
             {/* ── Step 3: Services ──────────────────────────────────────── */}
             {step === 3 && (
               <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <h2 className="text-2xl font-black text-gray-900 mb-1">השירותים שלך</h2>
-                <p className="text-gray-500 text-sm mb-5">כל השירותים נבחרו — הסר מה שאינך מציע ועדכן מחירים</p>
+                <h2 className={`text-2xl font-black mb-1 ${isNight ? 'text-white' : 'text-gray-900'}`}>השירותים שלך</h2>
+                <p className={`text-sm mb-5 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>כל השירותים נבחרו — הסר מה שאינך מציע ועדכן מחירים</p>
 
                 {/* Service list - all in one line style */}
                 <div className="space-y-2">
                   {/* Select-all row — same style as service rows */}
-                  <div className="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-2.5 bg-white/60">
+                  <div className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${isNight ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white/60'}`}>
                     <button
                       onClick={toggleAll}
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0 ${
@@ -835,14 +856,14 @@ export default function OnboardingFlow() {
                     >
                       {allSelected && <Check size={11} className="text-white" />}
                     </button>
-                    <span className="text-gray-400 text-sm font-semibold flex-1">הכל</span>
+                    <span className={`text-sm font-semibold flex-1 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>הכל</span>
                   </div>
 
                   {presets.map(svc => {
                     const sel = selectedServices.find(s => s.name === svc.name);
                     return (
                       <div key={svc.name} className={`rounded-xl border px-3 py-2.5 transition-all ${
-                        sel ? 'border-[#16a34a]/30 bg-[#16a34a]/5' : 'border-gray-200 bg-white/40 opacity-50'
+                        sel ? 'border-[#16a34a]/30 bg-[#16a34a]/5' : isNight ? 'border-white/10 bg-white/3 opacity-50' : 'border-gray-200 bg-white/40 opacity-50'
                       }`}>
                         {/* Top row: checkbox + name + steppers (desktop) */}
                         <div className="flex items-center gap-3">
@@ -854,7 +875,7 @@ export default function OnboardingFlow() {
                           >
                             {sel && <Check size={11} className="text-white" />}
                           </button>
-                          <span className={`text-sm font-medium flex-1 min-w-0 truncate ${sel ? 'text-white' : 'text-gray-500'}`}>{svc.name}</span>
+                          <span className={`text-sm font-medium flex-1 min-w-0 truncate ${sel ? (isNight ? 'text-white' : 'text-gray-900') : (isNight ? 'text-gray-500' : 'text-gray-500')}`}>{svc.name}</span>
                           {/* Steppers inline on md+ */}
                           {sel && (
                             <div className="hidden md:flex items-center gap-2 shrink-0">
@@ -891,19 +912,19 @@ export default function OnboardingFlow() {
                   })}
                 </div>
 
-                <p className="text-gray-400 text-xs mt-3">ניתן לשנות ולהוסיף שירותים בכל עת מהדשבורד</p>
+                <p className={`text-xs mt-3 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>ניתן לשנות ולהוסיף שירותים בכל עת מהדשבורד</p>
               </motion.div>
             )}
 
             {/* ── Step 4: Settings (staff + hours + buffer) ─────────────── */}
             {step === 4 && (
               <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <h2 className="text-2xl font-black text-gray-900 mb-1">הגדרות</h2>
-                <p className="text-gray-500 text-sm mb-6">כל ההגדרות ניתנות לשינוי בכל עת</p>
+                <h2 className={`text-2xl font-black mb-1 ${isNight ? 'text-white' : 'text-gray-900'}`}>הגדרות</h2>
+                <p className={`text-sm mb-6 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>כל ההגדרות ניתנות לשינוי בכל עת</p>
 
                 {/* Staff count */}
                 <div className="mb-6">
-                  <p className="text-sm font-semibold text-gray-300 mb-3">כמה עובדים?</p>
+                  <p className={`text-sm font-semibold mb-3 ${isNight ? 'text-gray-300' : 'text-gray-700'}`}>כמה עובדים?</p>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { v: 1, label: 'עובד אחד', plan: '₪89/חודש' },
@@ -913,7 +934,7 @@ export default function OnboardingFlow() {
                         className={`py-4 rounded-2xl font-bold text-center transition-all ${
                           (v === 1 && staffCount === 1) || (v === 2 && staffCount >= 2)
                             ? 'bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white shadow-lg shadow-[#16a34a]/20'
-                            : 'bg-white/70 border border-gray-200 text-gray-600 hover:bg-white'
+                            : isNight ? 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10' : 'bg-white/70 border border-gray-200 text-gray-600 hover:bg-white'
                         }`}
                       >
                         <div className="text-sm font-black text-inherit">{label}</div>
@@ -921,13 +942,13 @@ export default function OnboardingFlow() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-gray-400 text-xs mt-2 text-center">30 יום ניסיון חינמי לכל התוכניות</p>
+                  <p className={`text-xs mt-2 text-center ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>30 יום ניסיון חינמי לכל התוכניות</p>
                 </div>
 
                 {/* Hours */}
-                <div className="border-t border-gray-100 pt-5 mb-5">
+                <div className={`border-t pt-5 mb-5 ${isNight ? 'border-white/10' : 'border-gray-100'}`}>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-semibold text-gray-300">שעות פעילות</p>
+                    <p className={`text-sm font-semibold ${isNight ? 'text-gray-300' : 'text-gray-700'}`}>שעות פעילות</p>
                     <button onClick={() => setHours(DEFAULT_HOURS)} className="text-xs text-[#16a34a] hover:text-[#15803d] transition-colors">
                       אפס לברירת מחדל
                     </button>
@@ -937,11 +958,11 @@ export default function OnboardingFlow() {
                     {(() => {
                       const h = hours[0];
                       return (
-                        <div className={`p-3 rounded-xl border ${h.is_open ? 'border-gray-200 bg-white/70' : 'border-gray-100 opacity-50'}`}>
+                        <div className={`p-3 rounded-xl border ${h.is_open ? (isNight ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white/70') : (isNight ? 'border-white/5 opacity-50' : 'border-gray-100 opacity-50')}`}>
                           <div className="flex items-center gap-3">
                             <Toggle value={h.is_open} onChange={v => [0,1,2,3,4].forEach(i => setDayOpen(i, v))} />
-                            <span className="text-gray-800 text-sm font-medium">א׳–ה׳</span>
-                            {!h.is_open && <span className="text-gray-400 text-sm mr-auto"">סגור</span>}
+                            <span className={`text-sm font-medium ${isNight ? 'text-gray-200' : 'text-gray-800'}`}>א׳–ה׳</span>
+                            {!h.is_open && <span className={`text-sm mr-auto ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>סגור</span>}
                           </div>
                           {h.is_open && (
                             <div className="flex items-center gap-2 mt-2 pr-13">
@@ -966,11 +987,11 @@ export default function OnboardingFlow() {
                     {(() => {
                       const h = hours[5];
                       return (
-                        <div className={`p-3 rounded-xl border ${h.is_open ? 'border-gray-200 bg-white/70' : 'border-gray-100 opacity-50'}`}>
+                        <div className={`p-3 rounded-xl border ${h.is_open ? (isNight ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white/70') : (isNight ? 'border-white/5 opacity-50' : 'border-gray-100 opacity-50')}`}>
                           <div className="flex items-center gap-3">
                             <Toggle value={h.is_open} onChange={v => setDayOpen(5, v)} />
-                            <span className="text-gray-800 text-sm font-medium">שישי</span>
-                            {!h.is_open && <span className="text-gray-400 text-sm mr-auto"">סגור</span>}
+                            <span className={`text-sm font-medium ${isNight ? 'text-gray-200' : 'text-gray-800'}`}>שישי</span>
+                            {!h.is_open && <span className={`text-sm mr-auto ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>סגור</span>}
                           </div>
                           {h.is_open && (
                             <div className="flex items-center gap-2 mt-2 pr-13">
@@ -992,25 +1013,25 @@ export default function OnboardingFlow() {
                     })()}
 
                     {/* Saturday — fixed closed */}
-                    <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 opacity-40">
+                    <div className={`flex items-center gap-3 p-3 rounded-xl border opacity-40 ${isNight ? 'border-white/5' : 'border-gray-100'}`}>
                       <div className="w-10 h-6 rounded-full bg-gray-300 relative shrink-0">
                         <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow" />
                       </div>
-                      <span className="text-gray-400 text-sm font-medium w-24 shrink-0">שבת</span>
-                      <span className="text-gray-400 text-sm mr-auto"">סגור</span>
+                      <span className={`text-sm font-medium w-24 shrink-0 ${isNight ? 'text-gray-400' : 'text-gray-400'}`}>שבת</span>
+                      <span className={`text-sm mr-auto ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>סגור</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Buffer */}
-                <div className="border-t border-gray-100 pt-5">
-                  <p className="text-sm font-semibold text-gray-300 mb-3">הפסקה בין תורים</p>
+                <div className={`border-t pt-5 ${isNight ? 'border-white/10' : 'border-gray-100'}`}>
+                  <p className={`text-sm font-semibold mb-3 ${isNight ? 'text-gray-300' : 'text-gray-700'}`}>הפסקה בין תורים</p>
                   <Stepper
                     label={bufferMinutes === 0 ? 'ללא' : `${bufferMinutes} דק׳`}
                     onDecrement={() => setBufferMinutes(m => Math.max(0, m - 5))}
                     onIncrement={() => setBufferMinutes(m => Math.min(60, m + 5))}
                   />
-                  <p className="text-gray-400 text-xs mt-3">זמן ניקיון והכנה בין תור לתור</p>
+                  <p className={`text-xs mt-3 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>זמן ניקיון והכנה בין תור לתור</p>
                 </div>
               </motion.div>
             )}
@@ -1018,44 +1039,44 @@ export default function OnboardingFlow() {
             {/* ── Step 5: Account ───────────────────────────────────────── */}
             {step === 5 && (
               <motion.div key="s5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <h2 className="text-2xl font-black text-gray-900 mb-1">פרטי כניסה</h2>
-                <p className="text-gray-500 text-sm mb-6">אלה הפרטים שלך לכניסה לדשבורד</p>
+                <h2 className={`text-2xl font-black mb-1 ${isNight ? 'text-white' : 'text-gray-900'}`}>פרטי כניסה</h2>
+                <p className={`text-sm mb-6 ${isNight ? 'text-gray-400' : 'text-gray-500'}`}>אלה הפרטים שלך לכניסה לדשבורד</p>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1.5">שמך המלא *</label>
+                    <label className={`block text-sm font-medium mb-1.5 ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>שמך המלא *</label>
                     <input value={ownerName} onChange={e => setOwnerName(e.target.value)}
-                      className={inputCls} placeholder="אבי כהן" />
+                      className={getInputCls(isNight)} placeholder="אבי כהן" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1.5">אימייל *</label>
+                    <label className={`block text-sm font-medium mb-1.5 ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>אימייל *</label>
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      className={inputCls} placeholder="avi@example.com" dir="ltr" />
+                      className={getInputCls(isNight)} placeholder="avi@example.com" dir="ltr" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1.5">סיסמה * <span className="text-gray-600 font-normal">(לפחות 8 תווים)</span></label>
+                    <label className={`block text-sm font-medium mb-1.5 ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>סיסמה * <span className={`font-normal ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>(לפחות 8 תווים)</span></label>
                     <div className="relative">
                       <input type={showPass ? 'text' : 'password'} value={password}
                         onChange={e => setPassword(e.target.value)}
-                        className={`${inputCls} pl-11`} placeholder="••••••••" dir="ltr" />
+                        className={`${getInputCls(isNight)} pl-11`} placeholder="••••••••" dir="ltr" />
                       <button type="button" onClick={() => setShowPass(!showPass)}
-                        className="absolute left-0 top-0 h-full w-12 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+                        className={`absolute left-0 top-0 h-full w-12 flex items-center justify-center transition-colors ${isNight ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                         tabIndex={-1}>
                         {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1.5">אישור סיסמה *</label>
+                    <label className={`block text-sm font-medium mb-1.5 ${isNight ? 'text-gray-300' : 'text-gray-600'}`}>אישור סיסמה *</label>
                     <div className="relative">
                       <input type={showConfirmPass ? 'text' : 'password'} value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
-                        className={`${inputCls} pl-11 ${
+                        className={`${getInputCls(isNight)} pl-11 ${
                           confirmPassword && confirmPassword !== password ? 'border-red-500/60' :
                           confirmPassword && confirmPassword === password ? 'border-green-500/50' : ''
                         }`}
                         placeholder="••••••••" dir="ltr" />
                       <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)}
-                        className="absolute left-0 top-0 h-full w-12 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+                        className={`absolute left-0 top-0 h-full w-12 flex items-center justify-center transition-colors ${isNight ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                         tabIndex={-1}>
                         {showConfirmPass ? <EyeOff size={17} /> : <Eye size={17} />}
                       </button>
@@ -1071,7 +1092,7 @@ export default function OnboardingFlow() {
                       }`}>
                       {termsAccepted && <Check size={11} className="text-white" />}
                     </button>
-                    <span className="text-gray-600 text-sm leading-relaxed">
+                    <span className={`text-sm leading-relaxed ${isNight ? 'text-gray-400' : 'text-gray-600'}`}>
                       אני מסכים ל
                       <button type="button" onClick={() => setLegalModal('terms')} className="text-[#16a34a] hover:underline mx-1">תנאי השימוש</button>
                       ו
@@ -1086,9 +1107,9 @@ export default function OnboardingFlow() {
           </AnimatePresence>
 
           {/* Navigation */}
-          <div className="flex justify-between items-center mt-7 pt-5 border-t border-gray-100">
+          <div className={`flex justify-between items-center mt-7 pt-5 border-t ${isNight ? 'border-white/10' : 'border-gray-100'}`}>
             <button onClick={prev}
-              className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 transition-colors font-medium text-sm py-2 px-1">
+              className={`flex items-center gap-1.5 transition-colors font-medium text-sm py-2 px-1 ${isNight ? 'text-gray-500 hover:text-gray-200' : 'text-gray-500 hover:text-gray-900'}`}>
               <ChevronRight size={17} />
               {step === 1 ? 'חזרה לאתר' : 'חזרה'}
             </button>
@@ -1110,7 +1131,7 @@ export default function OnboardingFlow() {
         </div>
 
         {/* Already have account */}
-        <p className="text-center text-gray-500 text-sm mt-5">
+        <p className={`text-center text-sm mt-5 ${isNight ? 'text-gray-500' : 'text-gray-500'}`}>
           יש לך חשבון?{' '}
           <Link to="/login" className="text-[#16a34a] hover:text-[#15803d] transition-colors font-medium">
             כניסה
@@ -1121,5 +1142,6 @@ export default function OnboardingFlow() {
       <LegalModal type={legalModal} onClose={() => setLegalModal(null)} />
     </div>
     </MotionConfig>
+    </NightCtx.Provider>
   );
 }
