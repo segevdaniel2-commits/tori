@@ -19,8 +19,8 @@ const NAV_ITEMS = [
 function PlanBadge({ plan }) {
   const map = {
     trial: { label: 'ניסיון', color: 'bg-amber-100 text-amber-700' },
-    basic: { label: 'Basic', color: 'bg-[#fff1eb] text-[#f43f5e]' },
-    business: { label: 'Business', color: 'bg-[#f97316] text-white' },
+    basic: { label: 'Basic', color: 'bg-[#f0fdf4] text-[#16a34a]' },
+    business: { label: 'Business', color: 'bg-[#16a34a] text-white' },
     cancelled: { label: 'מבוטל', color: 'bg-red-100 text-red-700' },
   };
   const { label, color } = map[plan] || map.trial;
@@ -50,7 +50,7 @@ function TrialStrip({ business, onUpgrade }) {
       <button
         onClick={onUpgrade}
         className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white shrink-0"
-        style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)' }}
+        style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
       >
         <Zap size={10} />
         שדרג
@@ -113,12 +113,12 @@ export default function DashboardLayout() {
         surface: '#0d1117',
         border: 'rgba(255,255,255,0.07)',
         sidebarBg: '#0d1117',
-        sidebarBorder: 'rgba(249,115,22,0.15)',
+        sidebarBorder: 'rgba(34,197,94,0.15)',
         titleColor: '#ffffff',
         mutedColor: 'rgba(255,255,255,0.45)',
         hoverBg: 'rgba(255,255,255,0.06)',
-        activeBg: 'rgba(244,63,94,0.18)',
-        activeText: '#f97316',
+        activeBg: 'rgba(34,197,94,0.18)',
+        activeText: '#22c55e',
       }
     : {
         outerBg: '#f0f2f5',
@@ -128,9 +128,9 @@ export default function DashboardLayout() {
         sidebarBorder: '#e2e5ea',
         titleColor: '#111827',
         mutedColor: '#6b7280',
-        hoverBg: '#fff7ed',
-        activeBg: '#fff1eb',
-        activeText: '#f43f5e',
+        hoverBg: '#f0fdf4',
+        activeBg: '#f0fdf4',
+        activeText: '#16a34a',
       };
 
   // Socket
@@ -221,9 +221,9 @@ export default function DashboardLayout() {
           <div className="px-3 py-3 space-y-2">
             <div
               className="flex items-center gap-3 p-3 rounded-xl"
-              style={{ background: isNight ? 'rgba(249,115,22,0.10)' : '#fff7ed' }}
+              style={{ background: isNight ? 'rgba(34,197,94,0.10)' : '#f0fdf4' }}
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f97316] to-[#f43f5e] flex items-center justify-center text-white font-bold shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-white font-bold shrink-0">
                 {business?.name?.[0] || 'E'}
               </div>
               <div className="min-w-0">
@@ -298,7 +298,7 @@ export default function DashboardLayout() {
             style={{ maxHeight: expanded ? 60 : 0, opacity: expanded ? 1 : 0 }}
           >
             <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-8 h-8 rounded-full bg-[#fff1eb] flex items-center justify-center text-[#f43f5e] font-bold text-sm shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] font-bold text-sm shrink-0">
                 {business?.owner_name?.[0] || 'U'}
               </div>
               <div className="min-w-0">
@@ -376,8 +376,8 @@ export default function DashboardLayout() {
             </div>
 
             <div className="px-3 py-3 border-b space-y-2" style={{ borderColor: theme.border }}>
-              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: isNight ? 'rgba(249,115,22,0.10)' : '#fff7ed' }}>
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f97316] to-[#f43f5e] flex items-center justify-center text-white font-bold shrink-0">
+              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: isNight ? 'rgba(34,197,94,0.10)' : '#f0fdf4' }}>
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-white font-bold shrink-0">
                   {business?.name?.[0] || 'E'}
                 </div>
                 <div className="min-w-0">
@@ -410,7 +410,7 @@ export default function DashboardLayout() {
 
             <div className="p-3 border-t" style={{ borderColor: theme.border }}>
               <div className="flex items-center gap-3 px-3 py-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-[#fff1eb] flex items-center justify-center text-[#f43f5e] font-bold text-sm">
+                <div className="w-8 h-8 rounded-full bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] font-bold text-sm">
                   {business?.owner_name?.[0] || 'U'}
                 </div>
                 <div className="min-w-0">
@@ -472,7 +472,7 @@ export default function DashboardLayout() {
                 <button
                   onClick={handleUpgrade}
                   className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white shrink-0"
-                  style={{ background: urgent ? 'linear-gradient(135deg,#ef4444,#f97316)' : 'linear-gradient(135deg,#f97316,#f43f5e)' }}
+                  style={{ background: urgent ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'linear-gradient(135deg,#22c55e,#16a34a)' }}
                 >
                   <Zap size={11} />
                   {days === 0 ? 'שדרג עכשיו' : `${days} ימים · שדרג`}
@@ -533,7 +533,7 @@ export default function DashboardLayout() {
                           {unread > 0 && (
                             <button
                               onClick={markAllRead}
-                              className="text-xs font-medium text-[#f97316] hover:text-[#f43f5e] flex items-center gap-1"
+                              className="text-xs font-medium text-[#16a34a] hover:text-[#16a34a] flex items-center gap-1"
                             >
                               <CheckCheck size={13} />
                               סמן כנקרא
@@ -565,22 +565,22 @@ export default function DashboardLayout() {
                             className="flex items-start gap-3 px-4 py-3 border-b last:border-0 transition-colors"
                             style={{
                               borderColor: theme.border,
-                              background: !n.read ? (isNight ? 'rgba(249,115,22,0.08)' : '#fff7ed') : 'transparent',
+                              background: !n.read ? (isNight ? 'rgba(34,197,94,0.08)' : '#f0fdf4') : 'transparent',
                             }}
                           >
                             <div
                               className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-                              style={{ background: n.type === 'appointment' ? '#fff1eb' : '#fee2e2' }}
+                              style={{ background: n.type === 'appointment' ? '#f0fdf4' : '#fee2e2' }}
                             >
                               {n.type === 'appointment'
-                                ? <Calendar size={14} className="text-[#f97316]" />
+                                ? <Calendar size={14} className="text-[#16a34a]" />
                                 : <X size={14} className="text-red-500" />
                               }
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-sm font-semibold" style={{ color: theme.titleColor }}>{n.title}</span>
-                                {!n.read && <div className="w-2 h-2 rounded-full bg-[#f97316] shrink-0" />}
+                                {!n.read && <div className="w-2 h-2 rounded-full bg-[#16a34a] shrink-0" />}
                               </div>
                               <div className="text-xs mt-0.5" style={{ color: theme.mutedColor }}>{n.message}</div>
                               <div className="flex items-center gap-1 mt-1" style={{ color: theme.mutedColor, opacity: 0.6 }}>
@@ -654,12 +654,12 @@ export default function DashboardLayout() {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -20, scale: 0.92 }}
                 className="border rounded-2xl p-4 shadow-2xl min-w-64 max-w-sm pointer-events-auto"
-                style={{ background: theme.surface, borderColor: theme.border, borderRight: `4px solid ${n.type === 'appointment' ? '#f97316' : '#f43f5e'}` }}
+                style={{ background: theme.surface, borderColor: theme.border, borderRight: `4px solid ${n.type === 'appointment' ? '#16a34a' : '#ef4444'}` }}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`p-1.5 rounded-lg ${n.type === 'appointment' ? 'bg-[#fff1eb]' : 'bg-red-100'}`}>
+                  <div className={`p-1.5 rounded-lg ${n.type === 'appointment' ? 'bg-[#f0fdf4]' : 'bg-red-100'}`}>
                     {n.type === 'appointment'
-                      ? <Calendar size={14} className="text-[#f97316]" />
+                      ? <Calendar size={14} className="text-[#16a34a]" />
                       : <X size={14} className="text-red-500" />
                     }
                   </div>

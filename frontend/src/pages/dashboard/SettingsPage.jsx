@@ -31,8 +31,8 @@ function useNightMode() {
 
 // ─── Theme helpers ────────────────────────────────────────────────────────────
 const inputCls = (n) => n
-  ? 'w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-[#f43f5e]/50 text-sm transition-all'
-  : 'w-full px-3 py-2.5 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f43f5e]/60 text-sm transition-all shadow-sm';
+  ? 'w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-[#16a34a]/50 text-sm transition-all'
+  : 'w-full px-3 py-2.5 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#16a34a]/60 text-sm transition-all shadow-sm';
 
 const labelCls = (n) => n
   ? 'block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide'
@@ -50,7 +50,7 @@ const TABS = [
 const DAY_LABELS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
 const BRAND_COLORS = [
-  { value: 'linear-gradient(135deg,#f97316,#f43f5e)', label: 'Tori (ברירת מחדל)' },
+  { value: 'linear-gradient(135deg,#22c55e,#16a34a)', label: 'Tori (ברירת מחדל)' },
   { value: 'linear-gradient(135deg,#8b5cf6,#ec4899)', label: 'ורוד-סגול' },
   { value: 'linear-gradient(135deg,#06b6d4,#3b82f6)', label: 'כחול-טורקיז' },
   { value: 'linear-gradient(135deg,#10b981,#06b6d4)', label: 'ירוק-טורקיז' },
@@ -60,7 +60,7 @@ const BRAND_COLORS = [
   { value: '#0f172a', label: 'שחור כחלחל' },
 ];
 
-const ACCENT = 'from-[#f97316] via-[#f43f5e] to-[#06b6d4]';
+const ACCENT = 'from-[#22c55e] via-[#16a34a] to-[#065f46]';
 
 const PRESET_SUGGESTIONS = [
   { name: 'תספורת', duration_minutes: 30, price: 60 },
@@ -81,7 +81,7 @@ const PRESET_SUGGESTIONS = [
   { name: 'ייעוץ', duration_minutes: 30, price: 0 },
 ];
 
-const STAFF_COLORS = ['#f97316','#f43f5e','#06b6d4','#8b5cf6','#10b981','#eab308','#ec4899','#14b8a6'];
+const STAFF_COLORS = ['#22c55e','#16a34a','#065f46','#8b5cf6','#10b981','#eab308','#ec4899','#14b8a6'];
 
 // ─── Shared Save Button ────────────────────────────────────────────────────────
 function SaveBtn({ onClick, saving, saved, label = 'שמור שינויים' }) {
@@ -89,7 +89,7 @@ function SaveBtn({ onClick, saving, saved, label = 'שמור שינויים' }) 
     <button
       onClick={onClick}
       disabled={saving}
-      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all bg-gradient-to-r ${ACCENT} shadow-md shadow-[#f43f5e]/20 disabled:opacity-50`}
+      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all bg-gradient-to-r ${ACCENT} shadow-md shadow-[#16a34a]/20 disabled:opacity-50`}
     >
       {saving ? <Loader2 size={15} className="animate-spin" /> : saved ? <Check size={15} /> : <Save size={15} />}
       {saving ? 'שומר...' : saved ? 'נשמר!' : label}
@@ -105,7 +105,7 @@ function Toggle({ value, onChange }) {
       type="button"
       onClick={() => onChange(!value)}
       className={`w-11 h-6 rounded-full transition-all shrink-0 relative ${
-        value ? 'bg-gradient-to-r from-[#f43f5e] to-[#06b6d4]' : isNight ? 'bg-white/10' : 'bg-gray-200'
+        value ? 'bg-gradient-to-r from-[#22c55e] to-[#16a34a]' : isNight ? 'bg-white/10' : 'bg-gray-200'
       }`}
     >
       <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${value ? 'right-0.5' : 'left-0.5'}`} />
@@ -135,7 +135,7 @@ function CustomSelect({ value, onChange, options, isNight }) {
         className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all focus:outline-none ${
           isNight
             ? 'bg-white/[0.04] border-white/[0.10] text-gray-200 hover:border-white/20'
-            : 'bg-white border-gray-200 text-gray-800 hover:border-[#f43f5e]/40'
+            : 'bg-white border-gray-200 text-gray-800 hover:border-[#16a34a]/40'
         }`}
       >
         <span>{selected ? selected.label : '—'}</span>
@@ -162,12 +162,12 @@ function CustomSelect({ value, onChange, options, isNight }) {
                     onClick={() => { onChange(o.value); setOpen(false); }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 text-sm text-right transition-colors ${
                       isSel
-                        ? 'bg-gradient-to-r from-[#f97316]/10 via-[#f43f5e]/10 to-[#06b6d4]/10 text-[#f43f5e] font-semibold'
+                        ? 'bg-gradient-to-r from-[#22c55e]/10 via-[#16a34a]/10 to-[#065f46]/10 text-[#16a34a] font-semibold'
                         : isNight ? 'text-gray-300 hover:bg-white/[0.06]' : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <span>{o.label}</span>
-                    {isSel && <Check size={13} className="text-[#f43f5e] shrink-0" />}
+                    {isSel && <Check size={13} className="text-[#16a34a] shrink-0" />}
                   </button>
                 );
               })}
@@ -289,7 +289,7 @@ function GeneralSettings() {
                 type="button"
                 onClick={() => logoFileRef.current?.click()}
                 disabled={logoUploading}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-all ${isNight ? 'border-white/10 text-gray-300 hover:border-[#f43f5e]/50 hover:text-white disabled:opacity-40' : 'border-gray-300 text-gray-600 hover:border-[#f43f5e]/50 hover:text-gray-900 disabled:opacity-40'}`}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-all ${isNight ? 'border-white/10 text-gray-300 hover:border-[#16a34a]/50 hover:text-white disabled:opacity-40' : 'border-gray-300 text-gray-600 hover:border-[#16a34a]/50 hover:text-gray-900 disabled:opacity-40'}`}
               >
                 {logoUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                 {logoUploading ? 'מעלה...' : 'העלה תמונה'}
@@ -321,7 +321,7 @@ function GeneralSettings() {
                       className="w-7 h-7 rounded-lg transition-transform hover:scale-110 shrink-0"
                       style={{
                         background: c.value,
-                        outline: form.brand_color === c.value ? '2px solid #f43f5e' : '2px solid transparent',
+                        outline: form.brand_color === c.value ? '2px solid #16a34a' : '2px solid transparent',
                         outlineOffset: '2px',
                       }}
                     />
@@ -406,12 +406,12 @@ function GeneralSettings() {
             <button key={t.id} type="button" onClick={() => setForm(p => ({ ...p, bot_tone: t.id }))}
               className={`p-3 rounded-xl border text-right transition-all ${
                 form.bot_tone === t.id
-                  ? 'border-[#f43f5e]/50 bg-[#f43f5e]/10'
+                  ? 'border-[#16a34a]/50 bg-[#16a34a]/10'
                   : isNight
                     ? 'border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]'
                     : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
               }`}>
-              <div className={`font-bold text-sm ${form.bot_tone === t.id ? 'text-[#f43f5e]' : isNight ? 'text-gray-300' : 'text-gray-700'}`}>{t.label}</div>
+              <div className={`font-bold text-sm ${form.bot_tone === t.id ? 'text-[#16a34a]' : isNight ? 'text-gray-300' : 'text-gray-700'}`}>{t.label}</div>
               <div className={`text-xs mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{t.desc}</div>
             </button>
           ))}
@@ -493,15 +493,15 @@ function HoursSettings() {
 
   if (isLoading && !hours) return (
     <div className="flex justify-center py-10">
-      <Loader2 size={24} className="animate-spin text-[#f43f5e]" />
+      <Loader2 size={24} className="animate-spin text-[#16a34a]" />
     </div>
   );
 
   if (!hours) return null;
 
   const timeCls = isNight
-    ? 'border border-white/10 bg-white/5 text-white text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/50 w-[84px] text-center'
-    : 'border border-gray-300 bg-white text-gray-800 text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#f43f5e]/60 w-[84px] shadow-sm text-center';
+    ? 'border border-white/10 bg-white/5 text-white text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#16a34a]/50 w-[84px] text-center'
+    : 'border border-gray-300 bg-white text-gray-800 text-xs rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#16a34a]/60 w-[84px] shadow-sm text-center';
 
   const dividerCls = isNight ? 'border-white/[0.07]' : 'border-gray-100';
 
@@ -611,7 +611,7 @@ function ServicesSettings() {
     } catch (err) { showServiceErr(err); }
   }
 
-  if (isLoading) return <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-[#f43f5e]" /></div>;
+  if (isLoading) return <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-[#16a34a]" /></div>;
 
   const rowBorder = isNight ? 'border-white/[0.07]' : 'border-gray-100';
   const mutedText = isNight ? 'text-gray-500' : 'text-gray-400';
@@ -647,7 +647,7 @@ function ServicesSettings() {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className={`border-b ${isNight ? 'bg-[#f43f5e]/5 border-white/[0.08]' : 'bg-[#fff1eb] border-gray-200'}`}>
+              <div className={`border-b ${isNight ? 'bg-[#16a34a]/5 border-white/[0.08]' : 'bg-[#f0fdf4] border-gray-200'}`}>
                 {/* Tabs */}
                 <div className={`flex border-b ${isNight ? 'border-white/[0.06]' : 'border-gray-200'}`}>
                   {[{ id: 'custom', label: 'שירות מותאם' }, { id: 'preset', label: 'מהרשימה' }].map(t => (
@@ -710,10 +710,10 @@ function ServicesSettings() {
                             disabled={already}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
                               already
-                                ? 'border-[#f43f5e]/25 bg-[#f43f5e]/8 text-[#f43f5e]/50 cursor-default'
+                                ? 'border-[#16a34a]/25 bg-[#16a34a]/8 text-[#16a34a]/50 cursor-default'
                                 : isNight
                                   ? 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/15 hover:text-white'
-                                  : 'border-gray-200 bg-white text-gray-700 hover:border-[#f43f5e]/30 hover:bg-[#fff1eb] hover:text-[#f43f5e] shadow-sm'
+                                  : 'border-gray-200 bg-white text-gray-700 hover:border-[#16a34a]/30 hover:bg-[#f0fdf4] hover:text-[#16a34a] shadow-sm'
                             }`}>
                             {already && <Check size={10} />}
                             {p.name}
@@ -747,7 +747,7 @@ function ServicesSettings() {
             <div key={svc.id}
               className={`border-b last:border-0 transition-all ${rowBorder} ${
                 editingId === svc.id
-                  ? isNight ? 'bg-[#f43f5e]/5' : 'bg-[#fff1eb]'
+                  ? isNight ? 'bg-[#16a34a]/5' : 'bg-[#f0fdf4]'
                   : isNight ? 'hover:bg-white/[0.03]' : 'hover:bg-gray-50'
               }`}>
               {editingId === svc.id ? (
@@ -769,7 +769,7 @@ function ServicesSettings() {
                     <span className={`text-xs shrink-0 ${mutedText}`}>₪</span>
                   </div>
                   <button onClick={() => handleUpdate(svc.id)}
-                    className="w-8 h-8 rounded-full bg-gradient-to-r from-[#f43f5e] to-[#06b6d4] flex items-center justify-center text-white shrink-0">
+                    className="w-8 h-8 rounded-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] flex items-center justify-center text-white shrink-0">
                     <Check size={13} />
                   </button>
                   <button onClick={() => setEditingId(null)}
@@ -979,7 +979,7 @@ function CheckoutForm({ plan, onSuccess, onCancel }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center justify-between mb-1">
         <span className={`font-semibold ${isNight ? 'text-white' : 'text-gray-900'}`}>{planMeta?.label}</span>
-        <span className="font-bold text-[#f43f5e]">{planMeta?.price}{planMeta?.period}</span>
+        <span className="font-bold text-[#16a34a]">{planMeta?.price}{planMeta?.period}</span>
       </div>
       <div className={`border rounded-xl p-4 ${isNight ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'}`}>
         <CardElement options={{ style: { base: { fontSize: '15px', color: isNight ? '#fff' : '#111827', '::placeholder': { color: '#6b7280' } }, invalid: { color: '#ef4444' } } }} />
@@ -1042,10 +1042,10 @@ function BillingSettings() {
   return (
     <div className="space-y-5">
       {/* Current plan */}
-      <div className={`rounded-2xl p-5 border ${isActive ? 'border-[#f43f5e]/30 bg-[#f43f5e]/5' : isTrial ? 'border-amber-500/30 bg-amber-500/5' : isNight ? 'border-white/10 bg-white/3' : 'border-gray-200 bg-gray-50'}`}>
+      <div className={`rounded-2xl p-5 border ${isActive ? 'border-[#16a34a]/30 bg-[#16a34a]/5' : isTrial ? 'border-amber-500/30 bg-amber-500/5' : isNight ? 'border-white/10 bg-white/3' : 'border-gray-200 bg-gray-50'}`}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <span className={`text-xs font-bold px-3 py-1 rounded-full ${isActive ? `bg-gradient-to-r from-[#f43f5e] to-[#06b6d4] text-white` : isTrial ? 'bg-amber-500 text-white' : isNight ? 'bg-white/10 text-gray-400' : 'bg-gray-200 text-gray-500'}`}>
+            <span className={`text-xs font-bold px-3 py-1 rounded-full ${isActive ? `bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white` : isTrial ? 'bg-amber-500 text-white' : isNight ? 'bg-white/10 text-gray-400' : 'bg-gray-200 text-gray-500'}`}>
               {isActive ? (business.plan === 'basic' ? 'Basic' : 'Business') : isTrial ? 'תקופת ניסיון' : 'מנוי לא פעיל'}
             </span>
             <div className={`text-3xl font-black mt-3 ${isNight ? 'text-white' : 'text-gray-900'}`}>
@@ -1091,7 +1091,7 @@ function BillingSettings() {
             const isCurrent = business?.plan === p.id;
             return (
               <div key={p.id} className={`relative rounded-2xl border p-5 flex flex-col ${
-                isCurrent ? 'border-[#f43f5e]/40 bg-[#f43f5e]/5' :
+                isCurrent ? 'border-[#16a34a]/40 bg-[#16a34a]/5' :
                 p.highlight ? isNight ? 'border-white/15 bg-white/5' : 'border-gray-200 bg-gray-50' :
                 isNight ? 'border-white/[0.08] bg-white/[0.03]' : 'border-gray-200 bg-white'
               }`}>
@@ -1106,7 +1106,7 @@ function BillingSettings() {
                 <ul className="space-y-2 mb-5 flex-1">
                   {p.features.map(f => (
                     <li key={f} className={`flex items-center gap-2 text-sm ${isNight ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <Check size={13} className="text-[#f43f5e] shrink-0" />{f}
+                      <Check size={13} className="text-[#16a34a] shrink-0" />{f}
                     </li>
                   ))}
                 </ul>
@@ -1342,7 +1342,7 @@ function IntegrationsSettings() {
                 <div className="flex items-center gap-3">
                   <SaveBtn onClick={handleGreenSave} saving={saving} saved={saved} label="חבר חשבונית ירוקה" />
                   <a href="https://app.greeninvoice.co.il" target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-[#f43f5e] hover:underline flex items-center gap-1">
+                    className="text-sm text-[#16a34a] hover:underline flex items-center gap-1">
                     <ExternalLink size={11} />פתח חשבונית ירוקה
                   </a>
                 </div>
@@ -1590,8 +1590,8 @@ function SecuritySettings() {
     ? 'bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5'
     : 'bg-gray-50 border border-gray-200 rounded-2xl p-5';
   const inputCls2 = isNight
-    ? 'w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#f43f5e]/50'
-    : 'w-full px-3 py-2.5 rounded-xl bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-[#f43f5e]/60 shadow-sm';
+    ? 'w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#16a34a]/50'
+    : 'w-full px-3 py-2.5 rounded-xl bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-[#16a34a]/60 shadow-sm';
 
   return (
     <div className="space-y-5">
@@ -1617,7 +1617,7 @@ function SecuritySettings() {
           </div>
           {status === false && step === 'idle' && (
             <button onClick={startSetup} disabled={loading}
-              className="shrink-0 px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-[#f97316] to-[#f43f5e] text-white disabled:opacity-50">
+              className="shrink-0 px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white disabled:opacity-50">
               {loading ? <Loader2 size={14} className="animate-spin" /> : 'הפעל'}
             </button>
           )}
@@ -1651,7 +1651,7 @@ function SecuritySettings() {
             </div>
             <div className="flex gap-2">
               <button onClick={confirmEnable} disabled={loading || code.length < 6}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-[#f97316] to-[#f43f5e] text-white disabled:opacity-50 flex items-center justify-center gap-2">
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white disabled:opacity-50 flex items-center justify-center gap-2">
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
                 אשר והפעל
               </button>
@@ -1847,7 +1847,7 @@ function SecuritySettings() {
         {historyOpen && (
           <div className="mt-4 space-y-2">
             {historyLoading ? (
-              <div className="flex justify-center py-4"><Loader2 size={18} className="animate-spin text-[#f43f5e]" /></div>
+              <div className="flex justify-center py-4"><Loader2 size={18} className="animate-spin text-[#16a34a]" /></div>
             ) : historyData && historyData.length === 0 ? (
               <p className={`text-xs text-center py-3 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>אין היסטוריית כניסות</p>
             ) : (
@@ -1860,7 +1860,7 @@ function SecuritySettings() {
                     <div className="flex-1 min-w-0">
                       <div className={`text-xs font-semibold ${isNight ? 'text-gray-300' : 'text-gray-700'}`}>
                         {parseUA(ev.user_agent)}
-                        {i === 0 && <span className="mr-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#f43f5e]/15 text-[#f43f5e]">כניסה זו</span>}
+                        {i === 0 && <span className="mr-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#16a34a]/15 text-[#16a34a]">כניסה זו</span>}
                       </div>
                       <div className={`text-[11px] mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{ev.ip}</div>
                     </div>
@@ -1961,7 +1961,7 @@ function AccountSection({ isNight }) {
       <div className="px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
         {/* User info */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f97316] to-[#f43f5e] flex items-center justify-center text-white font-black text-base shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-white font-black text-base shrink-0">
             {(business?.name || '?')[0]}
           </div>
           <div className="min-w-0">
@@ -2011,8 +2011,8 @@ function ManagementSettings() {
     return (
       <div className={`rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.10]' : 'border-gray-200 shadow-sm'}`}>
         <div className={`flex items-center gap-3 px-4 py-3 border-b ${isNight ? 'bg-white/[0.04] border-white/[0.08]' : 'bg-gray-50 border-gray-200'}`}>
-          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isNight ? 'bg-[#f43f5e]/20' : 'bg-[#f43f5e]/10'}`}>
-            <Icon size={14} className="text-[#f43f5e]" />
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isNight ? 'bg-[#16a34a]/20' : 'bg-[#16a34a]/10'}`}>
+            <Icon size={14} className="text-[#16a34a]" />
           </div>
           <span className={`font-extrabold text-sm tracking-wide ${isNight ? 'text-gray-200' : 'text-gray-700'}`}>{label}</span>
         </div>

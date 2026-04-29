@@ -164,7 +164,7 @@ export default function OwnerBotPage() {
         className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all"
         style={{
           background: input.trim() && !loading
-            ? 'linear-gradient(135deg, #f97316, #f43f5e)'
+            ? 'linear-gradient(135deg, #22c55e, #16a34a)'
             : isNight ? 'rgba(255,255,255,0.06)' : '#e5e7eb',
         }}
       >
@@ -185,7 +185,7 @@ export default function OwnerBotPage() {
         style={{ background: surface, borderColor: border }}
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)' }}>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
             <Sparkles size={13} className="text-white" />
           </div>
           <span className="font-bold text-sm" style={{ color: titleClr }}>טורי</span>

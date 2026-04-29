@@ -13,7 +13,7 @@ import { useAuthStore, useDashboardStore, useNotificationStore } from '../../sto
 import api from '../../hooks/useApi';
 
 const STATUS_COLORS = {
-  confirmed: { bg: 'bg-[#fff1eb]', text: 'text-[#f97316]', border: 'border-[#f97316]/20', dot: 'bg-[#f97316]' },
+  confirmed: { bg: 'bg-[#f0fdf4]', text: 'text-[#16a34a]', border: 'border-[#16a34a]/20', dot: 'bg-[#16a34a]' },
   completed: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', dot: 'bg-green-500' },
   cancelled: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300', dot: 'bg-red-400' },
   pending: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', dot: 'bg-amber-500' },
@@ -24,14 +24,14 @@ const STATUS_LABELS = { confirmed: 'מאושר', completed: 'הושלם', cancel
 
 
 const STATUS_LABELS_NIGHT = {
-  confirmed: { label: 'מאושר', cls: 'bg-[#f97316]/15 text-[#f97316] border-[#f97316]/20' },
+  confirmed: { label: 'מאושר', cls: 'bg-[#16a34a]/15 text-[#16a34a] border-[#16a34a]/20' },
   completed: { label: 'הושלם', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' },
   cancelled: { label: 'בוטל',  cls: 'bg-red-500/15 text-red-400 border-red-500/20' },
   pending:   { label: 'ממתין', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/20' },
   break:     { label: 'הפסקה', cls: 'bg-slate-500/15 text-slate-400 border-slate-500/20' },
 };
 const STATUS_LABELS_DAY = {
-  confirmed: { label: 'מאושר', cls: 'bg-[#fff1eb] text-[#f97316] border-[#f97316]/20' },
+  confirmed: { label: 'מאושר', cls: 'bg-[#f0fdf4] text-[#16a34a] border-[#16a34a]/20' },
   completed: { label: 'הושלם', cls: 'bg-green-50 text-green-700 border-green-200' },
   cancelled: { label: 'בוטל',  cls: 'bg-red-50 text-red-600 border-red-200' },
   pending:   { label: 'ממתין', cls: 'bg-amber-50 text-amber-600 border-amber-200' },
@@ -50,7 +50,7 @@ function useNightMode() {
 function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
   const start = appt.starts_at.split('T')[1]?.slice(0, 5) || appt.starts_at.slice(11, 16);
   const end   = appt.ends_at?.split('T')[1]?.slice(0, 5) || appt.ends_at?.slice(11, 16);
-  const staffColor = appt.staff_color || '#f43f5e';
+  const staffColor = appt.staff_color || '#16a34a';
   const statusMap = isNight ? STATUS_LABELS_NIGHT : STATUS_LABELS_DAY;
   const st = statusMap[appt.status] || statusMap.confirmed;
   const duration = appt.service_duration || 30;
@@ -59,10 +59,10 @@ function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
     <>
       {showNowLine && (
         <div className="flex items-center gap-3 py-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#f43f5e] shrink-0" />
-          <div className="flex-1 h-px bg-[#f43f5e]/40" />
-          <span className="text-[#f43f5e] text-xs font-bold shrink-0">עכשיו</span>
-          <div className="flex-1 h-px bg-[#f43f5e]/40" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[#16a34a] shrink-0" />
+          <div className="flex-1 h-px bg-[#16a34a]/40" />
+          <span className="text-[#16a34a] text-xs font-bold shrink-0">עכשיו</span>
+          <div className="flex-1 h-px bg-[#16a34a]/40" />
         </div>
       )}
       <motion.div
@@ -328,8 +328,8 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
 
         <div className="p-5 space-y-4">
           <div className="flex items-center gap-3 p-4 rounded-xl"
-            style={{ background: isNight ? 'rgba(249,115,22,0.10)' : '#fff1eb', border: isNight ? '1px solid rgba(249,115,22,0.18)' : 'none' }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0" style={{ background: 'linear-gradient(135deg,#f97316,#f43f5e)' }}>
+            style={{ background: isNight ? 'rgba(34,197,94,0.10)' : '#f0fdf4', border: isNight ? '1px solid rgba(34,197,94,0.18)' : 'none' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0" style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)' }}>
               {(customerName || 'L')[0]}
             </div>
             <div className="flex-1 min-w-0">
@@ -338,12 +338,12 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                   <input
                     value={customerName}
                     onChange={e => setCustomerName(e.target.value)}
-                    className="flex-1 text-sm font-bold border border-[#f97316]/50 rounded-lg px-2.5 py-1 focus:outline-none min-w-0"
+                    className="flex-1 text-sm font-bold border border-[#16a34a]/50 rounded-lg px-2.5 py-1 focus:outline-none min-w-0"
                     style={{ background: isNight ? 'rgba(255,255,255,0.08)' : '#fff', color: isNight ? '#fff' : '#111' }}
                     autoFocus
                     onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') { setCustomerName(appt.customer_name || ''); setEditingName(false); } }}
                   />
-                  <button onClick={handleSaveName} disabled={savingName} className="p-1.5 rounded-lg bg-[#f97316] text-white hover:bg-[#f43f5e] transition-colors shrink-0">
+                  <button onClick={handleSaveName} disabled={savingName} className="p-1.5 rounded-lg bg-[#16a34a] text-white hover:bg-[#16a34a] transition-colors shrink-0">
                     {savingName ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                   </button>
                   <button onClick={() => { setCustomerName(appt.customer_name || ''); setEditingName(false); }} className="p-1.5 rounded-lg text-gray-500 transition-colors shrink-0"
@@ -354,8 +354,8 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
               ) : (
                 <div className="flex items-center gap-1.5">
                   <div className="font-bold truncate" style={{ color: isNight ? '#ffffff' : '#111827' }}>{customerName || 'לקוח לא ידוע'}</div>
-                  <button onClick={() => setEditingName(true)} className="p-1 rounded hover:bg-[#f97316]/15 transition-colors shrink-0">
-                    <Pencil size={11} className="text-[#f97316]" />
+                  <button onClick={() => setEditingName(true)} className="p-1 rounded hover:bg-[#16a34a]/15 transition-colors shrink-0">
+                    <Pencil size={11} className="text-[#16a34a]" />
                   </button>
                 </div>
               )}
@@ -364,13 +364,13 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                   <input
                     value={customerPhone}
                     onChange={e => setCustomerPhone(e.target.value)}
-                    className="flex-1 text-sm border border-[#f97316]/50 rounded-lg px-2 py-1 focus:outline-none min-w-0"
+                    className="flex-1 text-sm border border-[#16a34a]/50 rounded-lg px-2 py-1 focus:outline-none min-w-0"
                     style={{ background: isNight ? 'rgba(255,255,255,0.08)' : '#fff', color: isNight ? '#fff' : '#111' }}
                     dir="ltr"
                     autoFocus
                     onKeyDown={e => { if (e.key === 'Enter') handleSavePhone(); if (e.key === 'Escape') { setCustomerPhone(appt.customer_phone || ''); setEditingPhone(false); } }}
                   />
-                  <button onClick={handleSavePhone} disabled={savingPhone} className="p-1.5 rounded-lg bg-[#f97316] text-white shrink-0">
+                  <button onClick={handleSavePhone} disabled={savingPhone} className="p-1.5 rounded-lg bg-[#16a34a] text-white shrink-0">
                     {savingPhone ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                   </button>
                   <button onClick={() => { setCustomerPhone(appt.customer_phone || ''); setEditingPhone(false); }} className="p-1.5 rounded-lg text-gray-500 shrink-0" style={{ background: isNight ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
@@ -380,15 +380,15 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
               ) : (
                 <div className="flex items-center gap-1 mt-0.5">
                   {customerPhone ? (
-                    <a href={`tel:${customerPhone}`} className="text-[#f43f5e] text-sm hover:underline flex items-center gap-1" dir="ltr">
+                    <a href={`tel:${customerPhone}`} className="text-[#16a34a] text-sm hover:underline flex items-center gap-1" dir="ltr">
                       <Phone size={12} />{customerPhone}
                     </a>
                   ) : (
                     <span className="text-gray-400 text-xs italic">אין טלפון</span>
                   )}
                   {appt.customer_id && (
-                    <button onClick={() => setEditingPhone(true)} className="p-1 rounded hover:bg-[#f97316]/15 shrink-0">
-                      <Pencil size={10} className="text-[#f97316]" />
+                    <button onClick={() => setEditingPhone(true)} className="p-1 rounded hover:bg-[#16a34a]/15 shrink-0">
+                      <Pencil size={10} className="text-[#16a34a]" />
                     </button>
                   )}
                 </div>
@@ -405,8 +405,8 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
               <div className="flex items-center justify-between mb-1">
                 <span className="text-gray-500 text-xs flex items-center gap-1"><Clock size={11} /> שעה</span>
                 {!editingTime && (
-                  <button onClick={() => setEditingTime(true)} className="p-0.5 rounded hover:bg-[#f97316]/15 transition-colors">
-                    <Pencil size={10} className="text-[#f97316]" />
+                  <button onClick={() => setEditingTime(true)} className="p-0.5 rounded hover:bg-[#16a34a]/15 transition-colors">
+                    <Pencil size={10} className="text-[#16a34a]" />
                   </button>
                 )}
               </div>
@@ -416,10 +416,10 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                     type="time"
                     value={newTime}
                     onChange={e => setNewTime(e.target.value)}
-                    className="flex-1 text-xs border border-[#f97316]/50 rounded-lg px-1.5 py-1 focus:outline-none bg-white text-gray-900"
+                    className="flex-1 text-xs border border-[#16a34a]/50 rounded-lg px-1.5 py-1 focus:outline-none bg-white text-gray-900"
                     dir="ltr"
                   />
-                  <button onClick={handleSaveTime} disabled={savingTime} className="p-1 rounded-lg bg-[#f97316] text-white shrink-0">
+                  <button onClick={handleSaveTime} disabled={savingTime} className="p-1 rounded-lg bg-[#16a34a] text-white shrink-0">
                     {savingTime ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
                   </button>
                   <button onClick={() => { setNewTime(appt.starts_at.slice(11, 16)); setEditingTime(false); }} className="p-1 rounded-lg bg-gray-200 text-gray-600 shrink-0">
@@ -434,8 +434,8 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
               <div className="flex items-center justify-between mb-1">
                 <span className="text-gray-500 text-xs flex items-center gap-1"><Scissors size={11} /> שירות</span>
                 {!editingService && (
-                  <button onClick={() => setEditingService(true)} className="p-0.5 rounded hover:bg-[#f97316]/15 transition-colors">
-                    <Pencil size={10} className="text-[#f97316]" />
+                  <button onClick={() => setEditingService(true)} className="p-0.5 rounded hover:bg-[#16a34a]/15 transition-colors">
+                    <Pencil size={10} className="text-[#16a34a]" />
                   </button>
                 )}
               </div>
@@ -449,7 +449,7 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                   />
                   <div className="flex gap-1">
                     <button onClick={handleSaveService} disabled={savingService || !selectedServiceId}
-                      className="flex-1 flex items-center justify-center gap-1 p-1.5 rounded-lg bg-[#f97316] text-white text-xs">
+                      className="flex-1 flex items-center justify-center gap-1 p-1.5 rounded-lg bg-[#16a34a] text-white text-xs">
                       {savingService ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />} שמור
                     </button>
                     <button onClick={() => { setSelectedServiceId(appt.service_id || ''); setEditingService(false); }}
@@ -466,8 +466,8 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
               <div className="flex items-center justify-between mb-1">
                 <span className="text-gray-500 text-xs flex items-center gap-1"><User size={11} /> עובד</span>
                 {!editingStaff && (
-                  <button onClick={() => setEditingStaff(true)} className="p-0.5 rounded hover:bg-[#f97316]/15 transition-colors">
-                    <Pencil size={10} className="text-[#f97316]" />
+                  <button onClick={() => setEditingStaff(true)} className="p-0.5 rounded hover:bg-[#16a34a]/15 transition-colors">
+                    <Pencil size={10} className="text-[#16a34a]" />
                   </button>
                 )}
               </div>
@@ -480,7 +480,7 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                     placeholder="ללא עובד"
                   />
                   <div className="flex gap-1">
-                    <button onClick={handleSaveStaff} disabled={savingStaff} className="flex-1 flex items-center justify-center gap-1 p-1.5 rounded-lg bg-[#f97316] text-white text-xs">
+                    <button onClick={handleSaveStaff} disabled={savingStaff} className="flex-1 flex items-center justify-center gap-1 p-1.5 rounded-lg bg-[#16a34a] text-white text-xs">
                       {savingStaff ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />} שמור
                     </button>
                     <button onClick={() => { setSelectedStaffId(appt.staff_id || ''); setEditingStaff(false); }} className="p-1.5 rounded-lg bg-gray-100 text-gray-500">
@@ -508,7 +508,7 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
               {!editingNotes && (
                 <button
                   onClick={() => setEditingNotes(true)}
-                  className="text-xs text-[#f97316] hover:text-[#f43f5e] font-medium"
+                  className="text-xs text-[#16a34a] hover:text-[#16a34a] font-medium"
                 >
                   {notes ? 'ערוך' : '+ הוסף הערה'}
                 </button>
@@ -521,14 +521,14 @@ function AppointmentModal({ appt, onClose, onUpdate, onCancel }) {
                   onChange={e => setNotes(e.target.value)}
                   rows={2}
                   placeholder="הערה לתור..."
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#f97316] resize-none"
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#16a34a] resize-none"
                   autoFocus
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveNotes}
                     disabled={savingNotes}
-                    className="flex items-center gap-1 bg-[#f97316] text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
+                    className="flex items-center gap-1 bg-[#16a34a] text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
                   >
                     {savingNotes ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                     שמור
@@ -593,7 +593,7 @@ function CustomSelect({ label, value, onChange, options, placeholder = 'בחר..
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-800 hover:border-[#f43f5e]/40 transition-all focus:outline-none"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-800 hover:border-[#16a34a]/40 transition-all focus:outline-none"
       >
         <span className={selected ? 'text-gray-900' : 'text-gray-400'}>{selected ? selected.label : placeholder}</span>
         <ChevronDown size={15} className={`text-gray-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
@@ -617,14 +617,14 @@ function CustomSelect({ label, value, onChange, options, placeholder = 'בחר..
                     onClick={() => { onChange(String(o.value)); setOpen(false); }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 text-sm text-right transition-colors ${
                       isSelected
-                        ? 'bg-gradient-to-r from-[#f97316]/10 via-[#f43f5e]/10 to-[#06b6d4]/10 text-[#f43f5e] font-semibold'
+                        ? 'bg-gradient-to-r from-[#22c55e]/10 via-[#16a34a]/10 to-[#065f46]/10 text-[#16a34a] font-semibold'
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <span>{o.label}</span>
                     <div className="flex items-center gap-2 shrink-0">
                       {o.sub && <span className="text-xs text-gray-400">{o.sub}</span>}
-                      {isSelected && <Check size={13} className="text-[#f43f5e]" />}
+                      {isSelected && <Check size={13} className="text-[#16a34a]" />}
                     </div>
                   </button>
                 );
@@ -813,7 +813,7 @@ function AddAppointmentModal({ selectedDate, initialTime, initialStaffId, onClos
                       type="button"
                       onClick={() => { setTime(slot); setError(''); setAltSlots([]); }}
                       className="text-xs font-bold px-2.5 py-1 rounded-lg text-white"
-                      style={{ background: 'linear-gradient(135deg,#f97316,#f43f5e)' }}
+                      style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)' }}
                     >
                       {slot}
                     </button>
@@ -833,9 +833,9 @@ function AddAppointmentModal({ selectedDate, initialTime, initialStaffId, onClos
                   type="button"
                   onClick={() => setDate(d)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                    date === d ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-200 hover:border-[#f97316]/40'
+                    date === d ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-200 hover:border-[#16a34a]/40'
                   }`}
-                  style={date === d ? { background: 'linear-gradient(135deg,#f97316,#f43f5e)' } : {}}
+                  style={date === d ? { background: 'linear-gradient(135deg,#22c55e,#16a34a)' } : {}}
                 >
                   {quickDateLabel(d)}
                 </button>
@@ -1076,9 +1076,9 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
             onClick={() => !isPast && onSlotClick(slotTime)}>
             <div className="w-16 shrink-0 flex items-center justify-end pr-3"
               style={{ height: '100%', borderLeft: `1px solid ${dividerColor}` }}>
-              <span className={`text-xs font-medium ${isNowSlot ? 'text-[#f43f5e] font-bold' : isNight ? 'text-gray-600' : 'text-gray-400'}`}>{slotTime}</span>
+              <span className={`text-xs font-medium ${isNowSlot ? 'text-[#16a34a] font-bold' : isNight ? 'text-gray-600' : 'text-gray-400'}`}>{slotTime}</span>
             </div>
-            <div className={`flex-1 mx-3 rounded-xl flex items-center justify-center transition-all ${isPast ? '' : isNight ? 'group-hover:bg-white/[0.03]' : 'group-hover:bg-[#fff7ed]'}`} style={{ height: 40 }}>
+            <div className={`flex-1 mx-3 rounded-xl flex items-center justify-center transition-all ${isPast ? '' : isNight ? 'group-hover:bg-white/[0.03]' : 'group-hover:bg-[#f0fdf4]'}`} style={{ height: 40 }}>
               {!isPast && (
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-3">
                   <span className={`text-xs flex items-center gap-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -1091,7 +1091,7 @@ function DesktopTimeGrid({ appointments, isNight, openTime, closeTime, bufferMin
                   </span>
                 </div>
               )}
-              {isNowSlot && <div className="w-full h-px mx-2" style={{ background: '#f43f5e', opacity: 0.4 }} />}
+              {isNowSlot && <div className="w-full h-px mx-2" style={{ background: '#16a34a', opacity: 0.4 }} />}
             </div>
           </div>
         );
@@ -1167,7 +1167,7 @@ function DatePickerPopup({ value, onChange, onClose }) {
                 isPast ? 'text-gray-300 cursor-not-allowed' :
                 'text-gray-700 hover:bg-gray-100'
               }`}
-              style={isSel ? { background: 'linear-gradient(135deg,#f97316,#f43f5e)' } : isTod ? { background: '#fff1eb', color: '#f97316', ringColor: '#f97316' } : {}}
+              style={isSel ? { background: 'linear-gradient(135deg,#22c55e,#16a34a)' } : isTod ? { background: '#f0fdf4', color: '#16a34a' } : {}}
             >
               {d}
             </button>
@@ -1177,7 +1177,7 @@ function DatePickerPopup({ value, onChange, onClose }) {
       <div className="mt-3 pt-3 border-t border-gray-100">
         <button
           onClick={() => { onChange(today); onClose(); }}
-          className="w-full py-2 text-sm font-semibold text-[#f43f5e] hover:bg-[#fff1eb] rounded-xl transition-colors"
+          className="w-full py-2 text-sm font-semibold text-[#16a34a] hover:bg-[#f0fdf4] rounded-xl transition-colors"
         >
           חזור להיום
         </button>
@@ -1309,7 +1309,7 @@ function MobileAiChat({ isNight, onClose, onAppointmentChange }) {
 }
 
 const NIGHT_STATUS_COLORS = {
-  confirmed: { bg: 'bg-[#f97316]/10', text: 'text-[#fb923c]', border: 'border-[#f97316]/25', dot: 'bg-[#f97316]' },
+  confirmed: { bg: 'bg-[#16a34a]/10', text: 'text-[#fb923c]', border: 'border-[#16a34a]/25', dot: 'bg-[#16a34a]' },
   completed:  { bg: 'bg-emerald-500/10', text: 'text-emerald-300', border: 'border-emerald-500/25', dot: 'bg-emerald-400' },
   cancelled:  { bg: 'bg-red-500/10',    text: 'text-red-400',    border: 'border-red-500/25',    dot: 'bg-red-400' },
   pending:    { bg: 'bg-amber-500/10',   text: 'text-amber-300',  border: 'border-amber-500/25',  dot: 'bg-amber-400' },
@@ -1322,7 +1322,7 @@ function MobileApptCard({ appt, onClick, isNight, requireConfirm, onComplete }) 
   const end = appt.ends_at?.split('T')[1]?.slice(0, 5) || appt.ends_at?.slice(11, 16);
   const palette = isNight ? NIGHT_STATUS_COLORS : STATUS_COLORS;
   const colors = palette[appt.status] || palette.confirmed;
-  const staffColor = appt.status === 'break' ? '#94a3b8' : (appt.staff_color || '#f97316');
+  const staffColor = appt.status === 'break' ? '#94a3b8' : (appt.staff_color || '#16a34a');
 
   return (
     <motion.button
@@ -1408,7 +1408,7 @@ function MobileDateStrip({ selectedDate, onSelect }) {
               isToday ? 'ring-1' :
               'text-gray-500 hover:bg-gray-100'
             }`}
-            style={isSelected ? { background: 'linear-gradient(135deg,#f97316,#f43f5e)' } : isToday ? { background: '#fff1eb', color: '#f97316' } : {}}
+            style={isSelected ? { background: 'linear-gradient(135deg,#22c55e,#16a34a)' } : isToday ? { background: '#f0fdf4', color: '#16a34a' } : {}}
           >
             <span className="text-xs">{DAY_SHORT[dayObj.getDay()]}</span>
             <span className={`text-base font-black leading-tight ${isSelected ? 'text-white' : ''}`}>{dayObj.getDate()}</span>
@@ -1529,7 +1529,7 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
         onClick={() => send(input)}
         disabled={!input.trim() || loading}
         className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all mb-0.5"
-        style={{ background: input.trim() && !loading ? 'linear-gradient(135deg,#f97316,#f43f5e)' : isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb' }}
+        style={{ background: input.trim() && !loading ? 'linear-gradient(135deg,#22c55e,#16a34a)' : isNight ? 'rgba(255,255,255,0.08)' : '#e5e7eb' }}
       >
         {loading
           ? <Loader2 size={13} className="animate-spin" style={{ color: input.trim() ? '#fff' : muted }} />
@@ -1580,8 +1580,8 @@ function CalendarBotPanel({ isNight, onAppointmentChange }) {
                     style={{ background: isNight ? 'rgba(255,255,255,0.04)' : '#ffffff', borderColor: border, cursor: 'pointer' }}
                   >
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ background: isNight ? 'rgba(249,115,22,0.12)' : '#fff1eb' }}>
-                      <Icon size={17} style={{ color: '#f97316' }} />
+                      style={{ background: isNight ? 'rgba(34,197,94,0.12)' : '#f0fdf4' }}>
+                      <Icon size={17} style={{ color: '#16a34a' }} />
                     </div>
                     <div className="flex-1 min-w-0 text-right">
                       <div className="font-bold text-sm" style={{ color: titleClr }}>{card.title}</div>
@@ -1792,7 +1792,7 @@ function BreakModal({ selectedDate, onClose, onSuccess, initialTime = null }) {
             <span className="text-xs" style={{ color: textSub }}>{dateLabel}</span>
             <button type="button"
               onClick={() => setShowDatePicker(v => !v)}
-              className="text-xs font-medium text-[#f43f5e]/60 hover:text-[#f43f5e] transition-colors">
+              className="text-xs font-medium text-[#16a34a]/60 hover:text-[#16a34a] transition-colors">
               {showDatePicker ? 'סגור' : 'שנה תאריך'}
             </button>
           </div>
@@ -1933,9 +1933,9 @@ export default function CalendarPage() {
       <button
         onClick={() => setStaffFilter(null)}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
-          staffFilter === null ? 'text-white border-transparent' : isNight ? 'border-white/10 text-gray-400 hover:text-white hover:border-white/20' : 'border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316]'
+          staffFilter === null ? 'text-white border-transparent' : isNight ? 'border-white/10 text-gray-400 hover:text-white hover:border-white/20' : 'border-gray-200 text-gray-500 hover:border-[#16a34a]/40 hover:text-[#16a34a]'
         }`}
-        style={staffFilter === null ? { background: 'linear-gradient(135deg,#f97316,#f43f5e)' } : {}}
+        style={staffFilter === null ? { background: 'linear-gradient(135deg,#22c55e,#16a34a)' } : {}}
       >
         הכל
         <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${staffFilter === null ? 'bg-white/20 text-white' : isNight ? 'bg-white/10 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
@@ -1948,11 +1948,11 @@ export default function CalendarPage() {
         return (
           <button key={s.id} onClick={() => setStaffFilter(isActive ? null : s.id)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
-              isNight ? isActive ? 'border-transparent text-white' : 'border-white/10 text-gray-400 hover:text-white hover:border-white/20' : isActive ? 'border-transparent text-white' : 'border-gray-200 text-gray-600 hover:border-[#f97316]/40 hover:text-[#f97316]'
+              isNight ? isActive ? 'border-transparent text-white' : 'border-white/10 text-gray-400 hover:text-white hover:border-white/20' : isActive ? 'border-transparent text-white' : 'border-gray-200 text-gray-600 hover:border-[#16a34a]/40 hover:text-[#16a34a]'
             }`}
-            style={isActive ? { background: s.color || '#f97316' } : {}}
+            style={isActive ? { background: s.color || '#16a34a' } : {}}
           >
-            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: isActive ? 'rgba(255,255,255,0.6)' : (s.color || '#f97316') }} />
+            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: isActive ? 'rgba(255,255,255,0.6)' : (s.color || '#16a34a') }} />
             {s.name}
             <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : isNight ? 'bg-white/10 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
               {count}
@@ -1975,7 +1975,7 @@ export default function CalendarPage() {
             </button>
             <div className="flex items-center gap-1.5">
               <span className={`font-black text-lg leading-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>{formatHeaderDate(selectedDate)}</span>
-              {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>}
+              {isTodayFlag && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#f0fdf4', color: '#16a34a' }}>היום</span>}
             </div>
             <button onClick={() => goDay(1)} className={`p-1.5 rounded-xl transition-all active:scale-90 ${isNight ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}>
               <ChevronLeft size={20} />
@@ -1983,13 +1983,13 @@ export default function CalendarPage() {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={handleMobileRefresh} disabled={isRefreshing}
-              className={`p-2 rounded-full border transition-all active:scale-90 ${isNight ? 'border-white/10 text-gray-500 hover:text-white' : 'border-gray-200 text-gray-500 hover:border-[#f97316]/40 hover:text-[#f97316]'}`} aria-label="רענן">
+              className={`p-2 rounded-full border transition-all active:scale-90 ${isNight ? 'border-white/10 text-gray-500 hover:text-white' : 'border-gray-200 text-gray-500 hover:border-[#16a34a]/40 hover:text-[#16a34a]'}`} aria-label="רענן">
               <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
             </button>
             {!isTodayFlag && (
               <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
                 className="text-xs font-semibold px-3 py-1.5 rounded-full border"
-                style={{ color: '#f43f5e', background: '#fff1eb', borderColor: '#f97316' + '33' }}>
+                style={{ color: '#16a34a', background: '#f0fdf4', borderColor: '#16a34a' + '33' }}>
                 היום
               </button>
             )}
@@ -2004,7 +2004,7 @@ export default function CalendarPage() {
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 size={28} className="animate-spin text-[#f97316]" />
+              <Loader2 size={28} className="animate-spin text-[#16a34a]" />
             </div>
           ) : !isBusinessOpen ? (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -2032,7 +2032,7 @@ export default function CalendarPage() {
         </div>
         <button onClick={() => setShowAddModal(true)}
           className="fixed bottom-[84px] right-4 w-14 h-14 rounded-full z-40 flex items-center justify-center shadow-xl active:scale-95 transition-transform"
-          style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 8px 24px rgba(244,63,94,0.4)' }}>
+          style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 8px 24px rgba(22,163,74,0.4)' }}>
           <Plus size={22} className="text-white" />
         </button>
         <button onClick={() => { setBreakModalTime(null); setShowBreakModal(true); }}
@@ -2076,7 +2076,7 @@ export default function CalendarPage() {
                   </span>
                   {isTodayFlag && (
                     <div className="mt-0.5">
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff1eb', color: '#f97316' }}>היום</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#f0fdf4', color: '#16a34a' }}>היום</span>
                     </div>
                   )}
                 </button>
@@ -2125,7 +2125,7 @@ export default function CalendarPage() {
             </div>
             {isLoading ? (
               <div className="flex items-center justify-center flex-1">
-                <Loader2 size={28} className="animate-spin text-[#f43f5e]" />
+                <Loader2 size={28} className="animate-spin text-[#16a34a]" />
               </div>
             ) : !isBusinessOpen ? (
               <div className="flex flex-col items-center justify-center flex-1 text-center">

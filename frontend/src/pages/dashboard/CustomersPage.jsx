@@ -52,12 +52,12 @@ function CustomerDrawer({ customerId, onClose, onEdit, onDelete }) {
         ) : data ? (
           <div className="p-5 space-y-5">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#f97316] to-[#f43f5e] flex items-center justify-center text-white font-black text-2xl shadow-lg">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-white font-black text-2xl shadow-lg">
                 {(data.customer?.name || 'L')[0]}
               </div>
               <div>
                 <div className="font-black text-gray-900 text-xl">{data.customer?.name || 'לא ידוע'}</div>
-                <a href={`tel:${data.customer?.whatsapp_phone}`} className="text-[#f97316] text-sm hover:underline flex items-center gap-1 mt-0.5">
+                <a href={`tel:${data.customer?.whatsapp_phone}`} className="text-[#16a34a] text-sm hover:underline flex items-center gap-1 mt-0.5">
                   <Phone size={13} />{data.customer?.whatsapp_phone}
                 </a>
               </div>
@@ -85,7 +85,7 @@ function CustomerDrawer({ customerId, onClose, onEdit, onDelete }) {
                   {data.appointments?.slice(0, 10).map(a => (
                     <div key={a.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                       <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0">
-                        <Calendar size={14} className="text-[#f97316]" />
+                        <Calendar size={14} className="text-[#16a34a]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-gray-900 text-sm truncate">{a.service_name || 'שירות'}</div>
@@ -141,18 +141,18 @@ function EditCustomerModal({ customer, onClose, onSaved }) {
           <div>
             <label className="text-xs font-semibold text-gray-500 block mb-1">שם מלא</label>
             <input value={name} onChange={e => setName(e.target.value)} autoFocus
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#f97316] transition-all" />
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#16a34a] transition-all" />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-500 block mb-1">טלפון</label>
             <input value={phone} onChange={e => setPhone(e.target.value)} dir="ltr"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#f97316] transition-all font-mono" />
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#16a34a] transition-all font-mono" />
           </div>
           {error && <p className="text-red-500 text-xs">{error}</p>}
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">ביטול</button>
             <button type="submit" disabled={mutation.isPending}
-              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold bg-gradient-to-r from-[#f97316] to-[#f43f5e] disabled:opacity-60 flex items-center justify-center gap-1.5">
+              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] disabled:opacity-60 flex items-center justify-center gap-1.5">
               {mutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
               שמור
             </button>
@@ -238,22 +238,22 @@ function QuickAddSheet({ onClose, onSuccess }) {
             <div>
               <label className="text-xs font-semibold text-gray-500 block mb-1">שם פרטי</label>
               <input ref={firstRef} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="ישראל" autoFocus
-                className="w-full px-3 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#f97316] transition-all" style={{ fontSize: 16 }} />
+                className="w-full px-3 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#16a34a] transition-all" style={{ fontSize: 16 }} />
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-500 block mb-1">שם משפחה</label>
               <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="ישראלי"
-                className="w-full px-3 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#f97316] transition-all" style={{ fontSize: 16 }} />
+                className="w-full px-3 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#16a34a] transition-all" style={{ fontSize: 16 }} />
             </div>
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-500 block mb-1">מספר טלפון <span className="text-red-400">*</span></label>
             <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="050-000-0000" type="tel" inputMode="tel"
-              className="w-full px-3 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#f97316] transition-all font-mono" style={{ fontSize: 16 }} />
+              className="w-full px-3 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#16a34a] transition-all font-mono" style={{ fontSize: 16 }} />
           </div>
           {error && <p className="text-red-500 text-xs">{error}</p>}
           <button type="submit" disabled={mutation.isPending}
-            className="w-full py-3.5 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-[#f97316] to-[#f43f5e] shadow-lg shadow-[#f43f5e]/20 disabled:opacity-60 mt-1">
+            className="w-full py-3.5 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-[#22c55e] to-[#16a34a] shadow-lg shadow-[#16a34a]/20 disabled:opacity-60 mt-1">
             {mutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
             הוסף לקוח
           </button>
@@ -275,7 +275,7 @@ function CustomerCard({ customer, onClick, onEdit, onDelete, index }) {
       {/* Hover actions */}
       <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <button onClick={e => { e.stopPropagation(); onEdit(customer); }}
-          className="w-6 h-6 rounded-lg bg-white border border-gray-200 shadow hover:border-[#f97316] hover:text-[#f97316] text-gray-500 flex items-center justify-center transition-all">
+          className="w-6 h-6 rounded-lg bg-white border border-gray-200 shadow hover:border-[#16a34a] hover:text-[#16a34a] text-gray-500 flex items-center justify-center transition-all">
           <Pencil size={10} />
         </button>
         <button onClick={e => { e.stopPropagation(); onDelete(customer); }}
@@ -344,7 +344,7 @@ export default function CustomersPage() {
         </div>
         <button
           onClick={() => setShowQuickAdd(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#f97316] to-[#f43f5e] shadow-sm"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#22c55e] to-[#16a34a] shadow-sm"
         >
           <UserPlus size={15} />
           <span className="hidden sm:inline">לקוח חדש</span>
@@ -359,13 +359,13 @@ export default function CustomersPage() {
           <input
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pr-10 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#f97316] transition-all"
+            className="w-full pr-10 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#16a34a] transition-all"
             placeholder="חפש לפי שם או טלפון..."
           />
         </div>
         <button
           onClick={() => setSortAZ(v => !v)}
-          className={`px-3 py-2.5 rounded-xl border text-sm font-bold transition-all shrink-0 ${sortAZ ? 'bg-[#f97316] border-[#f97316] text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-[#f97316] hover:text-[#f97316]'}`}
+          className={`px-3 py-2.5 rounded-xl border text-sm font-bold transition-all shrink-0 ${sortAZ ? 'bg-[#16a34a] border-[#16a34a] text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-[#16a34a] hover:text-[#16a34a]'}`}
         >
           א-ת
         </button>
@@ -374,7 +374,7 @@ export default function CustomersPage() {
       {/* Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={28} className="animate-spin text-[#f97316]" />
+          <Loader2 size={28} className="animate-spin text-[#16a34a]" />
         </div>
       ) : customers.length === 0 ? (
         <div className="text-center py-16">
@@ -401,12 +401,12 @@ export default function CustomersPage() {
           {total > 48 && (
             <div className="flex items-center justify-center gap-3 mt-6">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40 hover:border-[#f97316] hover:text-[#f97316] transition-all">
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40 hover:border-[#16a34a] hover:text-[#16a34a] transition-all">
                 הקודם
               </button>
               <span className="text-sm text-gray-500">עמוד {page} מתוך {Math.ceil(total / 48)}</span>
               <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(total / 48)}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40 hover:border-[#f97316] hover:text-[#f97316] transition-all">
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40 hover:border-[#16a34a] hover:text-[#16a34a] transition-all">
                 הבא
               </button>
             </div>
@@ -418,7 +418,7 @@ export default function CustomersPage() {
       <button
         onClick={() => setShowQuickAdd(true)}
         className="sm:hidden fixed bottom-[84px] right-4 w-14 h-14 rounded-full z-40 flex items-center justify-center shadow-xl"
-        style={{ background: 'linear-gradient(135deg, #f97316, #f43f5e)', boxShadow: '0 8px 24px rgba(244,63,94,0.4)' }}
+        style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 8px 24px rgba(22,163,74,0.4)' }}
       >
         <UserPlus size={20} className="text-white" />
       </button>

@@ -61,7 +61,7 @@ function MonthPicker({ value, onChange, isNight }) {
             : 'bg-white border-gray-200 text-gray-800 hover:bg-gray-50 shadow-sm'
         }`}
       >
-        <Calendar size={15} className="text-[#f43f5e]" />
+        <Calendar size={15} className="text-[#16a34a]" />
         {displayLabel}
         <ChevronLeft size={14} className={`transition-transform ${isNight ? 'text-gray-500' : 'text-gray-400'} ${open ? 'rotate-90' : '-rotate-90'}`} />
       </button>
@@ -104,7 +104,7 @@ function MonthPicker({ value, onChange, isNight }) {
                   <button key={i} onClick={() => select(i)} disabled={isFuture}
                     className={`py-2 rounded-xl text-sm font-semibold transition-all ${
                       isSelected
-                        ? 'bg-gradient-to-r from-[#f97316] via-[#f43f5e] to-[#06b6d4] text-white'
+                        ? 'bg-gradient-to-r from-[#22c55e] via-[#16a34a] to-[#065f46] text-white'
                         : isFuture
                           ? (isNight ? 'text-gray-700 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed')
                           : (isNight ? 'text-gray-300 hover:bg-white/10 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900')
@@ -122,7 +122,7 @@ function MonthPicker({ value, onChange, isNight }) {
                   onChange(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
                   setOpen(false);
                 }}
-                className="text-xs text-[#f43f5e] hover:text-[#f97316] font-semibold transition-colors">
+                className="text-xs text-[#16a34a] hover:text-[#16a34a] font-semibold transition-colors">
                 החודש הנוכחי
               </button>
               <button onClick={() => setOpen(false)}
@@ -138,7 +138,7 @@ function MonthPicker({ value, onChange, isNight }) {
 }
 
 function StatCard({ title, value, subtitle, icon: Icon, color = 'orange', loading, isNight }) {
-  const iconColor = { orange: '#f97316', coral: '#f43f5e', cyan: '#06b6d4', green: '#10b981' }[color] || '#f97316';
+  const iconColor = { orange: '#22c55e', coral: '#16a34a', cyan: '#065f46', green: '#10b981' }[color] || '#22c55e';
 
   return (
     <motion.div
@@ -236,7 +236,7 @@ export default function AnalyticsPage() {
 
     const tableRows = appointments.map((a, idx) => {
       const status = a.status === 'completed' ? 'הושלם' : a.status === 'cancelled' ? 'בוטל' : 'ממתין';
-      const statusColor = a.status === 'completed' ? '#10b981' : a.status === 'cancelled' ? '#f43f5e' : '#f97316';
+      const statusColor = a.status === 'completed' ? '#10b981' : a.status === 'cancelled' ? '#16a34a' : '#22c55e';
       const bg = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
       const td = `padding:14px 16px;border-bottom:1px solid #eef0f3;font-size:13px;color:#374151;vertical-align:middle;line-height:1.5`;
       return `<tr style="background:${bg}">
@@ -265,14 +265,14 @@ export default function AnalyticsPage() {
 
     const sectionTitle = (label) => `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:28px">
-        <div style="width:5px;height:20px;border-radius:3px;background:#f43f5e;flex-shrink:0"></div>
+        <div style="width:5px;height:20px;border-radius:3px;background:#16a34a;flex-shrink:0"></div>
         <span style="font-size:15px;font-weight:800;color:#111827">${label}</span>
       </div>`;
 
     const kpiCards = [
       { label: 'סה״כ תורים',     value: String(s.total ?? 0),                              color: '#111827' },
-      { label: 'הכנסות החודש',   value: `₪${(s.revenue ?? 0).toLocaleString('he-IL')}`,   color: '#f43f5e' },
-      { label: 'לקוחות חדשים',   value: String(monthlyReport?.newCustomers ?? 0),           color: '#06b6d4' },
+      { label: 'הכנסות החודש',   value: `₪${(s.revenue ?? 0).toLocaleString('he-IL')}`,   color: '#16a34a' },
+      { label: 'לקוחות חדשים',   value: String(monthlyReport?.newCustomers ?? 0),           color: '#065f46' },
     ].map(k => `
       <div style="flex:1;background:#fff;border-radius:12px;padding:16px 18px;border:1px solid #e5e7eb;border-top:3px solid ${k.color}">
         <div style="font-size:11px;color:#9ca3af;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">${k.label}</div>
@@ -281,8 +281,8 @@ export default function AnalyticsPage() {
 
     const statusCards = [
       { label: 'הושלמו',  value: s.completed ?? 0, color: '#10b981', bg: '#f0fdf4' },
-      { label: 'ממתינים', value: pendingCount,       color: '#f97316', bg: '#fff7ed' },
-      { label: 'בוטלו',   value: s.cancelled ?? 0,  color: '#f43f5e', bg: '#fff1f2' },
+      { label: 'ממתינים', value: pendingCount,       color: '#22c55e', bg: '#f0fdf4' },
+      { label: 'בוטלו',   value: s.cancelled ?? 0,  color: '#16a34a', bg: '#fff1f2' },
     ].map(st => `
       <div style="flex:1;background:${st.bg};border-radius:12px;padding:14px 18px;border:1px solid ${st.color}30;text-align:center">
         <div style="font-size:28px;font-weight:900;color:${st.color};line-height:1;margin-bottom:4px">${st.value}</div>
@@ -291,7 +291,7 @@ export default function AnalyticsPage() {
 
     container.innerHTML = `
       <!-- Header -->
-      <div style="background:linear-gradient(120deg,#f97316 0%,#f43f5e 100%);padding:32px 40px;color:#fff">
+      <div style="background:linear-gradient(120deg,#22c55e 0%,#16a34a 100%);padding:32px 40px;color:#fff">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div>
             <div style="font-size:30px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">Tori</div>
@@ -330,7 +330,7 @@ export default function AnalyticsPage() {
               <col style="width:17%">
             </colgroup>
             <thead>
-              <tr style="background:#f43f5e">
+              <tr style="background:#16a34a">
                 ${['לקוח','שירות','עובד','תאריך','שעה','מחיר','סטטוס'].map(h =>
                   `<th style="padding:14px 16px;text-align:right;font-size:12px;font-weight:700;color:#fff;border-bottom:none;letter-spacing:0.02em">${h}</th>`
                 ).join('')}
@@ -414,8 +414,8 @@ export default function AnalyticsPage() {
   const pending   = Math.max(0, total - completed - cancelled);
   const pieData = [
     { name: 'הושלמו',  value: completed, color: '#10b981' },
-    { name: 'ממתינים', value: pending,   color: '#f97316' },
-    { name: 'בוטלו',   value: cancelled, color: '#f43f5e' },
+    { name: 'ממתינים', value: pending,   color: '#22c55e' },
+    { name: 'בוטלו',   value: cancelled, color: '#16a34a' },
   ].filter(d => d.value > 0);
 
   return (
@@ -455,7 +455,7 @@ export default function AnalyticsPage() {
             {[7, 30, 90].map(d => (
               <button key={d} onClick={() => setDays(d)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                  days === d ? 'bg-gradient-to-r from-[#f97316] to-[#f43f5e] text-white' :
+                  days === d ? 'bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white' :
                   isNight ? 'bg-white/[0.06] text-gray-400 hover:bg-white/10 hover:text-white' :
                   'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}>
@@ -466,21 +466,21 @@ export default function AnalyticsPage() {
         </div>
         {loadingDaily ? (
           <div className="h-44 flex items-center justify-center">
-            <Loader2 size={24} className="animate-spin text-[#f43f5e]" />
+            <Loader2 size={24} className="animate-spin text-[#16a34a]" />
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={190}>
             <AreaChart data={revenueData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#f43f5e" stopOpacity={isNight ? 0.25 : 0.18} />
-                  <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                  <stop offset="5%"  stopColor="#16a34a" stopOpacity={isNight ? 0.25 : 0.18} />
+                  <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} tickFormatter={v => `₪${v}`} width={44} />
               <Tooltip content={<CustomTooltip isNight={isNight} />} />
-              <Area type="monotone" dataKey="revenue" name="הכנסות" stroke="#f43f5e" fill="url(#revenueGrad)" strokeWidth={2} dot={false} />
+              <Area type="monotone" dataKey="revenue" name="הכנסות" stroke="#16a34a" fill="url(#revenueGrad)" strokeWidth={2} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         )}
@@ -585,7 +585,7 @@ export default function AnalyticsPage() {
                     <XAxis dataKey="hour" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} allowDecimals={false} width={20} domain={[0, 'dataMax+1']} />
                     <Tooltip content={<CustomTooltip isNight={isNight} />} />
-                    <Bar dataKey="count" name="תורים" fill="#f43f5e" radius={[5, 5, 0, 0]} fillOpacity={0.88} maxBarSize={32} />
+                    <Bar dataKey="count" name="תורים" fill="#16a34a" radius={[5, 5, 0, 0]} fillOpacity={0.88} maxBarSize={32} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
