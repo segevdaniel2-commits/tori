@@ -561,7 +561,7 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Testimonials ──────────────────────────────────────────────────── */}
-      <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative', overflow: 'visible' }}>
+      <section id="testimonials" className="py-28 md:py-40 px-4 md:px-6" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative', overflow: 'visible' }}>
 
         {/* cosmetician robot — breaks out from left edge */}
         <motion.div
