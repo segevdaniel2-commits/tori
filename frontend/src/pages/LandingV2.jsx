@@ -447,36 +447,41 @@ export default function LandingV2() {
           <div className="flex flex-col items-start gap-4" style={{ marginBottom: 64 }}>
             <span className="rounded-full px-4 py-1.5 text-xs font-medium"
               style={{ ...glassCard, background: 'rgba(255,255,255,0.6)', color: '#6b6055', fontFamily: "'Rubik', sans-serif" }}>
-              איך זה עובד
+              איך זה עובד?
             </span>
             <h2 style={{ fontFamily: "'Secular One', sans-serif", fontSize: 'clamp(36px,6vw,72px)', lineHeight: 0.9, letterSpacing: '-0.02em', color: '#18120a', margin: 0 }}>
-              פשוט, מהיר, עובד.
+              פשוט ומהיר
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
             {[
-              { step: '01', title: 'נרשמים תוך 2 דקות', desc: 'שם העסק, שירותים, מחירים ושעות עבודה — הכל בממשק פשוט ומהיר.' },
+              { step: '01', title: 'נרשמים תוך 2 דקות', desc: 'שם העסק, שירותים, מחירים ושעות עבודה. הכל בממשק פשוט ומהיר.' },
               { step: '02', title: 'מחברים את הוואטסאפ', desc: 'שולחים ללקוחות קישור אחד, מהרגע הזה הבוט מקבל תורים במקומך.' },
-              { step: '03', title: 'הבוט עובד, אתה נח',  desc: 'תורים, ביטולים, תזכורות — הכל רץ לבד 24/7, גם כשאתה ישן.' },
+              { step: '03', title: 'הבוט עובד, אתה נח',  desc: 'תורים, ביטולים, תזכורות. הכל רץ לבד 24/7, גם כשאתה ישן.' },
             ].map((s, i) => (
               <motion.div key={i}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: i * 0.14, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="relative flex flex-col gap-4 items-start"
+                className="relative flex flex-col gap-4 items-start group"
                 style={{
                   padding: 'clamp(40px,5vw,56px) clamp(24px,4vw,40px)',
                   borderInlineEnd: i < 2 ? '1px solid rgba(0,0,0,0.08)' : 'none',
                 }}
               >
-                <span className="leading-none select-none" style={{
-                  fontFamily: "'Secular One', sans-serif",
-                  fontSize: 'clamp(72px, 10vw, 130px)',
-                  color: 'rgba(0,0,0,0.07)',
-                  marginBottom: -16,
-                  display: 'block',
-                }}>{s.step}</span>
+                <motion.span
+                  className="leading-none select-none"
+                  style={{
+                    fontFamily: "'Secular One', sans-serif",
+                    fontSize: 'clamp(72px, 10vw, 130px)',
+                    marginBottom: -16,
+                    display: 'block',
+                  }}
+                  initial={{ color: 'rgba(0,0,0,0.07)' }}
+                  whileHover={{ color: 'rgba(22,163,74,0.25)' }}
+                  transition={{ duration: 0.4, ease: 'easeOut' }}
+                >{s.step}</motion.span>
                 <h3 style={{ fontFamily: "'Secular One', sans-serif", fontSize: 'clamp(22px,2.5vw,30px)', color: '#18120a', margin: 0, fontWeight: 400 }}>{s.title}</h3>
                 <p style={{ fontFamily: "'Rubik', sans-serif", fontSize: 14, lineHeight: 1.7, color: '#6b6055', margin: 0, maxWidth: '28ch' }}>{s.desc}</p>
               </motion.div>
