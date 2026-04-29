@@ -7,6 +7,7 @@ import {
 import { SplineScene } from '@/components/ui/splite';
 import robotWaveImg from '../assets/robot-wave.png';
 import robotBarberImg from '../assets/robot-barber.png';
+import robotCosmeticianImg from '../assets/robot-cosmetician.png';
 import WhatsAppDemo from '../components/WhatsAppDemo';
 
 // ─── Global SVG Glass Filter ───────────────────────────────────────────────────
@@ -561,6 +562,29 @@ export default function LandingV2() {
 
       {/* ─── Testimonials ──────────────────────────────────────────────────── */}
       <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative', overflow: 'visible' }}>
+
+        {/* cosmetician robot — breaks out from left edge */}
+        <motion.div
+          className="hidden lg:block absolute pointer-events-none"
+          style={{ bottom: -40, left: -40, width: 520, zIndex: 0 }}
+          initial={{ opacity: 0, x: -60, rotate: 45 }}
+          whileInView={{ opacity: 1, x: 0, rotate: 45 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <img
+            src={robotCosmeticianImg}
+            alt="TORI robot cosmetician"
+            style={{
+              width: '100%',
+              height: 'auto',
+              mixBlendMode: 'multiply',
+              maskImage: 'radial-gradient(ellipse 80% 80% at 40% 50%, black 40%, rgba(0,0,0,0.6) 62%, transparent 80%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 40% 50%, black 40%, rgba(0,0,0,0.6) 62%, transparent 80%)',
+              filter: 'drop-shadow(0 30px 50px rgba(0,0,0,0.2))',
+            }}
+          />
+        </motion.div>
 
         {/* barber robot — breaks out from right edge */}
         <motion.div
