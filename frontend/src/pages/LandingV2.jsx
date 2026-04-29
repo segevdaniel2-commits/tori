@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { SplineScene } from '@/components/ui/splite';
 import robotWaveImg from '../assets/robot-wave.png';
+import robotBarberImg from '../assets/robot-barber.png';
 import WhatsAppDemo from '../components/WhatsAppDemo';
 
 // ─── Global SVG Glass Filter ───────────────────────────────────────────────────
@@ -559,8 +560,32 @@ export default function LandingV2() {
       </section>
 
       {/* ─── Testimonials ──────────────────────────────────────────────────── */}
-      <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-        <div className="max-w-6xl mx-auto">
+      <section id="testimonials" className="py-14 md:py-24 px-4 md:px-6 overflow-hidden" style={{ background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative' }}>
+
+        {/* barber robot — breaks out from right edge */}
+        <motion.div
+          className="hidden lg:block absolute pointer-events-none"
+          style={{ bottom: -60, right: -60, width: 480, zIndex: 0 }}
+          initial={{ opacity: 0, x: 60, rotate: -45 }}
+          whileInView={{ opacity: 1, x: 0, rotate: -45 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <img
+            src={robotBarberImg}
+            alt="TORI robot barber"
+            style={{
+              width: '100%',
+              height: 'auto',
+              mixBlendMode: 'multiply',
+              maskImage: 'radial-gradient(ellipse 80% 80% at 60% 50%, black 40%, rgba(0,0,0,0.6) 62%, transparent 80%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 60% 50%, black 40%, rgba(0,0,0,0.6) 62%, transparent 80%)',
+              filter: 'drop-shadow(0 30px 50px rgba(0,0,0,0.2))',
+            }}
+          />
+        </motion.div>
+
+        <div className="max-w-6xl mx-auto" style={{ position: 'relative', zIndex: 1 }}>
           <div className="text-center mb-10 md:mb-16">
             <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900">מה אומרים עלינו</motion.h2>
