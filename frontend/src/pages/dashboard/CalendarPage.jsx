@@ -2319,6 +2319,8 @@ export default function CalendarPage() {
             onClose={() => setSelectedAppt(null)}
             onUpdate={() => {
               queryClient.invalidateQueries({ queryKey: ['appointments', selectedDate] });
+              queryClient.invalidateQueries({ queryKey: ['analytics-monthly'] });
+              queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
               setSelectedAppt(null);
             }}
           />

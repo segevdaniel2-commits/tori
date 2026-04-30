@@ -218,6 +218,9 @@ export default function AnalyticsPage() {
   const { data: monthlyReport } = useQuery({
     queryKey: ['analytics-monthly', month],
     queryFn: () => analyticsApi.monthlyReport(month).then(r => r.data),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000,
   });
 
   const revenueData = dailyRevenue.map(d => ({
@@ -590,50 +593,56 @@ export default function AnalyticsPage() {
 
             {/* ── Card 2: Insights ── */}
             <div className="rounded-2xl border p-5 flex flex-col" style={card}>
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center justify-between mb-4">
                 <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>תובנות</h3>
                 <span className={`text-xs font-medium ${dim}`}>{sub}</span>
               </div>
 
-              <div className="flex flex-col flex-1 gap-3">
+              <div className="flex flex-col flex-1 gap-4">
                 {/* Services breakdown */}
-                <div className={`rounded-2xl p-4 ${dimBg}`}>
-                  <div className={`text-[10px] font-semibold uppercase tracking-wider mb-3 ${dim}`}>פילוח שירותים</div>
+                <div className="flex-1">
+                  <div className={`text-xs font-semibold uppercase tracking-wider mb-3 ${dim}`}>פילוח שירותים</div>
                   {svcEntries.length > 0 ? (
-                    <div className="space-y-2.5">
-                      {svcEntries.slice(0, 3).map(([name, count], i) => {
+                    <div className="space-y-3">
+                      {svcEntries.slice(0, 4).map(([name, count], i) => {
                         const pct = Math.round((count / Math.max(total, 1)) * 100);
-                        const colors = ['#16a34a', '#22c55e', '#4ade80'];
+                        const barColors = ['#16a34a', '#22c55e', '#4ade80', '#86efac'];
                         return (
                           <div key={name}>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className={`text-xs font-semibold truncate ${isNight ? 'text-gray-200' : 'text-gray-700'}`}>{name}</span>
-                              <span className={`text-xs font-bold tabular-nums ml-2 shrink-0 ${dim}`}>{count}</span>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className={`text-sm font-semibold truncate leading-tight ${isNight ? 'text-gray-100' : 'text-gray-800'}`}>{name}</span>
+                              <div className="flex items-center gap-2 shrink-0 mr-2">
+                                <span className={`text-sm font-black tabular-nums ${isNight ? 'text-white' : 'text-gray-900'}`}>{count}</span>
+                                <span className={`text-xs ${dim}`}>{pct}%</span>
+                              </div>
                             </div>
-                            <div className={`h-1.5 rounded-full overflow-hidden ${isNight ? 'bg-white/10' : 'bg-gray-200'}`}>
+                            <div className={`h-2.5 rounded-full overflow-hidden ${isNight ? 'bg-white/[0.07]' : 'bg-gray-100'}`}>
                               <div className="h-full rounded-full transition-all duration-700"
-                                style={{ width: `${pct}%`, background: colors[i] }} />
+                                style={{ width: `${Math.max(pct, 2)}%`, background: barColors[i] }} />
                             </div>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <span className={`text-xs ${dim}`}>אין נתונים</span>
+                    <div className={`text-sm ${dim}`}>אין נתונים</div>
                   )}
                 </div>
 
-                {/* Two KPI boxes */}
-                <div className="grid grid-cols-2 gap-2 flex-1">
-                  <div className={`rounded-2xl p-3.5 flex flex-col justify-between ${dimBg}`}>
-                    <div className={`text-[10px] font-semibold uppercase tracking-wider ${dim}`}>ממוצע לתור</div>
-                    <div className={`text-2xl font-black tabular-nums mt-2 ${isNight ? 'text-white' : 'text-gray-900'}`}>
+                {/* Divider */}
+                <div className={`h-px ${isNight ? 'bg-white/[0.06]' : 'bg-gray-100'}`} />
+
+                {/* Two big KPIs */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className={`text-xs font-semibold uppercase tracking-wider mb-1 ${dim}`}>ממוצע לתור</div>
+                    <div className={`text-3xl font-black tabular-nums leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>
                       {avgValue !== null ? `₪${avgValue.toLocaleString()}` : '—'}
                     </div>
                   </div>
-                  <div className={`rounded-2xl p-3.5 flex flex-col justify-between ${dimBg}`}>
-                    <div className={`text-[10px] font-semibold uppercase tracking-wider ${dim}`}>לקוחות חדשים</div>
-                    <div className={`text-2xl font-black tabular-nums mt-2 ${isNight ? 'text-white' : 'text-gray-900'}`}>
+                  <div>
+                    <div className={`text-xs font-semibold uppercase tracking-wider mb-1 ${dim}`}>לקוחות חדשים</div>
+                    <div className={`text-3xl font-black tabular-nums leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>
                       {monthlyReport?.newCustomers ?? '—'}
                     </div>
                   </div>
@@ -641,51 +650,62 @@ export default function AnalyticsPage() {
 
                 {/* High cancellation alert */}
                 {cancellationRate >= 15 && (
-                  <div className={`rounded-xl px-3.5 py-2.5 text-xs flex items-center gap-2.5 ${isNight ? 'bg-amber-900/20 text-amber-400' : 'bg-amber-50 text-amber-700'} border ${isNight ? 'border-amber-900/30' : 'border-amber-200'}`}>
-                    <span className="text-base shrink-0">⚠️</span>
-                    <span>שיעור ביטולים {cancellationRate}% — כדאי לשלוח תזכורות</span>
+                  <div className={`rounded-xl px-3 py-2.5 text-xs flex items-center gap-2 ${isNight ? 'bg-amber-900/20 text-amber-400' : 'bg-amber-50 text-amber-700'} border ${isNight ? 'border-amber-900/30' : 'border-amber-200'}`}>
+                    <span className="shrink-0">⚠️</span>
+                    <span>ביטולים {cancellationRate}% — שלח תזכורות</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* ── Card 3: Peak Hours ── */}
-            <div className="rounded-2xl border p-5 flex flex-col" style={card}>
-              <div className="flex items-center justify-between mb-5">
-                <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
-                {peakHour && (
-                  <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-bold ${isNight ? 'bg-[#16a34a]/20 text-[#4ade80]' : 'bg-[#f0fdf4] text-[#16a34a]'} border ${isNight ? 'border-[#16a34a]/20' : 'border-green-200'}`}>
-                    <span>🔥</span><span>{peakHour.hour}</span>
-                  </div>
-                )}
-              </div>
+            {(() => {
+              // Show top 8 busiest hours, re-sorted chronologically
+              const displayHours = [...hoursData]
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 8)
+                .sort((a, b) => a.hour.localeCompare(b.hour));
+              const displayMax = displayHours.length > 0 ? Math.max(...displayHours.map(h => h.count)) : 1;
 
-              {hoursData.length === 0 ? (
-                <div className={`flex-1 flex items-center justify-center text-sm ${dim}`}>אין נתונים עדיין</div>
-              ) : (
-                <div className="flex flex-col flex-1 justify-between gap-1">
-                  {hoursData.map(({ hour, count }) => {
-                    const pct = Math.max(Math.round((count / maxHourCount) * 100), 3);
-                    const isPeak = hour === peakHour?.hour;
-                    return (
-                      <div key={hour} className="flex items-center gap-3">
-                        <span className={`text-[11px] font-mono font-semibold w-12 shrink-0 text-left tabular-nums ${isPeak ? (isNight ? 'text-[#4ade80]' : 'text-[#16a34a]') : dim}`}>{hour}</span>
-                        <div className={`flex-1 h-2.5 rounded-full overflow-hidden ${isNight ? 'bg-white/[0.06]' : 'bg-gray-100'}`}>
-                          <div className="h-full rounded-full transition-all duration-700"
-                            style={{
-                              width: `${pct}%`,
-                              background: isPeak
-                                ? 'linear-gradient(90deg,#22c55e,#16a34a)'
-                                : isNight ? 'rgba(22,163,74,0.35)' : 'rgba(22,163,74,0.28)',
-                            }} />
-                        </div>
-                        <span className={`text-[11px] font-black w-5 text-left tabular-nums shrink-0 ${isPeak ? (isNight ? 'text-[#4ade80]' : 'text-[#16a34a]') : dim}`}>{count}</span>
+              return (
+                <div className="rounded-2xl border p-5 flex flex-col" style={card}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>שעות עמוסות</h3>
+                    {peakHour && (
+                      <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-bold ${isNight ? 'bg-[#16a34a]/20 text-[#4ade80]' : 'bg-[#f0fdf4] text-[#16a34a]'} border ${isNight ? 'border-[#16a34a]/20' : 'border-green-200'}`}>
+                        <span>🔥</span><span>{peakHour.hour}</span>
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
+
+                  {displayHours.length === 0 ? (
+                    <div className={`flex-1 flex items-center justify-center text-sm ${dim}`}>אין נתונים עדיין</div>
+                  ) : (
+                    <div className="flex flex-col flex-1 gap-2.5">
+                      {displayHours.map(({ hour, count }) => {
+                        const pct = Math.max(Math.round((count / displayMax) * 100), 4);
+                        const isPeak = hour === peakHour?.hour;
+                        return (
+                          <div key={hour} className="flex items-center gap-3">
+                            <span className={`text-xs font-mono font-bold w-11 shrink-0 tabular-nums ${isPeak ? (isNight ? 'text-[#4ade80]' : 'text-[#16a34a]') : dim}`}>{hour}</span>
+                            <div className={`flex-1 h-4 rounded-full overflow-hidden ${isNight ? 'bg-white/[0.06]' : 'bg-gray-100'}`}>
+                              <div className="h-full rounded-full transition-all duration-700"
+                                style={{
+                                  width: `${pct}%`,
+                                  background: isPeak
+                                    ? 'linear-gradient(90deg,#22c55e,#16a34a)'
+                                    : isNight ? 'rgba(22,163,74,0.32)' : 'rgba(22,163,74,0.25)',
+                                }} />
+                            </div>
+                            <span className={`text-sm font-black w-6 text-left tabular-nums shrink-0 ${isPeak ? (isNight ? 'text-[#4ade80]' : 'text-[#16a34a]') : (isNight ? 'text-gray-300' : 'text-gray-700')}`}>{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })()}
 
           </div>
         );
