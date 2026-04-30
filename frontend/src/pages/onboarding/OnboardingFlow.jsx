@@ -301,7 +301,7 @@ function LegalModal({ type, onClose }) {
             initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={e => e.stopPropagation()}
-            className="rounded-3xl" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(44px)", WebkitBackdropFilter: "blur(44px)", border: "1px solid rgba(255,255,255,0.6)", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }} w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl"
+            className="rounded-3xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(44px)", WebkitBackdropFilter: "blur(44px)", border: "1px solid rgba(255,255,255,0.6)", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
@@ -539,7 +539,7 @@ function SuccessScreen({ onDone, businessType }) {
         {showTerms && (
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="rounded-2xl p-6 border border-white/60" style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)" }} mb-4"
+            className="rounded-2xl p-6 border border-white/60 mb-4" style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)" }}
           >
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-[#22c55e]/10 border border-[#16a34a]/20 flex items-center justify-center shrink-0 text-lg">📋</div>
@@ -570,7 +570,7 @@ function SuccessScreen({ onDone, businessType }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="rounded-2xl p-6 border border-white/60" style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)" }} mb-4"
+          className="rounded-2xl p-6 border border-white/60 mb-4" style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)" }}
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="w-11 h-11 rounded-xl bg-[#16a34a]/10 border border-[#16a34a]/20 flex items-center justify-center shrink-0">
