@@ -55,6 +55,40 @@ function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
   const st = statusMap[appt.status] || statusMap.confirmed;
   const duration = appt.service_duration || 30;
 
+  const appointmentsApi = useAppointmentsApi();
+  const queryClient = useQueryClient();
+  const [localNote, setLocalNote] = useState(appt.notes || '');
+  const [editingNote, setEditingNote] = useState(false);
+  const [noteDraft, setNoteDraft] = useState(appt.notes || '');
+  const [savingNote, setSavingNote] = useState(false);
+  const noteInputRef = useRef(null);
+
+  useEffect(() => { setLocalNote(appt.notes || ''); setNoteDraft(appt.notes || ''); }, [appt.notes]);
+
+  function openNoteEdit(e) {
+    e.stopPropagation();
+    setNoteDraft(localNote);
+    setEditingNote(true);
+    setTimeout(() => noteInputRef.current?.focus(), 30);
+  }
+
+  async function saveNote() {
+    const trimmed = noteDraft.trim();
+    if (trimmed === localNote) { setEditingNote(false); return; }
+    setSavingNote(true);
+    try {
+      await appointmentsApi.update(appt.id, { notes: trimmed });
+      setLocalNote(trimmed);
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    } catch {}
+    finally { setSavingNote(false); setEditingNote(false); }
+  }
+
+  function onNoteKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveNote(); }
+    if (e.key === 'Escape') { setEditingNote(false); setNoteDraft(localNote); }
+  }
+
   return (
     <>
       {showNowLine && (
@@ -68,10 +102,9 @@ function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        whileHover={{ backgroundColor: isNight ? 'rgba(255,255,255,0.06)' : 'rgba(249,115,22,0.04)' }}
         onClick={() => onClick(appt)}
-        className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl border cursor-pointer transition-all group ${
-          isNight ? 'border-white/[0.06] bg-white/[0.03]' : 'border-gray-100 bg-white shadow-sm'
+        className={`flex items-center gap-4 px-4 py-3 rounded-2xl border cursor-pointer transition-all group ${
+          isNight ? 'border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06]' : 'border-gray-100 bg-white shadow-sm hover:shadow-md'
         }`}
       >
         {/* Time */}
@@ -81,9 +114,9 @@ function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
         </div>
 
         {/* Staff color accent */}
-        <div className="w-0.5 h-10 rounded-full shrink-0" style={{ background: staffColor }} />
+        <div className="w-0.5 self-stretch rounded-full shrink-0" style={{ background: staffColor }} />
 
-        {/* Customer + service */}
+        {/* Customer + service + note */}
         <div className="flex-1 min-w-0">
           <div className={`font-bold text-base leading-tight truncate ${isNight ? 'text-white' : 'text-gray-900'}`}>
             {appt.customer_name || 'לקוח'}
@@ -94,9 +127,46 @@ function DesktopApptRow({ appt, onClick, showNowLine, isNight }) {
             <span>{duration} דק׳</span>
             {appt.staff_name && <><span className={isNight ? 'text-gray-700' : 'text-gray-300'}>·</span><span>{appt.staff_name}</span></>}
           </div>
-          {appt.notes && (
-            <div className={`text-xs mt-1 truncate italic ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>{appt.notes}</div>
-          )}
+
+          {/* ── Inline note editor ── */}
+          <div className="mt-1.5" onClick={e => e.stopPropagation()}>
+            {editingNote ? (
+              <div className="flex items-center gap-1.5">
+                <input
+                  ref={noteInputRef}
+                  value={noteDraft}
+                  onChange={e => setNoteDraft(e.target.value)}
+                  onBlur={saveNote}
+                  onKeyDown={onNoteKeyDown}
+                  placeholder="הוסף הערה... (Enter לשמירה)"
+                  className={`flex-1 text-xs px-2.5 py-1.5 rounded-lg border focus:outline-none transition-all ${
+                    isNight
+                      ? 'bg-white/[0.06] border-white/10 text-gray-200 placeholder-gray-600 focus:border-[#16a34a]/40'
+                      : 'bg-gray-50 border-gray-200 text-gray-700 placeholder-gray-400 focus:border-[#16a34a]/40'
+                  }`}
+                />
+                {savingNote && <Loader2 size={11} className={`animate-spin shrink-0 ${isNight ? 'text-gray-500' : 'text-gray-400'}`} />}
+              </div>
+            ) : (
+              <button
+                onClick={openNoteEdit}
+                className={`flex items-center gap-1.5 w-full text-right group/note rounded-lg px-1 -mx-1 py-0.5 transition-colors ${
+                  isNight ? 'hover:bg-white/[0.04]' : 'hover:bg-gray-50'
+                }`}
+              >
+                {localNote ? (
+                  <>
+                    <span className={`text-xs italic truncate flex-1 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{localNote}</span>
+                    <Pencil size={10} className={`shrink-0 opacity-0 group-hover/note:opacity-50 transition-opacity ${isNight ? 'text-gray-400' : 'text-gray-400'}`} />
+                  </>
+                ) : (
+                  <span className={`text-xs opacity-0 group-hover:opacity-100 transition-opacity ${isNight ? 'text-gray-600' : 'text-gray-400'}`}>
+                    + הוסף הערה
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Phone */}
@@ -1324,51 +1394,130 @@ function MobileApptCard({ appt, onClick, isNight, requireConfirm, onComplete }) 
   const colors = palette[appt.status] || palette.confirmed;
   const staffColor = appt.status === 'break' ? '#94a3b8' : (appt.staff_color || '#16a34a');
 
+  const appointmentsApi = useAppointmentsApi();
+  const queryClient = useQueryClient();
+  const [localNote, setLocalNote] = useState(appt.notes || '');
+  const [editingNote, setEditingNote] = useState(false);
+  const [noteDraft, setNoteDraft] = useState(appt.notes || '');
+  const [savingNote, setSavingNote] = useState(false);
+  const noteInputRef = useRef(null);
+
+  useEffect(() => { setLocalNote(appt.notes || ''); setNoteDraft(appt.notes || ''); }, [appt.notes]);
+
+  function openNoteEdit(e) {
+    e.stopPropagation();
+    setNoteDraft(localNote);
+    setEditingNote(true);
+    setTimeout(() => noteInputRef.current?.focus(), 40);
+  }
+
+  async function saveNote() {
+    const trimmed = noteDraft.trim();
+    if (trimmed === localNote) { setEditingNote(false); return; }
+    setSavingNote(true);
+    try {
+      await appointmentsApi.update(appt.id, { notes: trimmed });
+      setLocalNote(trimmed);
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    } catch {}
+    finally { setSavingNote(false); setEditingNote(false); }
+  }
+
+  const isBreak = appt.status === 'break';
+
   return (
-    <motion.button
+    <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={() => onClick(appt)}
-      className={`w-full text-right flex items-stretch gap-0 rounded-2xl border overflow-hidden active:opacity-80 transition-all ${colors.bg} ${colors.border}`}
+      className={`w-full text-right flex items-stretch gap-0 rounded-2xl border overflow-hidden transition-all ${colors.bg} ${colors.border}`}
     >
       {/* Staff color accent bar */}
       <div className="w-1.5 shrink-0" style={{ background: staffColor }} />
 
-      <div className="flex-1 px-4 py-3 flex items-center gap-3">
-        {/* Time column */}
-        <div className="shrink-0 text-center min-w-[48px]">
-          <div className={`font-black text-base leading-tight ${colors.text}`}>{start}</div>
-          {end && <div className={`text-xs opacity-60 ${colors.text}`}>{end}</div>}
-        </div>
-
-        {/* Divider */}
-        <div className={`w-px h-10 shrink-0 ${isNight ? 'bg-white/10' : 'bg-black/10'}`} />
-
-        {/* Details */}
-        <div className="flex-1 min-w-0">
-          <div className={`font-bold text-base leading-tight truncate flex items-center gap-1.5 ${colors.text}`}>
-            {appt.status === 'break' && <Coffee size={13} className="shrink-0 opacity-70" />}
-            {appt.customer_name || (appt.status === 'break' ? 'הפסקה' : 'לקוח')}
+      <div className="flex-1 min-w-0">
+        {/* Main row — tappable */}
+        <button
+          className="w-full px-4 pt-3 pb-2 flex items-center gap-3 active:opacity-80 transition-opacity"
+          onClick={() => onClick(appt)}
+        >
+          {/* Time column */}
+          <div className="shrink-0 text-center min-w-[48px]">
+            <div className={`font-black text-base leading-tight ${colors.text}`}>{start}</div>
+            {end && <div className={`text-xs opacity-60 ${colors.text}`}>{end}</div>}
           </div>
-          <div className={`text-sm opacity-70 truncate mt-0.5 ${colors.text}`}>
-            {[appt.service_name, appt.staff_name].filter(Boolean).join(' · ') || ''}
-          </div>
-        </div>
 
-        {/* Status dot / quick complete */}
-        {requireConfirm && appt.status === 'confirmed' ? (
-          <button
-            onClick={e => { e.stopPropagation(); onComplete?.(appt.id); }}
-            className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500 text-white active:scale-90 transition-transform"
-          >
-            <Check size={15} />
-          </button>
-        ) : (
-          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${colors.dot}`} />
+          {/* Divider */}
+          <div className={`w-px h-10 shrink-0 ${isNight ? 'bg-white/10' : 'bg-black/10'}`} />
+
+          {/* Details */}
+          <div className="flex-1 min-w-0 text-right">
+            <div className={`font-bold text-base leading-tight truncate flex items-center gap-1.5 ${colors.text}`}>
+              {isBreak && <Coffee size={13} className="shrink-0 opacity-70" />}
+              {appt.customer_name || (isBreak ? 'הפסקה' : 'לקוח')}
+            </div>
+            <div className={`text-sm opacity-70 truncate mt-0.5 ${colors.text}`}>
+              {[appt.service_name, appt.staff_name].filter(Boolean).join(' · ') || ''}
+            </div>
+          </div>
+
+          {/* Status dot / quick complete */}
+          {requireConfirm && appt.status === 'confirmed' ? (
+            <div
+              onClick={e => { e.stopPropagation(); onComplete?.(appt.id); }}
+              className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500 text-white active:scale-90 transition-transform"
+            >
+              <Check size={15} />
+            </div>
+          ) : (
+            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${colors.dot}`} />
+          )}
+        </button>
+
+        {/* ── Inline note row (hidden for breaks) ── */}
+        {!isBreak && (
+          <div className="px-4 pb-2.5" onClick={e => e.stopPropagation()}>
+            {editingNote ? (
+              <div className="flex items-center gap-2">
+                <input
+                  ref={noteInputRef}
+                  value={noteDraft}
+                  onChange={e => setNoteDraft(e.target.value)}
+                  onBlur={saveNote}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') saveNote();
+                    if (e.key === 'Escape') { setEditingNote(false); setNoteDraft(localNote); }
+                  }}
+                  placeholder="הוסף הערה..."
+                  className={`flex-1 text-xs px-2.5 py-1.5 rounded-lg border focus:outline-none ${
+                    isNight
+                      ? 'bg-white/[0.08] border-white/15 text-gray-200 placeholder-gray-500'
+                      : 'bg-white/60 border-black/10 text-gray-700 placeholder-gray-400'
+                  }`}
+                />
+                {savingNote
+                  ? <Loader2 size={12} className="animate-spin text-gray-400 shrink-0" />
+                  : <button onMouseDown={e => { e.preventDefault(); saveNote(); }} className="shrink-0 text-[#16a34a]"><Check size={14} /></button>
+                }
+              </div>
+            ) : (
+              <button
+                onClick={openNoteEdit}
+                className={`flex items-center gap-1.5 w-full text-right py-0.5`}
+              >
+                {localNote ? (
+                  <>
+                    <Pencil size={10} className={`shrink-0 opacity-40 ${colors.text}`} />
+                    <span className={`text-xs italic truncate opacity-60 ${colors.text}`}>{localNote}</span>
+                  </>
+                ) : (
+                  <span className={`text-xs opacity-40 ${colors.text}`}>+ הוסף הערה</span>
+                )}
+              </button>
+            )}
+          </div>
         )}
       </div>
-    </motion.button>
+    </motion.div>
   );
 }
 
