@@ -200,7 +200,7 @@ export default function DashboardLayout() {
           style={{ borderColor: theme.border, minHeight: 72 }}
         >
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <img src="/logo.svg" alt="Tori" className="w-8 h-8 shrink-0" />
+            <img src="/favicon.png" alt="Tori" className="w-8 h-8 shrink-0 rounded-lg" />
             <div
               className="overflow-hidden whitespace-nowrap transition-all duration-300"
               style={{ maxWidth: expanded ? 200 : 0, opacity: expanded ? 1 : 0 }}
@@ -223,7 +223,7 @@ export default function DashboardLayout() {
           <div className="px-3 py-3 space-y-2">
             <div
               className="flex items-center gap-3 p-3 rounded-xl"
-              style={{ background: isNight ? 'rgba(34,197,94,0.10)' : '#f0fdf4' }}
+              style={{ background: isNight ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}
             >
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-white font-bold shrink-0">
                 {business?.name?.[0] || 'E'}
@@ -366,7 +366,7 @@ export default function DashboardLayout() {
           >
             <div className="flex items-center justify-between px-5 py-5 border-b" style={{ borderColor: theme.border }}>
               <div className="flex items-center gap-2.5">
-                <img src="/logo.svg" alt="Tori" className="w-8 h-8" />
+                <img src="/favicon.png" alt="Tori" className="w-8 h-8 rounded-lg" />
                 <div>
                   <div className="font-black text-lg leading-none" style={{ color: theme.titleColor }}>Tori</div>
                   <div className="text-xs" style={{ color: theme.mutedColor }}>ניהול תורים</div>
@@ -378,7 +378,7 @@ export default function DashboardLayout() {
             </div>
 
             <div className="px-3 py-3 border-b space-y-2" style={{ borderColor: theme.border }}>
-              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: isNight ? 'rgba(34,197,94,0.10)' : '#f0fdf4' }}>
+              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: isNight ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-white font-bold shrink-0">
                   {business?.name?.[0] || 'E'}
                 </div>
@@ -496,8 +496,8 @@ export default function DashboardLayout() {
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-default select-none"
               style={{
-                background: isNight ? 'rgba(34,197,94,0.08)' : '#f0fdf4',
-                border: `1px solid ${isNight ? 'rgba(34,197,94,0.18)' : '#bbf7d0'}`,
+                background: isNight ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                border: `1px solid ${isNight ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'}`,
               }}
             >
               <div className="relative shrink-0 w-1.5 h-1.5">

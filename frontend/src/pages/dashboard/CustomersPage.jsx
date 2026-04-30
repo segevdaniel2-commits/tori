@@ -269,37 +269,49 @@ function CustomerCard({ customer, onClick, onEdit, onDelete, index }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.018 }}
-      className="bg-white border border-gray-100 rounded-2xl p-3.5 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group relative flex flex-col gap-2.5"
+      className="rounded-2xl p-3.5 cursor-pointer group relative flex flex-col gap-2 transition-all hover:scale-[1.01]"
+      style={{
+        background: 'rgba(255,255,255,0.75)',
+        backdropFilter: 'blur(16px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.6)',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
+      }}
       onClick={() => onClick(customer.id)}
     >
       {/* Hover actions */}
       <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <button onClick={e => { e.stopPropagation(); onEdit(customer); }}
-          className="w-6 h-6 rounded-lg bg-white border border-gray-200 shadow hover:border-[#16a34a] hover:text-[#16a34a] text-gray-500 flex items-center justify-center transition-all">
+          className="w-6 h-6 rounded-lg bg-white/80 border border-gray-200 text-gray-400 hover:text-[#16a34a] flex items-center justify-center transition-all">
           <Pencil size={10} />
         </button>
         <button onClick={e => { e.stopPropagation(); onDelete(customer); }}
-          className="w-6 h-6 rounded-lg bg-white border border-gray-200 shadow hover:border-red-400 hover:text-red-500 text-gray-500 flex items-center justify-center transition-all">
+          className="w-6 h-6 rounded-lg bg-white/80 border border-gray-200 text-gray-400 hover:text-red-400 flex items-center justify-center transition-all">
           <Trash2 size={10} />
         </button>
       </div>
 
-      {/* Name + phone */}
-      <div className="min-w-0 pt-1">
-        <div className="font-black text-gray-900 text-[15px] leading-tight truncate">{customer.name || 'לא ידוע'}</div>
-        <div className="text-xs text-gray-400 font-mono truncate mt-1" dir="ltr">{customer.whatsapp_phone}</div>
+      {/* Avatar + name */}
+      <div className="flex items-center gap-2.5 pt-1">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#22c55e]/20 to-[#16a34a]/30 flex items-center justify-center text-[#16a34a] font-semibold text-sm shrink-0">
+          {(customer.name || '?')[0]}
+        </div>
+        <div className="min-w-0">
+          <div className="font-medium text-gray-800 text-sm leading-tight truncate">{customer.name || 'לא ידוע'}</div>
+          <div className="text-[11px] text-gray-400 font-mono truncate" dir="ltr">{customer.whatsapp_phone}</div>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-0 pt-2 border-t border-gray-100 mt-auto">
+      <div className="flex items-center pt-2 border-t border-gray-100/80 mt-auto">
         <div className="flex-1 text-center">
-          <div className="text-sm font-black text-gray-800 leading-none">{customer.total_visits || 0}</div>
-          <div className="text-[9px] text-gray-400 mt-0.5 uppercase tracking-wide">ביקורים</div>
+          <div className="text-sm font-semibold text-gray-700">{customer.total_visits || 0}</div>
+          <div className="text-[9px] text-gray-400 mt-0.5 tracking-wide">ביקורים</div>
         </div>
-        <div className="w-px h-5 bg-gray-100" />
+        <div className="w-px h-4 bg-gray-100" />
         <div className="flex-1 text-center">
-          <div className="text-sm font-black text-gray-800 leading-none">₪{(customer.total_spent || 0).toLocaleString()}</div>
-          <div className="text-[9px] text-gray-400 mt-0.5 uppercase tracking-wide">הוצאה</div>
+          <div className="text-sm font-semibold text-gray-700">₪{(customer.total_spent || 0).toLocaleString()}</div>
+          <div className="text-[9px] text-gray-400 mt-0.5 tracking-wide">הוצאה</div>
         </div>
       </div>
     </motion.div>
@@ -339,8 +351,8 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-gray-900">לקוחות</h2>
-          <p className="text-gray-400 text-sm mt-0.5">{total} לקוחות רשומים</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">לקוחות</h2>
+          <p className="text-gray-400 text-sm mt-0.5">{total} רשומים</p>
         </div>
         <button
           onClick={() => setShowQuickAdd(true)}
