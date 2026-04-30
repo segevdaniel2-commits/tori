@@ -2024,33 +2024,52 @@ function AccountSection({ isNight }) {
 function ManagementSettings() {
   const isNight = useContext(NightCtx);
 
-  function SubSection({ icon: Icon, label, children }) {
-    return (
-      <div className={`rounded-2xl overflow-hidden border ${isNight ? 'border-white/[0.10]' : 'border-gray-200 shadow-sm'}`}>
-        <div className={`flex items-center gap-3 px-4 py-3 border-b ${isNight ? 'bg-white/[0.04] border-white/[0.08]' : 'bg-gray-50 border-gray-200'}`}>
-          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isNight ? 'bg-[#16a34a]/20' : 'bg-[#16a34a]/10'}`}>
-            <Icon size={14} className="text-[#16a34a]" />
-          </div>
-          <span className={`font-extrabold text-sm tracking-wide ${isNight ? 'text-gray-200' : 'text-gray-700'}`}>{label}</span>
-        </div>
-        <div className="p-4">
-          {children}
-        </div>
-      </div>
-    );
-  }
+  const SECTIONS = [
+    { icon: Clock,    label: 'שעות פעילות', sub: 'ימים ושעות עבודה',     accent: '#16a34a', component: HoursSettings    },
+    { icon: Scissors, label: 'שירותים',      sub: 'מחירים ומשכי זמן',     accent: '#16a34a', component: ServicesSettings },
+    { icon: Users,    label: 'עובדים',       sub: 'חברי הצוות שלך',      accent: '#16a34a', component: StaffSettings    },
+  ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
-      <SubSection icon={Clock} label="שעות פעילות">
-        <HoursSettings />
-      </SubSection>
-      <SubSection icon={Scissors} label="שירותים">
-        <ServicesSettings />
-      </SubSection>
-      <SubSection icon={Users} label="עובדים">
-        <StaffSettings />
-      </SubSection>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-stretch">
+      {SECTIONS.map(({ icon: Icon, label, sub, accent, component: Comp }) => (
+        <div
+          key={label}
+          className="rounded-2xl overflow-hidden border flex flex-col"
+          style={{
+            background: isNight ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.9)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            borderColor: isNight ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)',
+            boxShadow: isNight ? 'none' : '0 2px 16px rgba(0,0,0,0.06)',
+          }}
+        >
+          {/* ── Card header ── */}
+          <div
+            className={`flex items-center gap-3.5 px-5 py-4 border-b shrink-0`}
+            style={{
+              borderColor: isNight ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+              background: isNight ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)',
+            }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: `linear-gradient(135deg, ${accent}22, ${accent}10)`, border: `1px solid ${accent}20` }}
+            >
+              <Icon size={17} style={{ color: accent }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={`font-bold text-sm leading-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>{label}</div>
+              <div className={`text-[11px] mt-0.5 ${isNight ? 'text-gray-500' : 'text-gray-400'}`}>{sub}</div>
+            </div>
+          </div>
+
+          {/* ── Card content ── */}
+          <div className="flex-1 p-4 overflow-y-auto" style={{ minHeight: 0 }}>
+            <Comp />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
