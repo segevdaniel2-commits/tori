@@ -1210,7 +1210,7 @@ function MobileAiChat({ isNight, onClose, onAppointmentChange }) {
       const res = await api.post('/owner-bot/chat', { message: text, history });
       const reply = res.data?.reply || res.data?.message || 'לא הצלחתי להבין, נסה שוב.';
       setMessages(prev => [...prev, { role: 'assistant', text: reply }]);
-      if (res.data?.appointmentChanged) onAppointmentChange?.();
+      if (reply.includes('✓')) { onAppointmentChange?.(); }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', text: 'שגיאה בחיבור לשרת. נסה שוב.' }]);
     } finally {
