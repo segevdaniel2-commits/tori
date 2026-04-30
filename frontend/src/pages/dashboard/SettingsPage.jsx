@@ -1218,8 +1218,13 @@ function IntegrationsSettings() {
       setGoogleNotice({ type: 'success', msg: `סנכרון הושלם — ${data.appointmentsCreated} תורים, ${data.customersCreated} לקוחות חדשים.` });
       refetchStatus();
       queryClient.invalidateQueries(['appointments']);
-    } catch {
-      setGoogleNotice({ type: 'error', msg: 'הסנכרון נכשל, נסה שוב' });
+    } catch (err) {
+      if (err?.response?.status === 401 || err?.response?.data?.error === 'token_expired') {
+        setGoogleNotice({ type: 'error', msg: 'פג תוקף החיבור לגוגל — יש לחבר מחדש' });
+        refetchStatus();
+      } else {
+        setGoogleNotice({ type: 'error', msg: 'הסנכרון נכשל, נסה שוב' });
+      }
     } finally { setGoogleSyncing(false); }
   }
 

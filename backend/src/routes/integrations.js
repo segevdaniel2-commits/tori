@@ -369,7 +369,17 @@ router.post('/google/sync', authMiddleware, async (req, res) => {
     const result = await syncGoogleCalendar(req.business.id, biz.google_refresh_token);
     res.json({ success: true, ...result });
   } catch (err) {
-    console.error('[Google Calendar] Sync error:', err);
+    console.error('[Google Calendar] Sync error:', err.message || err);
+    const isTokenError = err.message?.includes('invalid_grant') ||
+      err.message?.includes('Token has been expired') ||
+      err.response?.data?.error === 'invalid_grant' ||
+      err.code === 401;
+    if (isTokenError) {
+      db.prepare(
+        `UPDATE businesses SET google_refresh_token = NULL, google_calendar_synced_at = NULL WHERE id = ?`
+      ).run(req.business.id);
+      return res.status(401).json({ error: 'token_expired' });
+    }
     res.status(500).json({ error: 'Sync failed' });
   }
 });
