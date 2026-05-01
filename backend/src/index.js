@@ -143,6 +143,12 @@ initDb().then(() => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
+  // ── Privacy policy (required for Meta app submission) ─────────────────────────
+  app.get('/privacy', (req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(`<!DOCTYPE html><html lang="he"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>מדיניות פרטיות - Tori</title><style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.7;color:#333}h1{color:#2d2d2d}h2{color:#444;margin-top:30px}</style></head><body><h1>מדיניות פרטיות</h1><p><strong>עדכון אחרון:</strong> מאי 2025</p><p>Tori היא מערכת ניהול תורים לעסקים קטנים בישראל. אנו מחויבים להגן על פרטיות המשתמשים שלנו.</p><h2>מידע שאנו אוספים</h2><p>אנו אוספים מידע שנמסר לנו ישירות, כגון שם, מספר טלפון ופרטי תורים, לצורך מתן השירות.</p><h2>שימוש במידע</h2><p>המידע משמש אך ורק לניהול תורים ותקשורת עם לקוחות העסק. לא נמכור או נשתף מידע אישי עם צדדים שלישיים.</p><h2>WhatsApp</h2><p>השירות משתמש ב-WhatsApp Business API לצורך שליחת תזכורות ועדכונים. הודעות נשלחות רק ללקוחות שנרשמו לשירות.</p><h2>אבטחת מידע</h2><p>אנו נוקטים באמצעי אבטחה סבירים להגנה על המידע האישי.</p><h2>יצירת קשר</h2><p>לשאלות בנושא פרטיות: <a href="mailto:supporttori@gmail.com">supporttori@gmail.com</a></p></body></html>`);
+  });
+
   // ── Routes ─────────────────────────────────────────────────────────────────────
   app.use('/api/auth', authLimiter, authRoutes);
   app.use('/api/businesses', businessRoutes);
