@@ -17,8 +17,18 @@ function useNightMode() {
 function ToriLogo({ isNight }) {
   return (
     <Link to="/v2" className="inline-flex items-center gap-2">
-      <img src="/favicon.png" alt="TORI" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
-      <span className={`font-black text-xl tracking-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>TORI</span>
+      <svg width="28" height="28" viewBox="0 0 40 40" style={{ display: 'inline-block', overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="logo-g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stopColor="#22c55e" />
+            <stop offset="50%"  stopColor="#16a34a" />
+            <stop offset="100%" stopColor="#065f46" />
+          </linearGradient>
+        </defs>
+        <text x="50%" y="78%" textAnchor="middle" fill="url(#logo-g)"
+          style={{ fontFamily: "'Inter','Heebo',sans-serif", fontWeight: 900, fontSize: 38, letterSpacing: '-2px' }}>T</text>
+      </svg>
+      <span className={`font-black text-xl tracking-tight ${isNight ? 'text-white' : 'text-gray-900'}`}>Tori</span>
     </Link>
   );
 }
@@ -83,14 +93,15 @@ export default function Login() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4"
+      className="min-h-screen flex items-center justify-center px-4 relative"
       dir="rtl"
-      style={{ background: isNight ? '#08080F' : 'linear-gradient(135deg, #f0fdf4 0%, #e8f5f0 50%, #f0f2f5 100%)' }}
+      style={{ background: isNight ? '#08080F' : 'linear-gradient(145deg, #f0fdf4 0%, #dcfce7 30%, #f0f9f4 60%, #f8fafc 100%)' }}
     >
       {/* Ambient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute top-1/4 right-1/3 w-96 h-96 rounded-full blur-[120px] ${isNight ? 'bg-[#16a34a]/12' : 'bg-[#16a34a]/8'}`} />
-        <div className={`absolute bottom-1/4 left-1/3 w-64 h-64 rounded-full blur-[100px] ${isNight ? 'bg-[#16a34a]/10' : 'bg-[#16a34a]/6'}`} />
+        <div className={`absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[140px] ${isNight ? 'bg-[#16a34a]/15' : 'bg-[#22c55e]/18'}`} />
+        <div className={`absolute bottom-1/4 left-1/4 w-72 h-72 rounded-full blur-[110px] ${isNight ? 'bg-[#065f46]/12' : 'bg-[#16a34a]/12'}`} />
+        <div className={`absolute top-10 left-10 w-48 h-48 rounded-full blur-[90px] ${isNight ? 'bg-[#22c55e]/8' : 'bg-[#86efac]/30'}`} />
       </div>
 
       <motion.div
@@ -104,10 +115,10 @@ export default function Login() {
 
         {/* Card */}
         <div
-          className="rounded-2xl p-8"
+          className="rounded-3xl p-8"
           style={isNight
-            ? { background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 8px 48px rgba(0,0,0,0.5)' }
-            : { background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(44px) saturate(220%)', WebkitBackdropFilter: 'blur(44px) saturate(220%)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 8px 48px rgba(0,0,0,0.10)' }
+            ? { background: 'rgba(13,17,23,0.88)', backdropFilter: 'blur(32px) saturate(180%)', WebkitBackdropFilter: 'blur(32px) saturate(180%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)' }
+            : { background: 'rgba(255,255,255,0.52)', backdropFilter: 'blur(48px) saturate(220%)', WebkitBackdropFilter: 'blur(48px) saturate(220%)', border: '1.5px solid rgba(255,255,255,0.88)', boxShadow: '0 8px 40px rgba(0,0,0,0.08), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.03)' }
           }
         >
           <h1 className={`text-2xl font-black mb-6 ${isNight ? 'text-white' : 'text-gray-900'}`}>
@@ -163,13 +174,17 @@ export default function Login() {
           {/* ── Credentials step ─────────────────────────────────────────── */}
           {step === 'credentials' && <>
           {/* Toggle email/phone */}
-          <div className={`flex rounded-xl overflow-hidden border mb-4 ${isNight ? 'border-white/10' : 'border-gray-200'}`}>
+          <div className={`flex rounded-2xl p-1 mb-5 ${isNight ? 'bg-white/5 border border-white/8' : 'bg-black/5'}`}>
             <button type="button" onClick={() => { setLoginMode('email'); setIdentifier(''); }}
-              className={`flex-1 py-2 text-sm font-semibold transition-all ${loginMode === 'email' ? 'bg-[#16a34a] text-white' : isNight ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-800'}`}>
+              className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all ${loginMode === 'email'
+                ? 'bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white shadow-sm'
+                : isNight ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
               אימייל
             </button>
             <button type="button" onClick={() => { setLoginMode('phone'); setIdentifier(''); }}
-              className={`flex-1 py-2 text-sm font-semibold transition-all ${loginMode === 'phone' ? 'bg-[#16a34a] text-white' : isNight ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-800'}`}>
+              className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all ${loginMode === 'phone'
+                ? 'bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white shadow-sm'
+                : isNight ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
               טלפון
             </button>
           </div>
