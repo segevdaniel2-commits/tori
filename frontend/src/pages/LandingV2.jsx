@@ -794,9 +794,8 @@ export default function LandingV2() {
                   width: '100%',
                   height: 'auto',
                   objectFit: 'contain',
-                  mixBlendMode: 'multiply',
-                  maskImage: 'linear-gradient(to bottom, black 60%, rgba(0,0,0,0.5) 80%, transparent 96%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, black 60%, rgba(0,0,0,0.5) 80%, transparent 96%)',
+                  maskImage: 'radial-gradient(ellipse 78% 82% at 52% 44%, black 55%, rgba(0,0,0,0.6) 72%, transparent 88%)',
+                  WebkitMaskImage: 'radial-gradient(ellipse 78% 82% at 52% 44%, black 55%, rgba(0,0,0,0.6) 72%, transparent 88%)',
                   filter: 'drop-shadow(0 40px 60px rgba(0,0,0,0.18))',
                 }}
               />
