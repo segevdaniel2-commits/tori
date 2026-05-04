@@ -510,6 +510,18 @@ export default function AnalyticsPage() {
         const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
         const cancellationRate = total > 0 ? Math.round((cancelled / total) * 100) : 0;
 
+        // Day-of-week breakdown
+        const DAY_NAMES = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+        const dayCount = Array(7).fill(0);
+        const dayRevenue = Array(7).fill(0);
+        appts.forEach(a => {
+          const dow = new Date(a.starts_at).getDay();
+          dayCount[dow]++;
+          dayRevenue[dow] += Number(a.price) || 0;
+        });
+        const dowData = DAY_NAMES.map((name, i) => ({ name, count: dayCount[i], revenue: dayRevenue[i] }));
+        const peakDow = dowData.reduce((best, d) => d.count > (best?.count || 0) ? d : best, null);
+
         const maxHourCount = hoursData.length > 0 ? Math.max(...hoursData.map(h => h.count)) : 1;
         const peakHour = hoursData.reduce((best, h) => h.count > (best?.count || 0) ? h : best, null);
 
@@ -591,71 +603,96 @@ export default function AnalyticsPage() {
               )}
             </div>
 
-            {/* ── Card 2: Insights ── */}
+            {/* ── Card 2: Weekly Activity ── */}
             <div className="rounded-2xl border p-5 flex flex-col" style={card}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>תובנות</h3>
+                <h3 className={`font-bold text-sm ${isNight ? 'text-white' : 'text-gray-900'}`}>פעילות לפי יום</h3>
                 <span className={`text-xs font-medium ${dim}`}>{sub}</span>
               </div>
 
-              <div className="flex flex-col flex-1 gap-4">
-                {/* Services breakdown */}
-                <div className="flex-1">
-                  <div className={`text-xs font-semibold uppercase tracking-wider mb-3 ${dim}`}>פילוח שירותים</div>
-                  {svcEntries.length > 0 ? (
-                    <div className="space-y-3">
-                      {svcEntries.slice(0, 4).map(([name, count], i) => {
-                        const pct = Math.round((count / Math.max(total, 1)) * 100);
-                        const barColors = ['#16a34a', '#22c55e', '#4ade80', '#86efac'];
-                        return (
-                          <div key={name}>
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className={`text-sm font-semibold truncate leading-tight ${isNight ? 'text-gray-100' : 'text-gray-800'}`}>{name}</span>
-                              <div className="flex items-center gap-2 shrink-0 mr-2">
-                                <span className={`text-sm font-black tabular-nums ${isNight ? 'text-white' : 'text-gray-900'}`}>{count}</span>
-                                <span className={`text-xs ${dim}`}>{pct}%</span>
-                              </div>
-                            </div>
-                            <div className={`h-2.5 rounded-full overflow-hidden ${isNight ? 'bg-white/[0.07]' : 'bg-gray-100'}`}>
-                              <div className="h-full rounded-full transition-all duration-700"
-                                style={{ width: `${Math.max(pct, 2)}%`, background: barColors[i] }} />
-                            </div>
-                          </div>
-                        );
-                      })}
+              {total === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl"
+                    style={{ background: isNight ? 'rgba(22,163,74,0.12)' : '#f0fdf4' }}>
+                    📅
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm font-bold ${isNight ? 'text-gray-300' : 'text-gray-700'}`}>אין תורים החודש עדיין</p>
+                    <p className={`text-xs mt-1 ${dim}`}>הגרף יופיע עם קבלת תורים</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col flex-1 gap-3">
+
+                  {/* KPI row */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className={`text-[10px] font-semibold uppercase tracking-wider mb-0.5 ${dim}`}>תורים החודש</div>
+                      <div className="flex items-baseline gap-2">
+                        <span className={`text-4xl font-black tabular-nums leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>{total}</span>
+                        {peakDow && peakDow.count > 0 && (
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isNight ? 'bg-[#16a34a]/20 text-[#4ade80]' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
+                            🔥 יום {peakDow.name}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className={`text-sm ${dim}`}>אין נתונים</div>
+                    {!hideStats && (monthlyReport?.summary?.revenue ?? 0) > 0 && (
+                      <div className="text-left">
+                        <div className={`text-[10px] font-semibold uppercase tracking-wider mb-0.5 ${dim}`}>הכנסות</div>
+                        <div className={`text-xl font-black tabular-nums ${isNight ? 'text-[#4ade80]' : 'text-[#16a34a]'}`}>
+                          ₪{(monthlyReport.summary.revenue).toLocaleString()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bar chart */}
+                  <div className="flex-1" style={{ minHeight: 100 }}>
+                    <ResponsiveContainer width="100%" height={115}>
+                      <BarChart data={dowData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }} barSize={22}>
+                        <defs>
+                          <linearGradient id="dowBarGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#22c55e" />
+                            <stop offset="100%" stopColor="#16a34a" />
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: axisColor, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          content={({ active, payload, label }) => active && payload?.length ? (
+                            <div className="rounded-xl shadow-lg p-2.5 text-right"
+                              style={{ background: isNight ? '#1a1a2e' : '#fff', border: `1px solid ${isNight ? 'rgba(255,255,255,0.1)' : '#f1f5f9'}` }}>
+                              <p className={`text-xs font-bold ${isNight ? 'text-white' : 'text-gray-900'}`}>יום {label}</p>
+                              <p className="text-xs font-semibold text-[#16a34a]">{payload[0].value} תורים</p>
+                            </div>
+                          ) : null}
+                        />
+                        <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                          {dowData.map((entry, i) => (
+                            <Cell key={i}
+                              fill={entry.name === peakDow?.name && entry.count > 0
+                                ? 'url(#dowBarGrad)'
+                                : isNight ? 'rgba(22,163,74,0.22)' : 'rgba(22,163,74,0.18)'}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Bottom: top service */}
+                  {svcEntries.length > 0 && (
+                    <div className={`flex items-center justify-between px-3 py-2.5 rounded-xl border ${dimBg} ${isNight ? 'border-white/[0.06]' : 'border-gray-100'}`}>
+                      <div>
+                        <div className={`text-[10px] font-semibold ${dim}`}>שירות מוביל</div>
+                        <div className={`text-sm font-bold mt-0.5 truncate max-w-[140px] ${isNight ? 'text-white' : 'text-gray-900'}`}>{svcEntries[0][0]}</div>
+                      </div>
+                      <div className={`text-2xl font-black tabular-nums ${isNight ? 'text-[#4ade80]' : 'text-[#16a34a]'}`}>{svcEntries[0][1]}</div>
+                    </div>
                   )}
+
                 </div>
-
-                {/* Divider */}
-                <div className={`h-px ${isNight ? 'bg-white/[0.06]' : 'bg-gray-100'}`} />
-
-                {/* Two big KPIs */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <div className={`text-xs font-semibold uppercase tracking-wider mb-1 ${dim}`}>ממוצע לתור</div>
-                    <div className={`text-3xl font-black tabular-nums leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>
-                      {avgValue !== null ? `₪${avgValue.toLocaleString()}` : '—'}
-                    </div>
-                  </div>
-                  <div>
-                    <div className={`text-xs font-semibold uppercase tracking-wider mb-1 ${dim}`}>לקוחות חדשים</div>
-                    <div className={`text-3xl font-black tabular-nums leading-none ${isNight ? 'text-white' : 'text-gray-900'}`}>
-                      {monthlyReport?.newCustomers ?? '—'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* High cancellation alert */}
-                {cancellationRate >= 15 && (
-                  <div className={`rounded-xl px-3 py-2.5 text-xs flex items-center gap-2 ${isNight ? 'bg-amber-900/20 text-amber-400' : 'bg-amber-50 text-amber-700'} border ${isNight ? 'border-amber-900/30' : 'border-amber-200'}`}>
-                    <span className="shrink-0">⚠️</span>
-                    <span>ביטולים {cancellationRate}% — שלח תזכורות</span>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
             {/* ── Card 3: Peak Hours ── */}
