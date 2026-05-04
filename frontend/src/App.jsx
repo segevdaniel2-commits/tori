@@ -13,7 +13,6 @@ import CalendarPage from './pages/dashboard/CalendarPage';
 import AnalyticsPage from './pages/dashboard/AnalyticsPage';
 import CustomersPage from './pages/dashboard/CustomersPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
-import BotSimulatorPage from './pages/dashboard/BotSimulatorPage';
 import DemoOne from './pages/DemoOne';
 import LandingV2 from './pages/LandingV2';
 
@@ -71,7 +70,6 @@ export default function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="customers" element={<CustomersPage />} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="simulator" element={<BotSimulatorPage />} />
           </Route>
           <Route path="/demo" element={<DemoOne />} />
           <Route path="/v2" element={<LandingV2 />} />

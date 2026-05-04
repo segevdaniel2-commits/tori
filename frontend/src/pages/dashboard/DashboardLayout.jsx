@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { path: '/dashboard', label: 'יומן', icon: Calendar, exact: true },
   { path: '/dashboard/analytics', label: 'נתונים', icon: BarChart3 },
   { path: '/dashboard/customers', label: 'לקוחות', icon: Users },
-  { path: '/dashboard/simulator', label: 'סימולטור', icon: Bot },
   { path: '/dashboard/settings', label: 'הגדרות', icon: Settings },
 ];
 
@@ -188,7 +187,6 @@ export default function DashboardLayout() {
     '/dashboard': 'יומן תורים',
     '/dashboard/analytics': 'נתונים',
     '/dashboard/customers': 'לקוחות',
-    '/dashboard/simulator': 'סימולטור בוט',
     '/dashboard/settings': 'הגדרות',
   }[location.pathname] || 'דשבורד';
 
