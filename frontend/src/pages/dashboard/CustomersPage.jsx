@@ -6,6 +6,85 @@ import { useCustomersApi } from '../../hooks/useApi';
 import { format, parseISO } from 'date-fns';
 import { he } from 'date-fns/locale';
 
+// ── Generative avatar ────────────────────────────────────────────────────────
+function hashStr(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) & 0xffffffff;
+  return Math.abs(h);
+}
+
+const PALETTES = [
+  ['#667eea', '#764ba2'],
+  ['#f093fb', '#f5576c'],
+  ['#4facfe', '#00f2fe'],
+  ['#43e97b', '#38f9d7'],
+  ['#fa709a', '#fee140'],
+  ['#a18cd1', '#fbc2eb'],
+  ['#f6d365', '#fda085'],
+  ['#96fbc4', '#f9f586'],
+  ['#fccb90', '#d57eeb'],
+  ['#e0c3fc', '#8ec5fc'],
+];
+
+function CustomerAvatar({ name = '?', size = 32, radius = '50%' }) {
+  const seed = name || '?';
+  const h = hashStr(seed);
+  const [c1, c2] = PALETTES[h % PALETTES.length];
+  const patternType = h % 4;
+  const patternAngle = (h % 8) * 45;
+  const letter = seed[0]?.toUpperCase() || '?';
+  const mid = size / 2;
+  const uid = `av${h % 99999}s${size}`;
+
+  const patternEl = (() => {
+    switch (patternType) {
+      case 0: return (
+        <pattern id={`p${uid}`} patternUnits="userSpaceOnUse" width="8" height="8" patternTransform={`rotate(${patternAngle})`}>
+          <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(255,255,255,0.18)" strokeWidth="3" />
+        </pattern>
+      );
+      case 1: return (
+        <pattern id={`p${uid}`} patternUnits="userSpaceOnUse" width="9" height="9">
+          <circle cx="4.5" cy="4.5" r="1.6" fill="rgba(255,255,255,0.2)" />
+        </pattern>
+      );
+      case 2: return (
+        <pattern id={`p${uid}`} patternUnits="userSpaceOnUse" width="10" height="10">
+          <path d="M10 0L0 0 0 10" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
+        </pattern>
+      );
+      default: return (
+        <pattern id={`p${uid}`} patternUnits="userSpaceOnUse" width="12" height="12">
+          <circle cx="6" cy="0"  r="1.2" fill="rgba(255,255,255,0.17)" />
+          <circle cx="0" cy="6"  r="1.2" fill="rgba(255,255,255,0.17)" />
+          <circle cx="12" cy="6" r="1.2" fill="rgba(255,255,255,0.17)" />
+          <circle cx="6" cy="12" r="1.2" fill="rgba(255,255,255,0.17)" />
+        </pattern>
+      );
+    }
+  })();
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+      style={{ borderRadius: radius, display: 'block', flexShrink: 0 }}>
+      <defs>
+        <linearGradient id={`g${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={c1} />
+          <stop offset="100%" stopColor={c2} />
+        </linearGradient>
+        {patternEl}
+      </defs>
+      <rect width={size} height={size} rx={size} fill={`url(#g${uid})`} />
+      <rect width={size} height={size} rx={size} fill={`url(#p${uid})`} />
+      <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle"
+        fill="rgba(255,255,255,0.95)"
+        style={{ fontSize: size * 0.42, fontWeight: 800, fontFamily: "'Inter','Heebo',sans-serif" }}>
+        {letter}
+      </text>
+    </svg>
+  );
+}
+
 function CustomerDrawer({ customerId, onClose, onEdit, onDelete }) {
   const customersApi = useCustomersApi();
   const { data, isLoading } = useQuery({
@@ -52,8 +131,8 @@ function CustomerDrawer({ customerId, onClose, onEdit, onDelete }) {
         ) : data ? (
           <div className="p-5 space-y-5">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-white font-black text-2xl shadow-lg">
-                {(data.customer?.name || 'L')[0]}
+              <div className="shadow-lg rounded-2xl overflow-hidden">
+                <CustomerAvatar name={data.customer?.name} size={64} radius="16px" />
               </div>
               <div>
                 <div className="font-black text-gray-900 text-xl">{data.customer?.name || 'לא ידוע'}</div>
@@ -293,9 +372,8 @@ function CustomerCard({ customer, onClick, onEdit, onDelete, index }) {
 
       {/* Avatar + name */}
       <div className="flex items-center gap-2.5 pt-1">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#22c55e]/20 to-[#16a34a]/30 flex items-center justify-center text-[#16a34a] font-semibold text-sm shrink-0">
-          {(customer.name || '?')[0]}
-        </div>
+        <CustomerAvatar name={customer.name} size={32} />
+
         <div className="min-w-0">
           <div className="font-medium text-gray-800 text-sm leading-tight truncate">{customer.name || 'לא ידוע'}</div>
           <div className="text-[11px] text-gray-400 font-mono truncate" dir="ltr">{customer.whatsapp_phone}</div>
