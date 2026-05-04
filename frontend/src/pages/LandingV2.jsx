@@ -398,29 +398,6 @@ export default function LandingV2() {
           style={{ background: 'linear-gradient(to bottom, transparent 0%, #f8f6f2 65%)' }} />
       </section>
 
-      {/* ─── Stats ─────────────────────────────────────────────────────────── */}
-      <section className="pb-12 md:pb-16 px-4 md:px-6 mt-4" style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(to bottom, #f8f6f2 0%, #f8f6f2 60%, transparent 100%)' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-            {[
-              { value: 24, suffix: '/7',   label: 'זמינות הבוט' },
-              { value: 30, suffix: ' יום', label: 'ניסיון חינמי' },
-              { value: 2,  suffix: ' דק׳', label: 'זמן הגדרה ממוצע' },
-              { value: 98, suffix: '%',    label: 'לקוחות מרוצים' },
-            ].map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="text-center p-5 md:p-8 rounded-2xl"
-                style={{ ...glassCard, borderRadius: 20 }}>
-                <div className="text-4xl font-black text-gray-900 mb-1" style={{ fontFamily: 'Heebo, sans-serif' }}>
-                  <Counter to={s.value} suffix={s.suffix} />
-                </div>
-                <div className="text-gray-400 text-sm">{s.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ─── Features ──────────────────────────────────────────────────────── */}
       <section id="features" className="py-14 md:py-20 px-4 md:px-6" style={{ position: 'relative', zIndex: 1 }}>
